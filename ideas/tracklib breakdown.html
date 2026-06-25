@@ -1,0 +1,1176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracklib-Style Sample Breakdown Builder</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111923;
+      --panel2: #172231;
+      --ink: #ecf2ff;
+      --muted: #92a2b9;
+      --line: #26364a;
+      --accent: #76e4ff;
+      --accent2: #ffd66b;
+      --danger: #ff7373;
+      --ok: #7dffac;
+      --shadow: rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #17283a 0, var(--bg) 32rem);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    header {
+      padding: 22px 28px 12px;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11, 15, 20, 0.88);
+      backdrop-filter: blur(16px);
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.03em; }
+    p { color: var(--muted); line-height: 1.5; }
+    .sub { margin: 0; max-width: 1050px; font-size: 14px; }
+    main { padding: 22px; max-width: 1480px; margin: 0 auto; }
+    .grid { display: grid; gap: 18px; }
+    .cols-3 { grid-template-columns: repeat(3, minmax(280px, 1fr)); }
+    .cols-2 { grid-template-columns: 1.05fr 0.95fr; }
+    .panel {
+      background: linear-gradient(180deg, rgba(23,34,49,0.92), rgba(17,25,35,0.92));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px var(--shadow);
+      overflow: hidden;
+    }
+    .panel > .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+    }
+    .panel h2, .panel h3 { margin: 0; font-size: 15px; letter-spacing: -0.01em; }
+    .body { padding: 15px 16px 16px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+    input, select, button, textarea {
+      font: inherit;
+      color: var(--ink);
+    }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0c121a;
+      border-radius: 12px;
+      padding: 9px 10px;
+      outline: none;
+    }
+    input[type="file"] { width: 100%; color: var(--muted); font-size: 12px; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    button {
+      border: 1px solid var(--line);
+      background: #132034;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 120ms ease;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    button:hover { transform: translateY(-1px); border-color: var(--accent); }
+    button.primary { background: linear-gradient(135deg, #1c6c8b, #23466e); border-color: #2d83a5; }
+    button.gold { background: linear-gradient(135deg, #7d5a11, #473714); border-color: #a77b1a; }
+    button.danger { background: #31161a; border-color: #653038; color: #ffd4d4; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .row { display: flex; gap: 10px; align-items: end; }
+    .row > * { flex: 1; }
+    .mini { font-size: 12px; color: var(--muted); }
+    .tiny { font-size: 11px; color: var(--muted); }
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 13px;
+      background: #071018;
+      border: 1px solid var(--line);
+      touch-action: none;
+    }
+    .wave { height: 132px; }
+    .finalwave { height: 165px; }
+    .breakdown { height: 520px; }
+    .roll { height: 520px; cursor: crosshair; }
+    .status {
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #0d1622;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .slice-list, .note-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 255px;
+      overflow: auto;
+      padding-right: 3px;
+    }
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(6, 13, 22, 0.62);
+    }
+    .item.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(118,228,255,0.15) inset; }
+    .item strong { display:block; font-size: 12px; margin-bottom: 3px; }
+    .item span { display:block; color: var(--muted); font-size: 11px; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
+    .toolbar .field { min-width: 95px; flex: 1; }
+    .toolbar .field.small { max-width: 110px; }
+    .transport {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .hidden { display: none !important; }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #08111a;
+      border: 1px solid var(--line);
+      border-bottom-color: #425873;
+      border-radius: 6px;
+      padding: 1px 5px;
+      color: #d9e8ff;
+      font-size: 11px;
+    }
+    .source-title { display:flex; align-items:center; gap:8px; }
+    .source-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px currentColor; }
+    .warn { color: var(--accent2); }
+    .ok { color: var(--ok); }
+    .danger-text { color: var(--danger); }
+    .footer-note { margin: 18px 2px 0; font-size: 12px; color: var(--muted); }
+    @media (max-width: 1100px) {
+      .cols-3, .cols-2 { grid-template-columns: 1fr; }
+      header { position: static; }
+      .roll, .breakdown { height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tracklib-Style Sample Breakdown Builder</h1>
+    <p class="sub">Load up to three source tracks, freeze their waveforms, chop sample slices, sequence those slices in a piano roll, then render a final waveform and stacked breakdown view. YouTube URL boxes are project slots; raw audio loading from YouTube needs a rights-cleared backend endpoint.</p>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <div class="head">
+        <h2>Project</h2>
+        <div class="transport">
+          <span class="pill">Tip: drag on a source waveform to select a chop</span>
+          <span class="pill"><span class="kbd">Click</span> roll = add note</span>
+          <span class="pill"><span class="kbd">Alt/Right click</span> roll = delete note</span>
+        </div>
+      </div>
+      <div class="body toolbar">
+        <div class="field"><label>Project title</label><input id="projectTitle" type="text" value="Sample Breakdown Draft" /></div>
+        <div class="field small"><label>BPM</label><input id="bpm" type="number" min="20" max="260" step="1" value="90" /></div>
+        <div class="field small"><label>Bars</label><input id="bars" type="number" min="1" max="32" step="1" value="8" /></div>
+        <div class="field small"><label>Grid</label><select id="gridDiv"><option value="4">1/4</option><option value="8">1/8</option><option value="16" selected>1/16</option><option value="32">1/32</option></select></div>
+        <div class="field small"><label>Master gain</label><input id="masterGain" type="number" min="0" max="2" step="0.05" value="0.9" /></div>
+        <div class="field small"><label>&nbsp;</label><button class="primary" id="renderBtn">Render final</button></div>
+        <div class="field small"><label>&nbsp;</label><button id="saveProjectBtn">Export JSON</button></div>
+        <div class="field small"><label>&nbsp;</label><button id="loadProjectBtn">Import JSON</button><input class="hidden" id="loadProjectInput" type="file" accept="application/json" /></div>
+      </div>
+    </section>
+
+    <section class="grid cols-3" id="sources"></section>
+
+    <section class="grid cols-2">
+      <div class="panel">
+        <div class="head">
+          <h2>Piano roll sampler</h2>
+          <div class="transport">
+            <button id="playSequenceBtn">Play sequence</button>
+            <button id="stopBtn" class="danger">Stop</button>
+          </div>
+        </div>
+        <div class="body grid" style="gap: 12px;">
+          <div class="toolbar">
+            <div class="field"><label>Selected slice</label><select id="selectedSlice"></select></div>
+            <div class="field small"><label>Root note</label><input id="rootNote" type="number" min="0" max="127" value="60" /></div>
+            <div class="field small"><label>Note length</label><input id="noteLenSteps" type="number" min="1" max="64" value="4" /></div>
+            <div class="field small"><label>Velocity</label><input id="velocity" type="number" min="0.05" max="1" step="0.05" value="0.8" /></div>
+            <div class="field small"><label>Transpose</label><input id="transpose" type="number" min="-36" max="36" value="0" /></div>
+          </div>
+          <canvas id="pianoRoll" class="roll" width="1200" height="520"></canvas>
+          <div class="status" id="rollStatus">Load a source, select a slice, then click the piano roll to place sampled notes.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:18px;">
+        <div class="panel">
+          <div class="head"><h2>Slices</h2><span class="mini" id="sliceCount">0 slices</span></div>
+          <div class="body">
+            <div class="slice-list" id="sliceList"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="head"><h2>Notes</h2><span class="mini" id="noteCount">0 notes</span></div>
+          <div class="body">
+            <div class="note-list" id="noteList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head">
+        <h2>Rendered final song waveform</h2>
+        <div class="transport">
+          <button id="playRenderedBtn">Play rendered</button>
+          <button id="downloadWavBtn">Download WAV</button>
+        </div>
+      </div>
+      <div class="body grid" style="gap: 12px;">
+        <canvas id="finalWave" class="finalwave" width="1400" height="165"></canvas>
+        <div class="status" id="renderStatus">No render yet. Hit “Render final” after placing notes.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head">
+        <h2>Tracklib-style breakdown view</h2>
+        <div class="transport">
+          <button class="gold" id="drawBreakdownBtn">Refresh breakdown</button>
+          <button id="playBreakdownBtn">Play with playhead</button>
+          <button id="exportPngBtn">Export PNG frame</button>
+        </div>
+      </div>
+      <div class="body grid" style="gap: 12px;">
+        <canvas id="breakdownCanvas" class="breakdown" width="1400" height="520"></canvas>
+        <div class="status">This is the visual you screen-record: source waveforms above, final rendered waveform below, slice highlights, note labels, and an animated playhead.</div>
+      </div>
+    </section>
+
+    <p class="footer-note">Rights note: use audio you own, licensed, or have permission to analyze. The browser cannot directly fetch most YouTube audio; wire the included <span class="kbd">/api/audio?url=...</span> hook to a compliant backend only for material you are allowed to use.</p>
+  </main>
+
+<script>
+(() => {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const audioCtx = new AudioContextClass();
+  let activeNodes = [];
+  let playheadRAF = null;
+  let playheadStart = 0;
+  let playheadDuration = 0;
+  let playingRenderedSource = null;
+
+  const SOURCE_COLORS = ['#76e4ff', '#ffd66b', '#c58bff'];
+  const NOTE_MIN = 36;
+  const NOTE_MAX = 84;
+
+  const state = {
+    projectTitle: 'Sample Breakdown Draft',
+    bpm: 90,
+    bars: 8,
+    gridDiv: 16,
+    masterGain: 0.9,
+    sources: [0,1,2].map(i => ({
+      id: 'source_' + (i+1),
+      name: 'Source ' + (i+1),
+      youtubeUrl: '',
+      fileName: '',
+      buffer: null,
+      speed: 1,
+      pitch: 0,
+      gain: 0.85,
+      selection: null,
+      color: SOURCE_COLORS[i]
+    })),
+    slices: [],
+    notes: [],
+    selectedSliceId: '',
+    renderedBuffer: null
+  };
+
+  const $ = sel => document.querySelector(sel);
+  const sourcesEl = $('#sources');
+  const pianoCanvas = $('#pianoRoll');
+  const pianoCtx = pianoCanvas.getContext('2d');
+  const finalCanvas = $('#finalWave');
+  const finalCtx = finalCanvas.getContext('2d');
+  const breakdownCanvas = $('#breakdownCanvas');
+  const breakdownCtx = breakdownCanvas.getContext('2d');
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function fmtTime(v) { return (Math.round(v * 1000) / 1000).toFixed(3) + 's'; }
+  function midiToName(n) {
+    const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    return names[n % 12] + (Math.floor(n / 12) - 1);
+  }
+  function noteToY(midi, height) {
+    const rows = NOTE_MAX - NOTE_MIN + 1;
+    return (NOTE_MAX - midi) * (height / rows);
+  }
+  function yToNote(y, height) {
+    const rows = NOTE_MAX - NOTE_MIN + 1;
+    return clamp(NOTE_MAX - Math.floor(y / (height / rows)), NOTE_MIN, NOTE_MAX);
+  }
+  function totalSteps() { return Number(state.bars) * 4 * Number(state.gridDiv); }
+  function secPerBeat() { return 60 / Number(state.bpm); }
+  function stepToTime(step) { return step / Number(state.gridDiv) * secPerBeat(); }
+  function timeToStep(time) { return time / secPerBeat() * Number(state.gridDiv); }
+  function projectDuration() { return Number(state.bars) * 4 * secPerBeat(); }
+  function uid(prefix) { return prefix + '_' + Math.random().toString(36).slice(2, 9); }
+
+  function resizeCanvasToDisplaySize(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(rect.width * dpr));
+    const h = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      return true;
+    }
+    return false;
+  }
+
+  function drawWaveform(ctx, canvas, buffer, opts = {}) {
+    resizeCanvasToDisplaySize(canvas);
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = opts.bg || '#071018';
+    ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = opts.midline || 'rgba(255,255,255,0.11)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, H/2);
+    ctx.lineTo(W, H/2);
+    ctx.stroke();
+
+    if (!buffer) {
+      ctx.fillStyle = 'rgba(236,242,255,0.36)';
+      ctx.font = `${Math.max(12, Math.round(H/12))}px system-ui`;
+      ctx.fillText(opts.empty || 'Load audio to draw frozen waveform', 18, H/2 - 12);
+      return;
+    }
+
+    const channel = buffer.getChannelData(0);
+    const samplesPerPixel = Math.max(1, Math.floor(channel.length / W));
+    ctx.strokeStyle = opts.color || '#76e4ff';
+    ctx.lineWidth = Math.max(1, window.devicePixelRatio || 1);
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      let min = 1, max = -1;
+      const start = x * samplesPerPixel;
+      const end = Math.min(channel.length, start + samplesPerPixel);
+      for (let i = start; i < end; i += 8) {
+        const v = channel[i];
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+      const y1 = (1 + min) * 0.5 * H;
+      const y2 = (1 + max) * 0.5 * H;
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y2);
+    }
+    ctx.stroke();
+
+    if (opts.highlights) {
+      for (const h of opts.highlights) {
+        const x = h.start / buffer.duration * W;
+        const w = Math.max(2, (h.end - h.start) / buffer.duration * W);
+        ctx.fillStyle = h.color || 'rgba(255,214,107,0.24)';
+        ctx.fillRect(x, 0, w, H);
+        ctx.strokeStyle = h.stroke || 'rgba(255,255,255,0.45)';
+        ctx.strokeRect(x, 0, w, H);
+      }
+    }
+
+    if (opts.selection) {
+      const x1 = opts.selection.start / buffer.duration * W;
+      const x2 = opts.selection.end / buffer.duration * W;
+      ctx.fillStyle = 'rgba(255,214,107,0.20)';
+      ctx.fillRect(x1, 0, x2 - x1, H);
+      ctx.strokeStyle = '#ffd66b';
+      ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+      ctx.strokeRect(x1, 1, x2 - x1, H - 2);
+    }
+
+    if (opts.label) {
+      ctx.fillStyle = 'rgba(7,16,24,0.78)';
+      ctx.fillRect(10, 10, Math.min(W - 20, 430), 28);
+      ctx.fillStyle = '#ecf2ff';
+      ctx.font = `${12 * (window.devicePixelRatio || 1)}px system-ui`;
+      ctx.fillText(opts.label, 20, 29 * (window.devicePixelRatio || 1));
+    }
+  }
+
+  function makeSourceCard(src, index) {
+    const card = document.createElement('section');
+    card.className = 'panel source-card';
+    card.innerHTML = `
+      <div class="head">
+        <h3 class="source-title"><span class="source-dot" style="color:${src.color};background:${src.color}"></span>${src.name}</h3>
+        <span class="mini" data-status>No audio loaded</span>
+      </div>
+      <div class="body grid" style="gap:12px;">
+        <div><label>YouTube URL / source URL metadata</label><input type="text" data-url placeholder="https://youtube.com/watch?v=..." /></div>
+        <div class="row">
+          <div><label>Audio file</label><input type="file" data-file accept="audio/*" /></div>
+          <div style="max-width:135px"><label>&nbsp;</label><button data-backend>Load URL hook</button></div>
+        </div>
+        <div class="row">
+          <div><label>Speed</label><input type="number" data-speed min="0.25" max="4" step="0.01" value="1" /></div>
+          <div><label>Pitch semitones</label><input type="number" data-pitch min="-36" max="36" step="1" value="0" /></div>
+          <div><label>Gain</label><input type="number" data-gain min="0" max="2" step="0.05" value="0.85" /></div>
+        </div>
+        <div class="transport">
+          <button data-play>Play source</button>
+          <button data-stop class="danger">Stop</button>
+          <button data-add class="gold">Add selected slice</button>
+        </div>
+        <canvas class="wave" data-wave width="500" height="132"></canvas>
+        <div class="tiny" data-selection>Drag on the waveform to select a chop. Then add it as a slice.</div>
+      </div>
+    `;
+    sourcesEl.appendChild(card);
+
+    const canvas = card.querySelector('[data-wave]');
+    const ctx = canvas.getContext('2d');
+    const refresh = () => drawSource(index);
+
+    card.querySelector('[data-url]').addEventListener('input', e => { src.youtubeUrl = e.target.value; });
+    card.querySelector('[data-speed]').addEventListener('input', e => { src.speed = Number(e.target.value) || 1; });
+    card.querySelector('[data-pitch]').addEventListener('input', e => { src.pitch = Number(e.target.value) || 0; });
+    card.querySelector('[data-gain]').addEventListener('input', e => { src.gain = Number(e.target.value) || 0; });
+    card.querySelector('[data-file]').addEventListener('change', e => loadAudioFile(index, e.target.files[0]));
+    card.querySelector('[data-play]').addEventListener('click', () => playSource(index));
+    card.querySelector('[data-stop]').addEventListener('click', stopAll);
+    card.querySelector('[data-add]').addEventListener('click', () => addSliceFromSelection(index));
+    card.querySelector('[data-backend]').addEventListener('click', () => loadFromBackendHook(index));
+
+    let dragStart = null;
+    canvas.addEventListener('pointerdown', e => {
+      if (!src.buffer) return;
+      const rect = canvas.getBoundingClientRect();
+      dragStart = clamp((e.clientX - rect.left) / rect.width * src.buffer.duration, 0, src.buffer.duration);
+      src.selection = { start: dragStart, end: dragStart };
+      canvas.setPointerCapture(e.pointerId);
+      refresh();
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (dragStart == null || !src.buffer) return;
+      const rect = canvas.getBoundingClientRect();
+      const t = clamp((e.clientX - rect.left) / rect.width * src.buffer.duration, 0, src.buffer.duration);
+      src.selection = { start: Math.min(dragStart, t), end: Math.max(dragStart, t) };
+      refresh();
+    });
+    canvas.addEventListener('pointerup', e => {
+      if (dragStart == null || !src.buffer) return;
+      dragStart = null;
+      updateSourceSelectionText(index);
+      refresh();
+    });
+    canvas.addEventListener('pointercancel', () => { dragStart = null; });
+
+    drawSource(index);
+  }
+
+  async function loadAudioFile(sourceIndex, file) {
+    if (!file) return;
+    const src = state.sources[sourceIndex];
+    try {
+      const arr = await file.arrayBuffer();
+      const decoded = await audioCtx.decodeAudioData(arr.slice(0));
+      src.buffer = decoded;
+      src.fileName = file.name;
+      src.name = file.name.replace(/\.[^.]+$/, '').slice(0, 42) || ('Source ' + (sourceIndex+1));
+      src.selection = { start: 0, end: Math.min(4, decoded.duration) };
+      updateSourceCard(sourceIndex);
+      drawAll();
+      setStatus('#rollStatus', `Loaded ${file.name}. Drag on its waveform to pick a slice.`);
+    } catch (err) {
+      console.error(err);
+      alert('Could not decode that audio file. Try WAV, MP3, AAC, or another browser-supported format.');
+    }
+  }
+
+  async function loadFromBackendHook(sourceIndex) {
+    const src = state.sources[sourceIndex];
+    if (!src.youtubeUrl.trim()) {
+      alert('Paste a URL first. This button expects your backend to expose /api/audio?url=... and return an audio file.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/audio?url=' + encodeURIComponent(src.youtubeUrl.trim()));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const arr = await res.arrayBuffer();
+      src.buffer = await audioCtx.decodeAudioData(arr.slice(0));
+      src.fileName = src.youtubeUrl;
+      src.name = 'URL Source ' + (sourceIndex + 1);
+      src.selection = { start: 0, end: Math.min(4, src.buffer.duration) };
+      updateSourceCard(sourceIndex);
+      drawAll();
+    } catch (err) {
+      console.warn(err);
+      alert('No backend audio endpoint responded. In production, implement /api/audio?url=... for rights-cleared sources, or use local files.');
+    }
+  }
+
+  function updateSourceCard(index) {
+    const card = sourcesEl.children[index];
+    const src = state.sources[index];
+    card.querySelector('.source-title').innerHTML = `<span class="source-dot" style="color:${src.color};background:${src.color}"></span>${escapeHtml(src.name)}`;
+    card.querySelector('[data-status]').textContent = src.buffer ? `${src.buffer.duration.toFixed(1)}s loaded` : 'No audio loaded';
+    updateSourceSelectionText(index);
+  }
+
+  function updateSourceSelectionText(index) {
+    const card = sourcesEl.children[index];
+    const src = state.sources[index];
+    const el = card.querySelector('[data-selection]');
+    if (!src.buffer) { el.textContent = 'Drag on the waveform to select a chop. Then add it as a slice.'; return; }
+    if (!src.selection || src.selection.end - src.selection.start < 0.01) { el.textContent = 'No slice range selected.'; return; }
+    el.textContent = `Selected ${fmtTime(src.selection.start)} → ${fmtTime(src.selection.end)} (${fmtTime(src.selection.end - src.selection.start)})`;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  }
+
+  function sourceHighlights(index) {
+    const src = state.sources[index];
+    return state.slices.filter(s => s.sourceId === src.id).map(s => ({
+      start: s.start,
+      end: s.end,
+      color: hexToRgba(src.color, 0.18),
+      stroke: src.color
+    }));
+  }
+
+  function drawSource(index) {
+    const card = sourcesEl.children[index];
+    if (!card) return;
+    const src = state.sources[index];
+    const canvas = card.querySelector('[data-wave]');
+    const ctx = canvas.getContext('2d');
+    const label = src.buffer ? `${src.name} · ${src.buffer.duration.toFixed(2)}s · speed ${src.speed} · pitch ${src.pitch} st` : 'Drop in audio or wire a backend URL loader';
+    drawWaveform(ctx, canvas, src.buffer, { color: src.color, selection: src.selection, highlights: sourceHighlights(index), label });
+  }
+
+  function addSliceFromSelection(sourceIndex) {
+    const src = state.sources[sourceIndex];
+    if (!src.buffer || !src.selection) return alert('Load audio and drag-select a range first.');
+    const start = Math.min(src.selection.start, src.selection.end);
+    const end = Math.max(src.selection.start, src.selection.end);
+    if (end - start < 0.03) return alert('Select a longer slice.');
+    const slice = {
+      id: uid('slice'),
+      sourceId: src.id,
+      name: `${src.name} chop ${state.slices.filter(s => s.sourceId === src.id).length + 1}`,
+      start,
+      end,
+      rootMidi: Number($('#rootNote').value) || 60,
+      color: src.color
+    };
+    state.slices.push(slice);
+    state.selectedSliceId = slice.id;
+    refreshSliceUI();
+    drawAll();
+  }
+
+  function refreshSliceUI() {
+    const list = $('#sliceList');
+    const select = $('#selectedSlice');
+    list.innerHTML = '';
+    select.innerHTML = '';
+    if (state.slices.length === 0) {
+      list.innerHTML = '<div class="status">No slices yet. Select a range on a source waveform and click “Add selected slice.”</div>';
+      select.innerHTML = '<option value="">No slices</option>';
+      $('#sliceCount').textContent = '0 slices';
+      return;
+    }
+    for (const s of state.slices) {
+      const src = state.sources.find(x => x.id === s.sourceId);
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${s.name} · ${fmtTime(s.start)}-${fmtTime(s.end)} · root ${midiToName(s.rootMidi)}`;
+      select.appendChild(opt);
+
+      const item = document.createElement('div');
+      item.className = 'item' + (s.id === state.selectedSliceId ? ' active' : '');
+      item.innerHTML = `
+        <div><strong>${escapeHtml(s.name)}</strong><span>${escapeHtml(src ? src.name : 'missing source')} · ${fmtTime(s.start)} → ${fmtTime(s.end)} · root ${midiToName(s.rootMidi)}</span></div>
+        <div class="transport"><button data-use>Use</button><button data-play>Audition</button><button class="danger" data-del>Delete</button></div>
+      `;
+      item.querySelector('[data-use]').addEventListener('click', () => { state.selectedSliceId = s.id; select.value = s.id; refreshSliceUI(); drawPianoRoll(); });
+      item.querySelector('[data-play]').addEventListener('click', () => playSlice(s));
+      item.querySelector('[data-del]').addEventListener('click', () => deleteSlice(s.id));
+      list.appendChild(item);
+    }
+    select.value = state.selectedSliceId || state.slices[0].id;
+    state.selectedSliceId = select.value;
+    $('#sliceCount').textContent = `${state.slices.length} slice${state.slices.length === 1 ? '' : 's'}`;
+  }
+
+  function deleteSlice(id) {
+    state.notes = state.notes.filter(n => n.sliceId !== id);
+    state.slices = state.slices.filter(s => s.id !== id);
+    if (state.selectedSliceId === id) state.selectedSliceId = state.slices[0]?.id || '';
+    refreshSliceUI();
+    refreshNoteUI();
+    drawAll();
+  }
+
+  function refreshNoteUI() {
+    const list = $('#noteList');
+    list.innerHTML = '';
+    const sorted = [...state.notes].sort((a,b) => a.step - b.step || b.midi - a.midi);
+    if (!sorted.length) {
+      list.innerHTML = '<div class="status">No notes yet. Choose a slice and click the piano roll.</div>';
+    }
+    for (const n of sorted) {
+      const s = state.slices.find(x => x.id === n.sliceId);
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div><strong>${midiToName(n.midi)} at step ${n.step}</strong><span>${escapeHtml(s ? s.name : 'missing slice')} · ${n.lenSteps} steps · vel ${n.velocity.toFixed(2)} · trans ${n.transpose}</span></div>
+        <div><button class="danger" data-del>Delete</button></div>
+      `;
+      item.querySelector('[data-del]').addEventListener('click', () => { state.notes = state.notes.filter(x => x.id !== n.id); refreshNoteUI(); drawPianoRoll(); });
+      list.appendChild(item);
+    }
+    $('#noteCount').textContent = `${state.notes.length} note${state.notes.length === 1 ? '' : 's'}`;
+  }
+
+  function drawPianoRoll() {
+    resizeCanvasToDisplaySize(pianoCanvas);
+    const W = pianoCanvas.width, H = pianoCanvas.height;
+    const left = 62 * (window.devicePixelRatio || 1);
+    const top = 12 * (window.devicePixelRatio || 1);
+    const bottom = 28 * (window.devicePixelRatio || 1);
+    const rollW = W - left - 12 * (window.devicePixelRatio || 1);
+    const rollH = H - top - bottom;
+    const steps = totalSteps();
+    const rows = NOTE_MAX - NOTE_MIN + 1;
+    pianoCtx.clearRect(0,0,W,H);
+    pianoCtx.fillStyle = '#071018';
+    pianoCtx.fillRect(0,0,W,H);
+
+    pianoCtx.font = `${11 * (window.devicePixelRatio || 1)}px ui-monospace, monospace`;
+    pianoCtx.textBaseline = 'middle';
+    for (let m = NOTE_MIN; m <= NOTE_MAX; m++) {
+      const y = top + noteToY(m, rollH);
+      const isC = m % 12 === 0;
+      pianoCtx.fillStyle = isC ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.018)';
+      pianoCtx.fillRect(left, y, rollW, rollH / rows + 1);
+      if (isC) {
+        pianoCtx.fillStyle = '#92a2b9';
+        pianoCtx.fillText(midiToName(m), 10 * (window.devicePixelRatio || 1), y + rollH / rows / 2);
+      }
+    }
+
+    for (let st = 0; st <= steps; st++) {
+      const x = left + st / steps * rollW;
+      const beat = st / Number(state.gridDiv);
+      const isBar = Math.abs(beat % 4) < 0.0001;
+      const isBeat = Math.abs(beat % 1) < 0.0001;
+      pianoCtx.strokeStyle = isBar ? 'rgba(255,255,255,0.26)' : isBeat ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.045)';
+      pianoCtx.lineWidth = isBar ? 2 : 1;
+      pianoCtx.beginPath();
+      pianoCtx.moveTo(x, top);
+      pianoCtx.lineTo(x, top + rollH);
+      pianoCtx.stroke();
+      if (isBar && st < steps) {
+        pianoCtx.fillStyle = '#92a2b9';
+        pianoCtx.fillText(String(Math.round(beat / 4) + 1), x + 4, H - 13 * (window.devicePixelRatio || 1));
+      }
+    }
+
+    const rowH = rollH / rows;
+    for (const n of state.notes) {
+      const s = state.slices.find(x => x.id === n.sliceId);
+      const x = left + n.step / steps * rollW;
+      const y = top + noteToY(n.midi, rollH);
+      const w = Math.max(3, n.lenSteps / steps * rollW);
+      const h = Math.max(6, rowH - 2);
+      pianoCtx.fillStyle = hexToRgba(s?.color || '#76e4ff', 0.75);
+      pianoCtx.fillRect(x + 1, y + 1, w - 2, h);
+      pianoCtx.strokeStyle = s?.color || '#76e4ff';
+      pianoCtx.strokeRect(x + 1, y + 1, w - 2, h);
+      pianoCtx.fillStyle = '#071018';
+      pianoCtx.font = `${10 * (window.devicePixelRatio || 1)}px ui-monospace, monospace`;
+      if (w > 54 * (window.devicePixelRatio || 1)) pianoCtx.fillText(midiToName(n.midi), x + 6, y + h / 2);
+    }
+  }
+
+  function addNoteFromRoll(e) {
+    e.preventDefault();
+    const selected = state.slices.find(s => s.id === state.selectedSliceId);
+    if (!selected) { setStatus('#rollStatus', 'Create/select a slice first.'); return; }
+    const rect = pianoCanvas.getBoundingClientRect();
+    const xCSS = e.clientX - rect.left;
+    const yCSS = e.clientY - rect.top;
+    const dpr = window.devicePixelRatio || 1;
+    const W = pianoCanvas.width, H = pianoCanvas.height;
+    const left = 62 * dpr;
+    const top = 12 * dpr;
+    const bottom = 28 * dpr;
+    const rollW = W - left - 12 * dpr;
+    const rollH = H - top - bottom;
+    const x = xCSS * dpr;
+    const y = yCSS * dpr;
+    if (x < left || y < top || y > top + rollH) return;
+    const steps = totalSteps();
+    const step = clamp(Math.floor((x - left) / rollW * steps), 0, steps - 1);
+    const midi = yToNote(y - top, rollH);
+
+    if (e.button === 2 || e.altKey || e.metaKey) {
+      const oldLen = state.notes.length;
+      state.notes = state.notes.filter(n => !(step >= n.step && step < n.step + n.lenSteps && midi === n.midi));
+      if (state.notes.length === oldLen) {
+        state.notes = state.notes.filter(n => Math.abs(n.step - step) > 0 || Math.abs(n.midi - midi) > 1);
+      }
+      refreshNoteUI();
+      drawPianoRoll();
+      return;
+    }
+
+    const n = {
+      id: uid('note'),
+      sliceId: selected.id,
+      step,
+      lenSteps: clamp(Number($('#noteLenSteps').value) || 4, 1, 256),
+      midi,
+      velocity: clamp(Number($('#velocity').value) || 0.8, 0.01, 1),
+      transpose: Number($('#transpose').value) || 0
+    };
+    state.notes.push(n);
+    refreshNoteUI();
+    drawPianoRoll();
+    setStatus('#rollStatus', `Added ${midiToName(midi)} using ${selected.name}.`);
+  }
+
+  function setStatus(sel, text) { const el = $(sel); if (el) el.textContent = text; }
+
+  function playSource(index) {
+    const src = state.sources[index];
+    if (!src.buffer) return;
+    ensureAudioStarted();
+    stopAll();
+    const source = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    source.buffer = src.buffer;
+    source.playbackRate.value = clamp(src.speed * Math.pow(2, src.pitch / 12), 0.05, 8);
+    gain.gain.value = src.gain;
+    source.connect(gain).connect(audioCtx.destination);
+    source.start();
+    activeNodes.push(source);
+  }
+
+  function playSlice(slice) {
+    const src = state.sources.find(x => x.id === slice.sourceId);
+    if (!src?.buffer) return;
+    ensureAudioStarted();
+    stopAll();
+    const source = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    source.buffer = src.buffer;
+    source.playbackRate.value = clamp(src.speed * Math.pow(2, src.pitch / 12), 0.05, 8);
+    gain.gain.value = src.gain;
+    source.connect(gain).connect(audioCtx.destination);
+    source.start(0, slice.start, slice.end - slice.start);
+    activeNodes.push(source);
+  }
+
+  function stopAll() {
+    for (const n of activeNodes) {
+      try { n.stop(); } catch (_) {}
+    }
+    activeNodes = [];
+    if (playingRenderedSource) {
+      try { playingRenderedSource.stop(); } catch (_) {}
+      playingRenderedSource = null;
+    }
+    if (playheadRAF) cancelAnimationFrame(playheadRAF);
+    playheadRAF = null;
+    drawBreakdown();
+  }
+
+  async function ensureAudioStarted() {
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+  }
+
+  async function playSequence() {
+    if (!state.notes.length) return setStatus('#rollStatus', 'No notes to play.');
+    const rendered = await renderSequence(false);
+    state.renderedBuffer = rendered;
+    drawFinalWave();
+    playRendered(true);
+  }
+
+  async function renderSequence(showStatus = true) {
+    const sr = 44100;
+    const duration = projectDuration() + 1.5;
+    const offline = new OfflineAudioContext(2, Math.ceil(sr * duration), sr);
+    const master = offline.createGain();
+    master.gain.value = Number(state.masterGain) || 0.9;
+    master.connect(offline.destination);
+
+    const sorted = [...state.notes].sort((a,b) => a.step - b.step);
+    for (const note of sorted) {
+      const slice = state.slices.find(s => s.id === note.sliceId);
+      const src = slice && state.sources.find(x => x.id === slice.sourceId);
+      if (!slice || !src?.buffer) continue;
+      const node = offline.createBufferSource();
+      node.buffer = src.buffer;
+      const rate = clamp(src.speed * Math.pow(2, (src.pitch + note.midi - slice.rootMidi + note.transpose) / 12), 0.05, 8);
+      node.playbackRate.value = rate;
+      const gain = offline.createGain();
+      const when = stepToTime(note.step);
+      const wantedDur = stepToTime(note.lenSteps);
+      const maxBufferDur = Math.max(0.01, slice.end - slice.start);
+      const bufferDur = Math.min(maxBufferDur, wantedDur * rate);
+      const audibleDur = bufferDur / rate;
+      gain.gain.setValueAtTime(0.0001, when);
+      gain.gain.linearRampToValueAtTime(note.velocity * (src.gain || 1), when + 0.008);
+      gain.gain.setValueAtTime(note.velocity * (src.gain || 1), Math.max(when + 0.009, when + audibleDur - 0.018));
+      gain.gain.linearRampToValueAtTime(0.0001, when + audibleDur);
+      node.connect(gain).connect(master);
+      try { node.start(when, slice.start, bufferDur); } catch (err) { console.warn('Could not schedule note', note, err); }
+    }
+
+    if (showStatus) setStatus('#renderStatus', 'Rendering offline audio...');
+    const out = await offline.startRendering();
+    if (showStatus) setStatus('#renderStatus', `Rendered ${out.duration.toFixed(2)}s at ${out.sampleRate} Hz from ${state.notes.length} note(s).`);
+    return out;
+  }
+
+  async function renderFinal() {
+    if (!state.notes.length) return alert('Place at least one note first.');
+    state.renderedBuffer = await renderSequence(true);
+    drawFinalWave();
+    drawBreakdown();
+  }
+
+  function drawFinalWave() {
+    drawWaveform(finalCtx, finalCanvas, state.renderedBuffer, { color: '#ecf2ff', empty: 'Rendered arrangement waveform appears here.' });
+  }
+
+  function playRendered(withPlayhead = false) {
+    if (!state.renderedBuffer) return setStatus('#renderStatus', 'Render first.');
+    ensureAudioStarted();
+    stopAll();
+    const source = audioCtx.createBufferSource();
+    source.buffer = state.renderedBuffer;
+    source.connect(audioCtx.destination);
+    source.start();
+    playingRenderedSource = source;
+    if (withPlayhead) animateBreakdownPlayhead(state.renderedBuffer.duration);
+  }
+
+  function drawBreakdown(playheadT = null) {
+    resizeCanvasToDisplaySize(breakdownCanvas);
+    const W = breakdownCanvas.width, H = breakdownCanvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const pad = 28 * dpr;
+    const titleH = 40 * dpr;
+    const rowGap = 14 * dpr;
+    const rows = 4;
+    const rowH = (H - pad * 2 - titleH - rowGap * (rows - 1)) / rows;
+    breakdownCtx.clearRect(0,0,W,H);
+    breakdownCtx.fillStyle = '#071018';
+    breakdownCtx.fillRect(0,0,W,H);
+
+    breakdownCtx.fillStyle = '#ecf2ff';
+    breakdownCtx.font = `${22 * dpr}px system-ui`;
+    breakdownCtx.fillText(state.projectTitle || 'Sample Breakdown Draft', pad, 30 * dpr);
+
+    for (let i = 0; i < 3; i++) {
+      const src = state.sources[i];
+      const y = pad + titleH + i * (rowH + rowGap);
+      drawWaveRow(breakdownCtx, pad, y, W - pad * 2, rowH, src.buffer, src.color, src.name, sourceHighlightsForBreakdown(src));
+    }
+    const yFinal = pad + titleH + 3 * (rowH + rowGap);
+    drawWaveRow(breakdownCtx, pad, yFinal, W - pad * 2, rowH, state.renderedBuffer, '#ecf2ff', 'Final arrangement', finalNoteHighlights());
+
+    const dur = state.renderedBuffer?.duration || projectDuration();
+    if (playheadT != null && dur > 0) {
+      const x = pad + clamp(playheadT / dur, 0, 1) * (W - pad * 2);
+      breakdownCtx.strokeStyle = '#ff7373';
+      breakdownCtx.lineWidth = 2 * dpr;
+      breakdownCtx.beginPath();
+      breakdownCtx.moveTo(x, pad + titleH - 4 * dpr);
+      breakdownCtx.lineTo(x, H - pad);
+      breakdownCtx.stroke();
+      breakdownCtx.fillStyle = '#ff7373';
+      breakdownCtx.font = `${12 * dpr}px ui-monospace, monospace`;
+      breakdownCtx.fillText(fmtTime(playheadT), x + 6 * dpr, pad + titleH + 2 * dpr);
+    }
+  }
+
+  function drawWaveRow(ctx, x, y, w, h, buffer, color, label, highlights = []) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeRect(x, y, w, h);
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+
+    if (buffer) {
+      for (const hi of highlights) {
+        const x1 = x + hi.start / (hi.duration || buffer.duration) * w;
+        const x2 = x + hi.end / (hi.duration || buffer.duration) * w;
+        ctx.fillStyle = hi.fill || hexToRgba(hi.color || color, 0.22);
+        ctx.fillRect(x1, y, Math.max(2, x2 - x1), h);
+      }
+      const channel = buffer.getChannelData(0);
+      const samplesPerPixel = Math.max(1, Math.floor(channel.length / w));
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(1, window.devicePixelRatio || 1);
+      ctx.beginPath();
+      for (let px = 0; px < w; px++) {
+        let min = 1, max = -1;
+        const start = Math.floor(px * samplesPerPixel);
+        const end = Math.min(channel.length, start + samplesPerPixel);
+        for (let i = start; i < end; i += 8) {
+          const v = channel[i];
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+        ctx.moveTo(x + px, y + (1 + min) * 0.5 * h);
+        ctx.lineTo(x + px, y + (1 + max) * 0.5 * h);
+      }
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(236,242,255,0.26)';
+      ctx.font = `${13 * (window.devicePixelRatio || 1)}px system-ui`;
+      ctx.fillText('No audio loaded', x + 16, y + h/2);
+    }
+    ctx.restore();
+
+    ctx.fillStyle = 'rgba(7,16,24,0.78)';
+    ctx.fillRect(x + 10, y + 8, Math.min(w - 20, 360), 28 * (window.devicePixelRatio || 1));
+    ctx.fillStyle = '#ecf2ff';
+    ctx.font = `${13 * (window.devicePixelRatio || 1)}px system-ui`;
+    ctx.fillText(label || 'Untitled', x + 20, y + 27 * (window.devicePixelRatio || 1));
+  }
+
+  function sourceHighlightsForBreakdown(src) {
+    if (!src.buffer) return [];
+    const slices = state.slices.filter(s => s.sourceId === src.id);
+    return slices.map(s => ({ start: s.start, end: s.end, color: src.color, duration: src.buffer.duration }));
+  }
+
+  function finalNoteHighlights() {
+    const dur = state.renderedBuffer?.duration || projectDuration();
+    return state.notes.map(n => {
+      const slice = state.slices.find(s => s.id === n.sliceId);
+      return { start: stepToTime(n.step), end: stepToTime(n.step + n.lenSteps), color: slice?.color || '#76e4ff', duration: dur, fill: hexToRgba(slice?.color || '#76e4ff', 0.28) };
+    });
+  }
+
+  function animateBreakdownPlayhead(duration) {
+    playheadStart = audioCtx.currentTime;
+    playheadDuration = duration;
+    const tick = () => {
+      const t = audioCtx.currentTime - playheadStart;
+      drawBreakdown(t);
+      if (t < playheadDuration && playingRenderedSource) playheadRAF = requestAnimationFrame(tick);
+      else { playheadRAF = null; drawBreakdown(); }
+    };
+    tick();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace('#','');
+    const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function downloadWav() {
+    if (!state.renderedBuffer) return alert('Render first.');
+    const wav = audioBufferToWav(state.renderedBuffer);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    downloadBlob(blob, safeName(state.projectTitle || 'breakdown') + '.wav');
+  }
+
+  function audioBufferToWav(buffer) {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const length = buffer.length * numChannels * 2 + 44;
+    const view = new DataView(new ArrayBuffer(length));
+    let offset = 0;
+    writeString(view, offset, 'RIFF'); offset += 4;
+    view.setUint32(offset, 36 + buffer.length * numChannels * 2, true); offset += 4;
+    writeString(view, offset, 'WAVE'); offset += 4;
+    writeString(view, offset, 'fmt '); offset += 4;
+    view.setUint32(offset, 16, true); offset += 4;
+    view.setUint16(offset, 1, true); offset += 2;
+    view.setUint16(offset, numChannels, true); offset += 2;
+    view.setUint32(offset, sampleRate, true); offset += 4;
+    view.setUint32(offset, sampleRate * numChannels * 2, true); offset += 4;
+    view.setUint16(offset, numChannels * 2, true); offset += 2;
+    view.setUint16(offset, 16, true); offset += 2;
+    writeString(view, offset, 'data'); offset += 4;
+    view.setUint32(offset, buffer.length * numChannels * 2, true); offset += 4;
+    const channels = Array.from({ length: numChannels }, (_, ch) => buffer.getChannelData(ch));
+    for (let i = 0; i < buffer.length; i++) {
+      for (let ch = 0; ch < numChannels; ch++) {
+        let sample = clamp(channels[ch][i], -1, 1);
+        sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset, sample, true); offset += 2;
+      }
+    }
+    return view.buffer;
+  }
+
+  function writeString(view, offset, s) {
+    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+  }
+
+  function downloadBlob(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  function safeName(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'breakdown'; }
+
+  function exportProject() {
+    const json = JSON.stringify({
+      version: 1,
+      projectTitle: state.projectTitle,
+      bpm: state.bpm,
+      bars: state.bars,
+      gridDiv: state.gridDiv,
+      masterGain: state.masterGain,
+      sources: state.sources.map(s => ({ id: s.id, name: s.name, youtubeUrl: s.youtubeUrl, fileName: s.fileName, speed: s.speed, pitch: s.pitch, gain: s.gain, color: s.color })),
+      slices: state.slices,
+      notes: state.notes
+    }, null, 2);
+    downloadBlob(new Blob([json], { type: 'application/json' }), safeName(state.projectTitle || 'breakdown') + '.json');
+  }
+
+  async function importProject(file) {
+    if (!file) return;
+    const data = JSON.parse(await file.text());
+    state.projectTitle = data.projectTitle || state.projectTitle;
+    state.bpm = data.bpm || state.bpm;
+    state.bars = data.bars || state.bars;
+    state.gridDiv = data.gridDiv || state.gridDiv;
+    state.masterGain = data.masterGain ?? state.masterGain;
+    if (Array.isArray(data.sources)) {
+      for (let i = 0; i < Math.min(3, data.sources.length); i++) {
+        Object.assign(state.sources[i], data.sources[i]);
+        state.sources[i].buffer = null;
+        state.sources[i].selection = null;
+      }
+    }
+    state.slices = data.slices || [];
+    state.notes = data.notes || [];
+    state.selectedSliceId = state.slices[0]?.id || '';
+    syncProjectInputs();
+    for (let i = 0; i < 3; i++) updateSourceCard(i);
+    refreshSliceUI();
+    refreshNoteUI();
+    drawAll();
+    alert('Project imported. Re-load the source audio files because browsers cannot persist local file buffers inside JSON.');
+  }
+
+  function exportPng() {
+    drawBreakdown();
+    breakdownCanvas.toBlob(blob => downloadBlob(blob, safeName(state.projectTitle || 'breakdown') + '-frame.png'), 'image/png');
+  }
+
+  function syncProjectInputs() {
+    $('#projectTitle').value = state.projectTitle;
+    $('#bpm').value = state.bpm;
+    $('#bars').value = state.bars;
+    $('#gridDiv').value = state.gridDiv;
+    $('#masterGain').value = state.masterGain;
+  }
+
+  function bindProjectControls() {
+    $('#projectTitle').addEventListener('input', e => { state.projectTitle = e.target.value; drawBreakdown(); });
+    $('#bpm').addEventListener('input', e => { state.bpm = Number(e.target.value) || 90; drawPianoRoll(); drawBreakdown(); });
+    $('#bars').addEventListener('input', e => { state.bars = Number(e.target.value) || 8; drawPianoRoll(); drawBreakdown(); });
+    $('#gridDiv').addEventListener('change', e => { state.gridDiv = Number(e.target.value) || 16; drawPianoRoll(); drawBreakdown(); });
+    $('#masterGain').addEventListener('input', e => { state.masterGain = Number(e.target.value) || 0.9; });
+    $('#selectedSlice').addEventListener('change', e => { state.selectedSliceId = e.target.value; refreshSliceUI(); drawPianoRoll(); });
+    $('#rootNote').addEventListener('input', e => {
+      const s = state.slices.find(x => x.id === state.selectedSliceId);
+      if (s) { s.rootMidi = Number(e.target.value) || 60; refreshSliceUI(); }
+    });
+    pianoCanvas.addEventListener('contextmenu', e => e.preventDefault());
+    pianoCanvas.addEventListener('pointerdown', addNoteFromRoll);
+    $('#renderBtn').addEventListener('click', renderFinal);
+    $('#playSequenceBtn').addEventListener('click', playSequence);
+    $('#stopBtn').addEventListener('click', stopAll);
+    $('#playRenderedBtn').addEventListener('click', () => playRendered(false));
+    $('#downloadWavBtn').addEventListener('click', downloadWav);
+    $('#drawBreakdownBtn').addEventListener('click', drawBreakdown);
+    $('#playBreakdownBtn').addEventListener('click', () => playRendered(true));
+    $('#exportPngBtn').addEventListener('click', exportPng);
+    $('#saveProjectBtn').addEventListener('click', exportProject);
+    $('#loadProjectBtn').addEventListener('click', () => $('#loadProjectInput').click());
+    $('#loadProjectInput').addEventListener('change', e => importProject(e.target.files[0]));
+    window.addEventListener('resize', () => drawAll());
+  }
+
+  function drawAll() {
+    for (let i = 0; i < 3; i++) drawSource(i);
+    drawPianoRoll();
+    drawFinalWave();
+    drawBreakdown();
+  }
+
+  for (let i = 0; i < 3; i++) makeSourceCard(state.sources[i], i);
+  bindProjectControls();
+  refreshSliceUI();
+  refreshNoteUI();
+  drawAll();
+})();
+</script>
+</body>
+</html>
