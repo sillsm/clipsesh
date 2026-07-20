@@ -1,0 +1,3063 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2b2430" />
+  <meta name="description" content="A standalone browser sampler, slicer, MIDI instrument, and 8-bar step sequencer." />
+  <title>Clip Sesh Sampler</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --ink: #18131a;
+  --ink-soft: #2c2530;
+  --shell: #2f2734;
+  --panel: #8f795f;
+  --panel-dark: #625346;
+  --panel-light: #d8c8b2;
+  --cream: #f4eadb;
+  --tan: #a98f70;
+  --black: #050505;
+  --green: #68ff47;
+  --green-dim: #2c9c27;
+  --red: #ff2d25;
+  --orange: #ffad15;
+  --yellow: #ffe07c;
+  --shadow: #40352e;
+  --cell: 27px;
+  --row-label: 158px;
+  --border: 4px;
+  font-family: "Courier New", Courier, ui-monospace, monospace;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(105, 81, 111, 0.35), transparent 42rem),
+    linear-gradient(135deg, #241e2a, #342b39 45%, #201b25);
+  color: var(--ink);
+}
+
+body {
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+output {
+  font: inherit;
+}
+
+button,
+select,
+input[type="number"] {
+  color: var(--ink);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.wave-canvas-wrap:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  width: min(1600px, 100%);
+  margin: 0 auto;
+  border: 6px solid var(--ink-soft);
+  border-radius: 15px;
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.45);
+}
+
+.window-bar {
+  height: 39px;
+  display: grid;
+  grid-template-columns: 110px 1fr 54px;
+  align-items: center;
+  padding: 0 10px;
+  background: #efefef;
+  color: #3b3b3b;
+  border-bottom: 3px solid var(--ink-soft);
+}
+
+.window-lights {
+  display: flex;
+  gap: 10px;
+}
+
+.window-lights span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.window-lights span:nth-child(1) { background: #ff5f57; }
+.window-lights span:nth-child(2) { background: #febc2e; }
+.window-lights span:nth-child(3) { background: #28c840; }
+
+.window-title {
+  text-align: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+
+.tiny-button {
+  justify-self: end;
+  width: 32px;
+  height: 28px;
+  border: 2px solid #777;
+  border-radius: 4px;
+  background: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+main {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  background: var(--panel-dark);
+}
+
+.panel-border {
+  border: var(--border) solid var(--cream);
+  box-shadow:
+    inset 0 0 0 3px var(--shadow),
+    0 0 0 2px var(--shadow);
+  background: var(--panel);
+}
+
+.top-rack {
+  min-height: 285px;
+  display: grid;
+  grid-template-columns: minmax(330px, 0.78fr) minmax(420px, 1.5fr) minmax(300px, 0.8fr);
+  overflow: hidden;
+}
+
+.parameter-bank,
+.tempo-bank {
+  display: grid;
+  align-content: stretch;
+  background: var(--panel);
+}
+
+.parameter-bank {
+  border-right: 5px solid var(--cream);
+}
+
+.tempo-bank {
+  border-left: 5px solid var(--cream);
+  padding: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.parameter-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.3fr 112px;
+  align-items: center;
+  min-height: 54px;
+  border-bottom: 4px solid var(--cream);
+  padding: 0 10px;
+  font-weight: 900;
+  font-size: clamp(18px, 2vw, 30px);
+  letter-spacing: 0.03em;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.parameter-row:last-child {
+  border-bottom: 0;
+}
+
+.parameter-row output,
+.parameter-row input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  background: #9a8266;
+  border: 4px solid var(--cream);
+  border-bottom-color: var(--shadow);
+  border-right-color: var(--shadow);
+  color: #050505;
+  text-align: center;
+  font-weight: 900;
+  font-size: clamp(17px, 1.55vw, 25px);
+  padding: 6px;
+}
+
+.parameter-row input[type="range"] {
+  position: absolute;
+  inset: auto 9px 4px 9px;
+  width: calc(100% - 18px);
+  height: 5px;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+.compact-number-row {
+  grid-template-columns: 1.3fr 112px 42px;
+}
+
+.compact-number-row b {
+  font-size: 18px;
+  text-align: center;
+}
+
+.brand-panel {
+  display: grid;
+  grid-template-rows: 1fr 48px;
+  min-width: 0;
+  background:
+    linear-gradient(rgba(83, 69, 68, 0.75), rgba(83, 69, 68, 0.75)),
+    repeating-linear-gradient(135deg, transparent 0 18px, rgba(33, 27, 33, 0.24) 18px 24px),
+    repeating-linear-gradient(45deg, rgba(225, 211, 187, 0.12) 0 11px, transparent 11px 26px),
+    var(--panel-dark);
+}
+
+.brand-art {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.brand-main {
+  color: var(--cream);
+  font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+  font-size: clamp(70px, 9vw, 145px);
+  line-height: 0.78;
+  letter-spacing: -0.08em;
+  transform: skewX(-7deg);
+  -webkit-text-stroke: 4px var(--ink);
+  text-shadow:
+    7px 7px 0 var(--ink),
+    -5px -5px 0 var(--cream),
+    0 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+.brand-sub {
+  margin-top: 15px;
+  color: var(--cream);
+  font-size: clamp(24px, 3vw, 42px);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-shadow: 3px 3px 0 var(--ink);
+}
+
+.brand-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  border-top: 5px solid var(--cream);
+  background: var(--panel);
+  color: var(--cream);
+  font-size: clamp(13px, 1.5vw, 22px);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.value-box {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 4px;
+  border: 3px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  padding: 6px;
+  background: var(--tan);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.value-box input,
+.value-box output {
+  width: 100%;
+  border: 0;
+  padding: 7px;
+  background: rgba(0, 0, 0, 0.12);
+  color: #080808;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.readout-box output {
+  display: grid;
+  align-items: center;
+}
+
+.rack-button {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 4px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.rack-button:hover {
+  filter: brightness(1.12);
+}
+
+.rack-button:active,
+.rack-button.is-active {
+  border-color: var(--shadow);
+  border-right-color: var(--cream);
+  border-bottom-color: var(--cream);
+  transform: translate(1px, 1px);
+}
+
+.rack-button.danger {
+  background: #785a50;
+}
+
+.rack-button.export {
+  background: #8aa86c;
+}
+
+.tempo-bank > .rack-button {
+  grid-column: 1 / -1;
+}
+
+.file-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 8px;
+  gap: 7px;
+  font-weight: 900;
+}
+
+.file-label {
+  color: var(--cream);
+  font-size: clamp(16px, 2vw, 30px);
+  letter-spacing: 0.03em;
+}
+
+.filename {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  padding: 7px 10px;
+  font-size: clamp(14px, 1.5vw, 22px);
+}
+
+.wave-panel {
+  padding: 7px;
+}
+
+.wave-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(275px, 34vw, 470px);
+  overflow: hidden;
+  border: 5px solid var(--cream);
+  background: var(--black);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.wave-canvas-wrap.is-dragover {
+  box-shadow: inset 0 0 0 8px var(--green);
+}
+
+#waveformCanvas,
+#overviewCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.drop-hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: var(--green);
+  pointer-events: none;
+  text-shadow: 3px 3px 0 #173812;
+}
+
+.drop-hint strong {
+  font-size: clamp(28px, 5vw, 78px);
+}
+
+.drop-hint span {
+  color: var(--cream);
+  font-size: clamp(12px, 1.5vw, 20px);
+}
+
+.drop-hint.hidden {
+  display: none;
+}
+
+.overview-wrap {
+  height: 34px;
+  margin-top: 7px;
+  border: 4px solid var(--cream);
+  background: #111;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.wave-toolbar {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.toolbar-readout {
+  min-width: 230px;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 7px 10px;
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--cream);
+  border: 3px solid var(--cream);
+  font-weight: 900;
+}
+
+.slice-rack {
+  padding: 7px;
+}
+
+.slice-controls {
+  display: grid;
+  grid-template-columns: 1.15fr 1.2fr 1fr 0.9fr;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.control-group {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 76px;
+  padding: 7px;
+  border: 4px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  background: var(--tan);
+  font-weight: 900;
+}
+
+.control-title {
+  flex-basis: 100%;
+  color: var(--cream);
+  font-size: 18px;
+  text-shadow: 2px 2px 0 var(--shadow);
+}
+
+.control-group label,
+.midi-rack label,
+.sequencer-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 900;
+}
+
+.control-group select,
+.control-group input[type="number"],
+.midi-rack select,
+.midi-rack input,
+.sequencer-toolbar select {
+  min-height: 34px;
+  border: 3px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  background: #9f8769;
+  padding: 3px 7px;
+  font-weight: 900;
+}
+
+.control-group input[type="range"],
+.sequencer-toolbar input[type="range"] {
+  width: 110px;
+  accent-color: var(--green);
+}
+
+.checkbox-label {
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--green);
+}
+
+.status-group {
+  display: grid;
+  align-content: center;
+}
+
+.status-group output {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 5px;
+}
+
+.slice-pad {
+  position: relative;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 7px;
+  border: 4px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  background: #887259;
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+  user-select: none;
+}
+
+.slice-pad:hover,
+.slice-pad.is-selected {
+  background: #b49b78;
+}
+
+.slice-pad.is-playing {
+  background: var(--green);
+  box-shadow: inset 0 0 0 3px var(--black);
+}
+
+.slice-pad .pad-number {
+  font-size: 19px;
+}
+
+.slice-pad .pad-note {
+  justify-self: end;
+  color: var(--cream);
+  text-shadow: 2px 2px 0 var(--shadow);
+}
+
+.slice-pad .pad-time {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  opacity: 0.78;
+}
+
+.slice-pad .pad-key {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.empty-pads {
+  grid-column: 1 / -1;
+  padding: 24px;
+  text-align: center;
+  color: var(--cream);
+  font-weight: 900;
+}
+
+.midi-rack {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px;
+}
+
+.midi-title {
+  color: var(--cream);
+  font-size: clamp(18px, 2vw, 27px);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 var(--shadow);
+}
+
+.midi-readout,
+.midi-status {
+  padding: 7px 10px;
+  border: 3px solid var(--cream);
+  background: rgba(0, 0, 0, 0.13);
+  font-weight: 900;
+}
+
+.midi-status {
+  flex: 1;
+  min-width: 240px;
+  color: var(--cream);
+}
+
+.sequencer-panel {
+  padding: 7px;
+}
+
+.sequencer-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+}
+
+.transport-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.transport {
+  min-width: 100px;
+  background: #9c8667;
+}
+
+.transport-display {
+  flex: 1;
+  min-width: 230px;
+  padding: 8px 10px;
+  color: var(--green);
+  background: var(--black);
+  border: 4px solid var(--cream);
+  font-weight: 900;
+  text-align: center;
+}
+
+.sequencer-help {
+  margin: 7px 0;
+  color: var(--cream);
+  font-size: 12px;
+  text-align: center;
+}
+
+.sequencer-scroller {
+  max-height: 520px;
+  overflow: auto;
+  border: 4px solid var(--cream);
+  background: var(--black);
+  scrollbar-color: var(--green-dim) var(--ink);
+  scrollbar-width: thin;
+}
+
+.sequencer-grid {
+  width: max-content;
+  min-width: 100%;
+  background: var(--black);
+  --total-steps: 64;
+}
+
+.seq-row,
+.seq-header-row {
+  display: grid;
+  grid-template-columns: var(--row-label) repeat(var(--total-steps), var(--cell));
+  min-height: var(--cell);
+}
+
+.seq-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.seq-label,
+.seq-step-label,
+.seq-cell {
+  border-right: 1px solid #6b2b2b;
+  border-bottom: 1px solid #5c2424;
+}
+
+.seq-label {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px;
+  background: #7e694f;
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 900;
+  border-right: 4px solid var(--cream);
+  white-space: nowrap;
+}
+
+.seq-header-row .seq-label {
+  z-index: 7;
+  background: #4d4037;
+}
+
+.seq-step-label {
+  display: grid;
+  place-items: center;
+  min-width: var(--cell);
+  background: #52463c;
+  color: var(--cream);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.seq-step-label.bar-start,
+.seq-cell.bar-start {
+  border-left: 3px solid var(--cream);
+}
+
+.seq-step-label.beat-start,
+.seq-cell.beat-start {
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.25);
+}
+
+.seq-cell {
+  position: relative;
+  width: var(--cell);
+  min-width: var(--cell);
+  height: var(--cell);
+  padding: 0;
+  border-top: 0;
+  border-left: 0;
+  background: #111;
+  cursor: pointer;
+}
+
+.seq-cell:hover {
+  background: #293024;
+}
+
+.seq-cell.is-on::after,
+.seq-cell.is-accent::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(104, 255, 71, 0.7);
+}
+
+.seq-cell.is-accent::after {
+  inset: 2px;
+  background: var(--yellow);
+}
+
+.seq-cell.is-current,
+.seq-step-label.is-current {
+  background: #5b1a19;
+}
+
+.seq-cell.is-current::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--orange);
+  pointer-events: none;
+}
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 50;
+  transform: translate(-50%, 20px);
+  max-width: min(90vw, 720px);
+  padding: 12px 18px;
+  border: 4px solid var(--cream);
+  background: var(--black);
+  color: var(--green);
+  font-weight: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+dialog {
+  width: min(900px, calc(100vw - 28px));
+  border: 6px solid var(--cream);
+  padding: 0;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7);
+}
+
+dialog::backdrop {
+  background: rgba(18, 14, 20, 0.78);
+}
+
+.help-dialog-inner header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 4px solid var(--cream);
+  background: var(--panel-dark);
+  color: var(--cream);
+}
+
+.help-dialog-inner h2,
+.help-dialog-inner h3,
+.help-dialog-inner p {
+  margin-top: 0;
+}
+
+.help-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+  padding: 8px;
+}
+
+.help-columns section {
+  padding: 12px;
+  border: 4px solid var(--cream);
+  background: var(--tan);
+}
+
+kbd {
+  display: inline-block;
+  border: 2px solid var(--shadow);
+  border-bottom-width: 4px;
+  background: var(--cream);
+  padding: 1px 5px;
+  font-weight: 900;
+}
+
+@media (max-width: 1180px) {
+  .top-rack {
+    grid-template-columns: 1fr 1.4fr;
+  }
+
+  .tempo-bank {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 5px solid var(--cream);
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .tempo-bank > .rack-button {
+    grid-column: auto;
+  }
+
+  .slice-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  body { padding: 0; }
+
+  .app-shell {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .window-bar {
+    grid-template-columns: 72px 1fr 40px;
+  }
+
+  .window-lights span {
+    width: 13px;
+    height: 13px;
+  }
+
+  .top-rack {
+    grid-template-columns: 1fr;
+  }
+
+  .parameter-bank {
+    border-right: 0;
+  }
+
+  .brand-panel {
+    min-height: 220px;
+    border-top: 5px solid var(--cream);
+  }
+
+  .tempo-bank {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .file-strip {
+    grid-template-columns: 1fr auto auto;
+  }
+
+  .file-label {
+    grid-column: 1 / -1;
+  }
+
+  .wave-canvas-wrap {
+    height: 310px;
+  }
+
+  .slice-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .help-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .midi-rack {
+    align-items: stretch;
+  }
+
+  .midi-rack > * {
+    flex: 1 1 auto;
+  }
+
+  .seq-row,
+  .seq-header-row {
+    grid-template-columns: 125px repeat(var(--total-steps), 26px);
+  }
+
+  :root {
+    --cell: 26px;
+    --row-label: 125px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Prevent the wide sequencer's max-content size from widening the whole rack. */
+main {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+.top-rack,
+.file-strip,
+.wave-panel,
+.slice-rack,
+.midi-rack,
+.sequencer-panel,
+.sequencer-scroller {
+  min-width: 0;
+  width: 100%;
+}
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="window-bar">
+      <div class="window-lights" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="window-title">CLIP SESH SAMPLER — STANDALONE</div>
+      <button id="helpButton" class="tiny-button" type="button" aria-label="Show keyboard help">?</button>
+    </header>
+
+    <main>
+      <section class="top-rack panel-border">
+        <div class="parameter-bank" aria-label="Playback controls">
+          <label class="parameter-row">
+            <span>FINE TUNE</span>
+            <output id="fineTuneOutput">0 ¢</output>
+            <input id="fineTune" type="range" min="-100" max="100" value="0" step="1" />
+          </label>
+          <label class="parameter-row">
+            <span>PITCH</span>
+            <output id="pitchOutput">0 ST</output>
+            <input id="pitchSemitones" type="range" min="-24" max="24" value="0" step="1" />
+          </label>
+          <label class="parameter-row">
+            <span>VOLUME</span>
+            <output id="volumeOutput">80</output>
+            <input id="volume" type="range" min="0" max="100" value="80" step="1" />
+          </label>
+          <label class="parameter-row compact-number-row">
+            <span>ATTACK</span>
+            <input id="attack" type="number" min="0" max="5000" value="2" step="1" />
+            <b>MS</b>
+          </label>
+          <label class="parameter-row compact-number-row">
+            <span>RELEASE</span>
+            <input id="release" type="number" min="0" max="5000" value="8" step="1" />
+            <b>MS</b>
+          </label>
+        </div>
+
+        <div class="brand-panel">
+          <div class="brand-art" aria-label="Clip Sesh Sampler logo">
+            <div class="brand-main">CLIP SESH</div>
+            <div class="brand-sub">SAMPLER</div>
+          </div>
+          <div class="brand-footer">
+            <span>WEB AUDIO EDITION</span>
+            <span>UNOFFICIAL BROWSER BUILD</span>
+          </div>
+        </div>
+
+        <div class="tempo-bank" aria-label="Tempo and tape-rate controls">
+          <label class="value-box">
+            <span>SOURCE BPM</span>
+            <input id="sourceBpm" type="number" min="20" max="400" value="120" step="0.01" />
+          </label>
+          <label class="value-box">
+            <span>TARGET BPM</span>
+            <input id="targetBpm" type="number" min="20" max="400" value="120" step="0.01" />
+          </label>
+          <div class="value-box readout-box">
+            <span>TAPE RATE</span>
+            <output id="rateDisplay">1.000×</output>
+          </div>
+          <div class="value-box readout-box">
+            <span>EFFECTIVE PITCH</span>
+            <output id="effectivePitchDisplay">0.00 ST</output>
+          </div>
+          <button id="matchTempoButton" class="rack-button" type="button">MATCH SOURCE</button>
+        </div>
+      </section>
+
+      <section class="file-strip panel-border" aria-label="Audio file controls">
+        <div class="file-label">SAMPLENAME:</div>
+        <div id="fileName" class="filename" title="No sample loaded">DROP A WAV / AIFF / MP3 / FLAC / OGG / M4A</div>
+        <button id="loadButton" class="rack-button" type="button">LOAD</button>
+        <button id="clearButton" class="rack-button danger" type="button">CLEAR</button>
+        <input id="fileInput" type="file" accept="audio/*,.wav,.wave,.aif,.aiff,.flac,.ogg,.mp3,.m4a" hidden />
+      </section>
+
+      <section class="wave-panel panel-border" aria-label="Waveform editor">
+        <div id="dropZone" class="wave-canvas-wrap" tabindex="0">
+          <canvas id="waveformCanvas" aria-label="Interactive sample waveform"></canvas>
+          <div id="dropHint" class="drop-hint">
+            <strong>DROP AUDIO HERE</strong>
+            <span>Drag to select · Shift-drag to pan · Wheel to scroll · Ctrl/Cmd-wheel to zoom</span>
+          </div>
+        </div>
+        <div class="overview-wrap" title="Drag the highlighted viewport to scroll through the sample">
+          <canvas id="overviewCanvas" aria-label="Waveform overview"></canvas>
+        </div>
+        <div class="wave-toolbar">
+          <button id="zoomInButton" class="rack-button" type="button">ZOOM +</button>
+          <button id="zoomOutButton" class="rack-button" type="button">ZOOM −</button>
+          <button id="zoomFullButton" class="rack-button" type="button">SHOW ALL</button>
+          <button id="zoomSelectionButton" class="rack-button" type="button">ZOOM SELECT</button>
+          <button id="auditionSelectionButton" class="rack-button" type="button">AUDITION</button>
+          <button id="makeSliceButton" class="rack-button" type="button">SLICE SELECTION</button>
+          <button id="clearSelectionButton" class="rack-button" type="button">CLEAR SELECT</button>
+          <div id="selectionInfo" class="toolbar-readout">SELECT: —</div>
+        </div>
+      </section>
+
+      <section class="slice-rack panel-border">
+        <div class="slice-controls">
+          <div class="control-group">
+            <span class="control-title">SLICE MODE</span>
+            <label>COUNT
+              <select id="equalSliceCount">
+                <option>4</option><option>8</option><option selected>16</option><option>24</option><option>32</option>
+              </select>
+            </label>
+            <button id="equalSliceButton" class="rack-button" type="button">EQUAL SLICE</button>
+          </div>
+          <div class="control-group">
+            <span class="control-title">AUTO TRANSIENT</span>
+            <label>THRESH
+              <input id="transientThreshold" type="range" min="5" max="90" value="34" step="1" />
+              <output id="thresholdOutput">34</output>
+            </label>
+            <button id="transientSliceButton" class="rack-button" type="button">DETECT</button>
+          </div>
+          <div class="control-group">
+            <span class="control-title">TRIGGER</span>
+            <label>MODE
+              <select id="triggerMode">
+                <option value="oneshot" selected>ONE-SHOT</option>
+                <option value="gate">GATE</option>
+              </select>
+            </label>
+            <label class="checkbox-label"><input id="chokeToggle" type="checkbox" /> MONO CHOKE</label>
+          </div>
+          <div class="control-group status-group">
+            <span class="control-title">STATUS</span>
+            <output id="sliceCountDisplay">0 SLICES</output>
+            <output id="fileMeta">NO SAMPLE</output>
+          </div>
+        </div>
+
+        <div id="pads" class="pad-grid" aria-label="Slice trigger pads"></div>
+      </section>
+
+      <section class="midi-rack panel-border" aria-label="MIDI and keyboard setup">
+        <div class="midi-title">MIDI / COMPUTER KEYBOARD</div>
+        <button id="midiEnableButton" class="rack-button" type="button">ENABLE WEB MIDI</button>
+        <label>INPUT
+          <select id="midiInputSelect"><option value="all">ALL INPUTS</option></select>
+        </label>
+        <label>CHANNEL
+          <select id="midiChannelSelect">
+            <option value="all">ALL</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+          </select>
+        </label>
+        <label>ROOT MIDI
+          <input id="rootMidiNote" type="number" min="0" max="127" value="48" step="1" />
+          <output id="rootNoteLabel">C3</output>
+        </label>
+        <label class="checkbox-label"><input id="keyboardToggle" type="checkbox" checked /> COMPUTER KEYS</label>
+        <div class="midi-readout">OCT <output id="keyboardOctaveOutput">3</output></div>
+        <div class="midi-readout">VEL <output id="keyboardVelocityOutput">100</output></div>
+        <div id="midiStatus" class="midi-status">KEYBOARD READY · MIDI NOT ENABLED</div>
+      </section>
+
+      <section class="sequencer-panel panel-border" aria-label="Step sequencer">
+        <div class="sequencer-toolbar">
+          <div class="transport-buttons">
+            <button id="playButton" class="rack-button transport" type="button">▶ PLAY</button>
+            <button id="stopButton" class="rack-button transport" type="button">■ STOP</button>
+          </div>
+          <label>BARS
+            <select id="barsSelect">
+              <option>1</option><option>2</option><option>3</option><option selected>4</option>
+              <option>5</option><option>6</option><option>7</option><option>8</option>
+            </select>
+          </label>
+          <label>STEPS / BAR
+            <select id="stepsPerBarSelect">
+              <option>4</option><option>8</option><option selected>16</option>
+            </select>
+          </label>
+          <label>SWING
+            <input id="swing" type="range" min="0" max="70" value="0" step="1" />
+            <output id="swingOutput">0%</output>
+          </label>
+          <button id="clearPatternButton" class="rack-button danger" type="button">CLEAR PATTERN</button>
+          <button id="exportWavButton" class="rack-button export" type="button">SAVE LOOP TO WAV</button>
+          <div id="transportDisplay" class="transport-display">STOPPED · BAR 1 · STEP 1</div>
+        </div>
+
+        <div class="sequencer-help">Click: normal hit · click again: accent · click again: off · Shift-click: accent · Space: play/stop</div>
+        <div id="sequencerScroller" class="sequencer-scroller">
+          <div id="sequencerGrid" class="sequencer-grid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="helpDialog">
+    <form method="dialog" class="help-dialog-inner">
+      <header>
+        <h2>KEYS & WORKFLOW</h2>
+        <button class="rack-button" value="close">CLOSE</button>
+      </header>
+      <div class="help-columns">
+        <section>
+          <h3>Ableton-style computer MIDI</h3>
+          <p><kbd>A W S E D F T G Y H U J K O L P ;</kbd> play a chromatic keyboard.</p>
+          <p><kbd>Z</kbd>/<kbd>X</kbd> move the octave down/up. <kbd>C</kbd>/<kbd>V</kbd> lower/raise velocity. <kbd>M</kbd> toggles computer-key input.</p>
+        </section>
+        <section>
+          <h3>Waveform</h3>
+          <p>Drag to select a region. Shift-drag or wheel to pan. Ctrl/Cmd-wheel zooms around the pointer. Double-click adds a slice marker. Shift-click a marker removes it. Drag a marker to reposition it.</p>
+        </section>
+        <section>
+          <h3>Tempo and pitch</h3>
+          <p>The app uses tape-style playback: changing Source BPM → Target BPM changes speed and pitch together. PITCH and FINE TUNE add semitone/cents offsets on top.</p>
+        </section>
+        <section>
+          <h3>MIDI from a DAW</h3>
+          <p>Route Ableton to an operating-system virtual MIDI port, then choose that port after enabling Web MIDI. Incoming notes trigger slices starting at ROOT MIDI.</p>
+        </section>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const sleepFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
+  const dom = {
+    fineTune: $("fineTune"),
+    fineTuneOutput: $("fineTuneOutput"),
+    pitchSemitones: $("pitchSemitones"),
+    pitchOutput: $("pitchOutput"),
+    volume: $("volume"),
+    volumeOutput: $("volumeOutput"),
+    attack: $("attack"),
+    release: $("release"),
+    sourceBpm: $("sourceBpm"),
+    targetBpm: $("targetBpm"),
+    rateDisplay: $("rateDisplay"),
+    effectivePitchDisplay: $("effectivePitchDisplay"),
+    matchTempoButton: $("matchTempoButton"),
+    fileName: $("fileName"),
+    fileMeta: $("fileMeta"),
+    fileInput: $("fileInput"),
+    loadButton: $("loadButton"),
+    clearButton: $("clearButton"),
+    dropZone: $("dropZone"),
+    dropHint: $("dropHint"),
+    waveformCanvas: $("waveformCanvas"),
+    overviewCanvas: $("overviewCanvas"),
+    zoomInButton: $("zoomInButton"),
+    zoomOutButton: $("zoomOutButton"),
+    zoomFullButton: $("zoomFullButton"),
+    zoomSelectionButton: $("zoomSelectionButton"),
+    auditionSelectionButton: $("auditionSelectionButton"),
+    makeSliceButton: $("makeSliceButton"),
+    clearSelectionButton: $("clearSelectionButton"),
+    selectionInfo: $("selectionInfo"),
+    equalSliceCount: $("equalSliceCount"),
+    equalSliceButton: $("equalSliceButton"),
+    transientThreshold: $("transientThreshold"),
+    thresholdOutput: $("thresholdOutput"),
+    transientSliceButton: $("transientSliceButton"),
+    triggerMode: $("triggerMode"),
+    chokeToggle: $("chokeToggle"),
+    sliceCountDisplay: $("sliceCountDisplay"),
+    pads: $("pads"),
+    midiEnableButton: $("midiEnableButton"),
+    midiInputSelect: $("midiInputSelect"),
+    midiChannelSelect: $("midiChannelSelect"),
+    rootMidiNote: $("rootMidiNote"),
+    rootNoteLabel: $("rootNoteLabel"),
+    keyboardToggle: $("keyboardToggle"),
+    keyboardOctaveOutput: $("keyboardOctaveOutput"),
+    keyboardVelocityOutput: $("keyboardVelocityOutput"),
+    midiStatus: $("midiStatus"),
+    playButton: $("playButton"),
+    stopButton: $("stopButton"),
+    barsSelect: $("barsSelect"),
+    stepsPerBarSelect: $("stepsPerBarSelect"),
+    swing: $("swing"),
+    swingOutput: $("swingOutput"),
+    clearPatternButton: $("clearPatternButton"),
+    exportWavButton: $("exportWavButton"),
+    transportDisplay: $("transportDisplay"),
+    sequencerScroller: $("sequencerScroller"),
+    sequencerGrid: $("sequencerGrid"),
+    helpButton: $("helpButton"),
+    helpDialog: $("helpDialog"),
+    toast: $("toast"),
+  };
+
+  const KEYBOARD_LAYOUT = [
+    ["KeyA", 0, "A"],
+    ["KeyW", 1, "W"],
+    ["KeyS", 2, "S"],
+    ["KeyE", 3, "E"],
+    ["KeyD", 4, "D"],
+    ["KeyF", 5, "F"],
+    ["KeyT", 6, "T"],
+    ["KeyG", 7, "G"],
+    ["KeyY", 8, "Y"],
+    ["KeyH", 9, "H"],
+    ["KeyU", 10, "U"],
+    ["KeyJ", 11, "J"],
+    ["KeyK", 12, "K"],
+    ["KeyO", 13, "O"],
+    ["KeyL", 14, "L"],
+    ["KeyP", 15, "P"],
+    ["Semicolon", 16, ";"],
+  ];
+  const KEYBOARD_BY_CODE = new Map(KEYBOARD_LAYOUT.map(([code, offset, label]) => [code, { offset, label }]));
+
+  const state = {
+    audioContext: null,
+    masterGain: null,
+    buffer: null,
+    peaks: [],
+    loadedFileName: "",
+    objectUrls: new Set(),
+    boundaries: [],
+    selection: null,
+    selectedSlice: 0,
+    viewStart: 0,
+    viewDuration: 1,
+    drawQueued: false,
+    pointer: null,
+    overviewPointer: null,
+    voices: new Set(),
+    activeNotes: new Map(),
+    playhead: null,
+    padFlashCounts: new Map(),
+    keyboardOctave: 3,
+    keyboardVelocity: 100,
+    pressedKeys: new Map(),
+    midiAccess: null,
+    midiEnabled: false,
+    pattern: [],
+    sequencer: {
+      playing: false,
+      currentStep: 0,
+      nextStepTime: 0,
+      timer: null,
+      generation: 0,
+      visualStep: -1,
+    },
+    toastTimer: null,
+  };
+
+  function showToast(message, duration = 2600) {
+    window.clearTimeout(state.toastTimer);
+    dom.toast.textContent = message;
+    dom.toast.classList.add("show");
+    state.toastTimer = window.setTimeout(() => dom.toast.classList.remove("show"), duration);
+  }
+
+  function numericValue(input, fallback) {
+    const value = Number.parseFloat(input.value);
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function getSourceBpm() {
+    return clamp(numericValue(dom.sourceBpm, 120), 20, 400);
+  }
+
+  function getTargetBpm() {
+    return clamp(numericValue(dom.targetBpm, 120), 20, 400);
+  }
+
+  function getPlaybackRate() {
+    const tempoRatio = getTargetBpm() / getSourceBpm();
+    const pitch = numericValue(dom.pitchSemitones, 0);
+    const fine = numericValue(dom.fineTune, 0) / 100;
+    return clamp(tempoRatio * Math.pow(2, (pitch + fine) / 12), 1 / 32, 32);
+  }
+
+  function getVolumeGain() {
+    const normalized = clamp(numericValue(dom.volume, 80) / 100, 0, 1);
+    return normalized * normalized;
+  }
+
+  function getAttackSeconds() {
+    return clamp(numericValue(dom.attack, 2), 0, 5000) / 1000;
+  }
+
+  function getReleaseSeconds() {
+    return clamp(numericValue(dom.release, 8), 0, 5000) / 1000;
+  }
+
+  function updatePlaybackReadouts() {
+    const fine = numericValue(dom.fineTune, 0);
+    const pitch = numericValue(dom.pitchSemitones, 0);
+    const volume = numericValue(dom.volume, 80);
+    const rate = getPlaybackRate();
+    const effectivePitch = 12 * Math.log2(rate);
+
+    dom.fineTuneOutput.textContent = `${fine > 0 ? "+" : ""}${fine.toFixed(0)} ¢`;
+    dom.pitchOutput.textContent = `${pitch > 0 ? "+" : ""}${pitch.toFixed(0)} ST`;
+    dom.volumeOutput.textContent = volume.toFixed(0);
+    dom.rateDisplay.textContent = `${rate.toFixed(3)}×`;
+    dom.effectivePitchDisplay.textContent = `${effectivePitch >= 0 ? "+" : ""}${effectivePitch.toFixed(2)} ST`;
+
+    if (state.masterGain && state.audioContext) {
+      state.masterGain.gain.setTargetAtTime(getVolumeGain(), state.audioContext.currentTime, 0.01);
+    }
+  }
+
+  async function ensureAudioContext() {
+    if (!state.audioContext) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        throw new Error("This browser does not support the Web Audio API.");
+      }
+      state.audioContext = new AudioContextClass({ latencyHint: "interactive" });
+      state.masterGain = state.audioContext.createGain();
+      state.masterGain.gain.value = getVolumeGain();
+      state.masterGain.connect(state.audioContext.destination);
+    }
+    if (state.audioContext.state === "suspended") {
+      await state.audioContext.resume();
+    }
+    return state.audioContext;
+  }
+
+  function noteName(note) {
+    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const clamped = clamp(Math.round(note), 0, 127);
+    return `${names[clamped % 12]}${Math.floor(clamped / 12) - 1}`;
+  }
+
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds)) return "0:00.000";
+    const sign = seconds < 0 ? "-" : "";
+    const value = Math.abs(seconds);
+    const minutes = Math.floor(value / 60);
+    const remaining = value - minutes * 60;
+    return `${sign}${minutes}:${remaining.toFixed(3).padStart(6, "0")}`;
+  }
+
+  function getSlices() {
+    if (!state.buffer || state.boundaries.length < 2) return [];
+    const slices = [];
+    for (let index = 0; index < state.boundaries.length - 1; index += 1) {
+      slices.push({
+        index,
+        start: state.boundaries[index],
+        end: state.boundaries[index + 1],
+      });
+    }
+    return slices;
+  }
+
+  function normalizeSelection(selection = state.selection) {
+    if (!selection) return null;
+    return {
+      start: Math.min(selection.start, selection.end),
+      end: Math.max(selection.start, selection.end),
+    };
+  }
+
+  function updateSelectionReadout() {
+    const selection = normalizeSelection();
+    if (!selection || selection.end - selection.start < 0.0005) {
+      dom.selectionInfo.textContent = "SELECT: —";
+      return;
+    }
+    dom.selectionInfo.textContent = `SELECT: ${formatTime(selection.start)} → ${formatTime(selection.end)} · ${(selection.end - selection.start).toFixed(3)} S`;
+  }
+
+  function setBoundaries(boundaries, { resetPattern = false } = {}) {
+    if (!state.buffer) return;
+    const duration = state.buffer.duration;
+    const minimumGap = Math.min(0.005, duration / 1000);
+    const normalized = [...boundaries, 0, duration]
+      .map((value) => clamp(Number(value), 0, duration))
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b)
+      .filter((value, index, array) => index === 0 || value - array[index - 1] > minimumGap);
+
+    if (normalized[0] !== 0) normalized.unshift(0);
+    if (Math.abs(normalized[normalized.length - 1] - duration) > minimumGap) normalized.push(duration);
+    normalized[0] = 0;
+    normalized[normalized.length - 1] = duration;
+
+    state.boundaries = normalized.slice(0, 33);
+    state.boundaries[state.boundaries.length - 1] = duration;
+    state.selectedSlice = clamp(state.selectedSlice, 0, Math.max(0, getSlices().length - 1));
+
+    if (resetPattern) {
+      clearPattern(false);
+    } else {
+      prunePatternToSlices();
+    }
+    renderPads();
+    renderSequencer();
+    updateSliceStatus();
+    requestWaveDraw();
+  }
+
+  function makeEqualSlices(count, shouldToast = true) {
+    if (!state.buffer) {
+      showToast("Load an audio file first.");
+      return;
+    }
+    const sliceCount = clamp(Math.round(count), 1, 32);
+    const duration = state.buffer.duration;
+    const boundaries = Array.from({ length: sliceCount + 1 }, (_, index) => (duration * index) / sliceCount);
+    state.selectedSlice = 0;
+    state.selection = null;
+    updateSelectionReadout();
+    setBoundaries(boundaries, { resetPattern: true });
+    if (shouldToast) showToast(`Created ${sliceCount} equal slices.`);
+  }
+
+  function addBoundary(time) {
+    if (!state.buffer) return false;
+    if (getSlices().length >= 32) {
+      showToast("Maximum reached: 32 slices.");
+      return false;
+    }
+    const duration = state.buffer.duration;
+    const clamped = clamp(time, 0, duration);
+    if (clamped < 0.005 || duration - clamped < 0.005) return false;
+    if (state.boundaries.some((boundary) => Math.abs(boundary - clamped) < 0.005)) return false;
+    setBoundaries([...state.boundaries, clamped]);
+    state.selectedSlice = findSliceIndexAtTime(clamped + 0.0001);
+    renderPads();
+    renderSequencer();
+    return true;
+  }
+
+  function removeBoundary(boundaryIndex) {
+    if (!state.buffer || boundaryIndex <= 0 || boundaryIndex >= state.boundaries.length - 1) return;
+    const next = state.boundaries.filter((_, index) => index !== boundaryIndex);
+    setBoundaries(next);
+    showToast("Slice marker removed.");
+  }
+
+  function findSliceIndexAtTime(time) {
+    const slices = getSlices();
+    if (!slices.length) return 0;
+    for (let index = 0; index < slices.length; index += 1) {
+      if (time >= slices[index].start && time < slices[index].end) return index;
+    }
+    return slices.length - 1;
+  }
+
+  function updateSliceStatus() {
+    const count = getSlices().length;
+    dom.sliceCountDisplay.textContent = `${count} ${count === 1 ? "SLICE" : "SLICES"}`;
+    if (!state.buffer) {
+      dom.fileMeta.textContent = "NO SAMPLE";
+      return;
+    }
+    const channels = state.buffer.numberOfChannels === 1 ? "MONO" : `${state.buffer.numberOfChannels} CH`;
+    dom.fileMeta.textContent = `${formatTime(state.buffer.duration)} · ${Math.round(state.buffer.sampleRate)} HZ · ${channels}`;
+  }
+
+  function buildPeakPyramid(buffer) {
+    const blockSize = 256;
+    const blocks = Math.ceil(buffer.length / blockSize);
+    const min = new Float32Array(blocks);
+    const max = new Float32Array(blocks);
+    const channels = Array.from({ length: buffer.numberOfChannels }, (_, index) => buffer.getChannelData(index));
+
+    for (let block = 0; block < blocks; block += 1) {
+      const start = block * blockSize;
+      const end = Math.min(buffer.length, start + blockSize);
+      let blockMin = 1;
+      let blockMax = -1;
+      for (let sample = start; sample < end; sample += 1) {
+        for (let channel = 0; channel < channels.length; channel += 1) {
+          const value = channels[channel][sample];
+          if (value < blockMin) blockMin = value;
+          if (value > blockMax) blockMax = value;
+        }
+      }
+      min[block] = blockMin === 1 ? 0 : blockMin;
+      max[block] = blockMax === -1 ? 0 : blockMax;
+    }
+
+    const pyramid = [{ blockSize, min, max }];
+    let current = pyramid[0];
+    while (current.min.length > 2) {
+      const nextLength = Math.ceil(current.min.length / 2);
+      const nextMin = new Float32Array(nextLength);
+      const nextMax = new Float32Array(nextLength);
+      for (let index = 0; index < nextLength; index += 1) {
+        const first = index * 2;
+        const second = Math.min(current.min.length - 1, first + 1);
+        nextMin[index] = Math.min(current.min[first], current.min[second]);
+        nextMax[index] = Math.max(current.max[first], current.max[second]);
+      }
+      current = { blockSize: current.blockSize * 2, min: nextMin, max: nextMax };
+      pyramid.push(current);
+    }
+    return pyramid;
+  }
+
+  function prepareCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    const pixelWidth = Math.max(1, Math.round(width * dpr));
+    const pixelHeight = Math.max(1, Math.round(height * dpr));
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
+    const context = canvas.getContext("2d");
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    context.imageSmoothingEnabled = false;
+    return { context, width, height };
+  }
+
+  function choosePeakLevel(samplesPerPixel) {
+    let chosen = null;
+    for (const level of state.peaks) {
+      if (level.blockSize <= samplesPerPixel * 1.4) chosen = level;
+      else break;
+    }
+    return chosen;
+  }
+
+  function drawPeakWaveform(context, width, height, startTime, endTime, color, amplitudeScale = 0.9) {
+    if (!state.buffer) return;
+    const sampleRate = state.buffer.sampleRate;
+    const startSample = clamp(Math.floor(startTime * sampleRate), 0, state.buffer.length - 1);
+    const endSample = clamp(Math.ceil(endTime * sampleRate), startSample + 1, state.buffer.length);
+    const span = Math.max(1, endSample - startSample);
+    const samplesPerPixel = span / Math.max(1, width);
+    const level = choosePeakLevel(samplesPerPixel);
+    const channelData = level ? null : Array.from({ length: state.buffer.numberOfChannels }, (_, index) => state.buffer.getChannelData(index));
+    const center = height / 2;
+    const amplitude = height * 0.5 * amplitudeScale;
+
+    context.strokeStyle = color;
+    context.lineWidth = 1;
+    context.beginPath();
+
+    for (let x = 0; x < width; x += 1) {
+      const sample0 = startSample + Math.floor((x / width) * span);
+      const sample1 = startSample + Math.max(1, Math.floor(((x + 1) / width) * span));
+      let minimum = 1;
+      let maximum = -1;
+
+      if (level) {
+        const firstBlock = clamp(Math.floor(sample0 / level.blockSize), 0, level.min.length - 1);
+        const lastBlock = clamp(Math.ceil(sample1 / level.blockSize), firstBlock, level.min.length - 1);
+        for (let block = firstBlock; block <= lastBlock; block += 1) {
+          if (level.min[block] < minimum) minimum = level.min[block];
+          if (level.max[block] > maximum) maximum = level.max[block];
+        }
+      } else {
+        const rawEnd = Math.min(state.buffer.length, Math.max(sample0 + 1, sample1));
+        for (let sample = sample0; sample < rawEnd; sample += 1) {
+          for (let channel = 0; channel < channelData.length; channel += 1) {
+            const value = channelData[channel][sample];
+            if (value < minimum) minimum = value;
+            if (value > maximum) maximum = value;
+          }
+        }
+      }
+
+      if (minimum === 1) minimum = 0;
+      if (maximum === -1) maximum = 0;
+      const top = center - maximum * amplitude;
+      const bottom = center - minimum * amplitude;
+      context.moveTo(x + 0.5, top);
+      context.lineTo(x + 0.5, bottom);
+    }
+    context.stroke();
+  }
+
+  function timeToWaveX(time, width) {
+    return ((time - state.viewStart) / state.viewDuration) * width;
+  }
+
+  function drawWaveform() {
+    const { context, width, height } = prepareCanvas(dom.waveformCanvas);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#030303";
+    context.fillRect(0, 0, width, height);
+
+    context.strokeStyle = "rgba(255, 45, 37, 0.28)";
+    context.lineWidth = 1;
+    for (let index = 0; index <= 16; index += 1) {
+      const x = (index / 16) * width;
+      context.beginPath();
+      context.moveTo(Math.round(x) + 0.5, 0);
+      context.lineTo(Math.round(x) + 0.5, height);
+      context.stroke();
+    }
+    context.strokeStyle = "rgba(104, 255, 71, 0.24)";
+    context.beginPath();
+    context.moveTo(0, height / 2 + 0.5);
+    context.lineTo(width, height / 2 + 0.5);
+    context.stroke();
+
+    if (!state.buffer) return;
+
+    const viewEnd = state.viewStart + state.viewDuration;
+    const slices = getSlices();
+    const selected = slices[state.selectedSlice];
+    if (selected) {
+      const x0 = timeToWaveX(selected.start, width);
+      const x1 = timeToWaveX(selected.end, width);
+      context.fillStyle = "rgba(255, 173, 21, 0.09)";
+      context.fillRect(x0, 0, x1 - x0, height);
+    }
+
+    const selection = normalizeSelection();
+    if (selection) {
+      const x0 = timeToWaveX(selection.start, width);
+      const x1 = timeToWaveX(selection.end, width);
+      context.fillStyle = "rgba(255, 224, 124, 0.14)";
+      context.fillRect(x0, 0, x1 - x0, height);
+    }
+
+    drawPeakWaveform(context, width, height, state.viewStart, viewEnd, "#68ff47", 0.92);
+
+    for (let index = 1; index < state.boundaries.length - 1; index += 1) {
+      const boundary = state.boundaries[index];
+      if (boundary < state.viewStart || boundary > viewEnd) continue;
+      const x = timeToWaveX(boundary, width);
+      context.strokeStyle = "#ff2d25";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(x + 0.5, 0);
+      context.lineTo(x + 0.5, height);
+      context.stroke();
+      if (state.viewDuration < state.buffer.duration * 0.7 || getSlices().length <= 16) {
+        context.fillStyle = "#f4eadb";
+        context.font = "bold 11px Courier New";
+        context.fillText(String(index + 1).padStart(2, "0"), x + 4, 14);
+      }
+    }
+
+    if (selection) {
+      const x0 = timeToWaveX(selection.start, width);
+      const x1 = timeToWaveX(selection.end, width);
+      context.strokeStyle = "#ffe07c";
+      context.lineWidth = 2;
+      context.strokeRect(x0 + 0.5, 1.5, x1 - x0, height - 3);
+    }
+
+    if (state.playhead && state.audioContext) {
+      const now = state.audioContext.currentTime;
+      if (now >= state.playhead.when && now <= state.playhead.endWhen) {
+        const sourceTime = state.playhead.start + (now - state.playhead.when) * state.playhead.rate;
+        if (sourceTime >= state.viewStart && sourceTime <= viewEnd) {
+          const x = timeToWaveX(sourceTime, width);
+          context.strokeStyle = "#ffffff";
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(x + 0.5, 0);
+          context.lineTo(x + 0.5, height);
+          context.stroke();
+        }
+      }
+    }
+
+    const labelCount = 6;
+    context.font = "bold 10px Courier New";
+    context.fillStyle = "rgba(244, 234, 219, 0.75)";
+    context.textBaseline = "bottom";
+    for (let index = 0; index <= labelCount; index += 1) {
+      const x = (index / labelCount) * width;
+      const time = state.viewStart + (index / labelCount) * state.viewDuration;
+      context.fillText(formatTime(time), Math.min(width - 52, x + 3), height - 3);
+    }
+
+    context.fillStyle = "#ffad15";
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(18, 0);
+    context.lineTo(0, 18);
+    context.closePath();
+    context.fill();
+    context.beginPath();
+    context.moveTo(width, 0);
+    context.lineTo(width - 18, 0);
+    context.lineTo(width, 18);
+    context.closePath();
+    context.fill();
+  }
+
+  function drawOverview() {
+    const { context, width, height } = prepareCanvas(dom.overviewCanvas);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#030303";
+    context.fillRect(0, 0, width, height);
+    if (!state.buffer) return;
+
+    drawPeakWaveform(context, width, height, 0, state.buffer.duration, "#68ff47", 0.78);
+
+    const x = (state.viewStart / state.buffer.duration) * width;
+    const viewportWidth = Math.max(4, (state.viewDuration / state.buffer.duration) * width);
+    context.fillStyle = "rgba(244, 234, 219, 0.18)";
+    context.fillRect(x, 0, viewportWidth, height);
+    context.strokeStyle = "#f4eadb";
+    context.lineWidth = 2;
+    context.strokeRect(x + 1, 1, Math.max(1, viewportWidth - 2), height - 2);
+
+    const selection = normalizeSelection();
+    if (selection) {
+      const sx = (selection.start / state.buffer.duration) * width;
+      const sw = ((selection.end - selection.start) / state.buffer.duration) * width;
+      context.fillStyle = "rgba(255, 224, 124, 0.35)";
+      context.fillRect(sx, 0, sw, height);
+    }
+  }
+
+  function requestWaveDraw() {
+    if (state.drawQueued) return;
+    state.drawQueued = true;
+    requestAnimationFrame(() => {
+      state.drawQueued = false;
+      drawWaveform();
+      drawOverview();
+      if (state.playhead && state.audioContext && state.audioContext.currentTime <= state.playhead.endWhen) {
+        requestWaveDraw();
+      }
+    });
+  }
+
+  function clampView() {
+    if (!state.buffer) return;
+    state.viewDuration = clamp(state.viewDuration, Math.min(0.01, state.buffer.duration), state.buffer.duration);
+    state.viewStart = clamp(state.viewStart, 0, Math.max(0, state.buffer.duration - state.viewDuration));
+  }
+
+  function zoomAt(factor, centerTime = null) {
+    if (!state.buffer) return;
+    const oldDuration = state.viewDuration;
+    const minimum = Math.min(0.01, state.buffer.duration);
+    const newDuration = clamp(oldDuration * factor, minimum, state.buffer.duration);
+    const center = centerTime == null ? state.viewStart + oldDuration / 2 : centerTime;
+    const ratio = oldDuration > 0 ? (center - state.viewStart) / oldDuration : 0.5;
+    state.viewDuration = newDuration;
+    state.viewStart = center - ratio * newDuration;
+    clampView();
+    requestWaveDraw();
+  }
+
+  function showAllWaveform() {
+    if (!state.buffer) return;
+    state.viewStart = 0;
+    state.viewDuration = state.buffer.duration;
+    requestWaveDraw();
+  }
+
+  function waveEventTime(event) {
+    const rect = dom.waveformCanvas.getBoundingClientRect();
+    const fraction = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    return state.viewStart + fraction * state.viewDuration;
+  }
+
+  function findBoundaryNearEvent(event, maxPixels = 7) {
+    if (!state.buffer) return -1;
+    const rect = dom.waveformCanvas.getBoundingClientRect();
+    const pointerX = event.clientX - rect.left;
+    for (let index = 1; index < state.boundaries.length - 1; index += 1) {
+      const x = ((state.boundaries[index] - state.viewStart) / state.viewDuration) * rect.width;
+      if (Math.abs(pointerX - x) <= maxPixels) return index;
+    }
+    return -1;
+  }
+
+  function scheduleEnvelope(gainNode, when, outputDuration, level) {
+    const gain = gainNode.gain;
+    const attack = Math.min(getAttackSeconds(), Math.max(0, outputDuration * 0.45));
+    const release = Math.min(getReleaseSeconds(), Math.max(0.001, outputDuration * 0.8));
+    const end = when + outputDuration;
+    const attackEnd = when + attack;
+    const releaseStart = Math.max(attackEnd, end - release);
+
+    gain.cancelScheduledValues(when);
+    gain.setValueAtTime(0.0001, when);
+    if (attack > 0.0001) gain.linearRampToValueAtTime(level, attackEnd);
+    else gain.setValueAtTime(level, when);
+    gain.setValueAtTime(level, releaseStart);
+    gain.linearRampToValueAtTime(0.0001, end);
+  }
+
+  function createScheduledSource(context, destination, region, velocity, when) {
+    const rate = getPlaybackRate();
+    const sourceDuration = Math.max(0.001, region.end - region.start);
+    const outputDuration = sourceDuration / rate;
+    const source = context.createBufferSource();
+    const voiceGain = context.createGain();
+    source.buffer = state.buffer;
+    source.playbackRate.setValueAtTime(rate, when);
+    source.connect(voiceGain);
+    voiceGain.connect(destination);
+    scheduleEnvelope(voiceGain, when, outputDuration, clamp(velocity / 127, 0, 1));
+    source.start(when, region.start, sourceDuration);
+    return { source, gain: voiceGain, rate, sourceDuration, outputDuration, start: region.start, end: region.end, when };
+  }
+
+  function stopVoice(voice, when = null) {
+    if (!voice || voice.stopping) return;
+    voice.stopping = true;
+    const context = state.audioContext;
+    if (!context) return;
+    const stopTime = Math.max(context.currentTime, when == null ? context.currentTime : when);
+    const release = Math.max(0.004, getReleaseSeconds());
+    const gainParam = voice.gain.gain;
+    try {
+      if (typeof gainParam.cancelAndHoldAtTime === "function") {
+        gainParam.cancelAndHoldAtTime(stopTime);
+      } else {
+        gainParam.cancelScheduledValues(stopTime);
+        gainParam.setValueAtTime(Math.max(0.0001, gainParam.value), stopTime);
+      }
+      gainParam.linearRampToValueAtTime(0.0001, stopTime + release);
+      voice.source.stop(stopTime + release + 0.01);
+    } catch {
+      // A source that already ended can safely be ignored.
+    }
+  }
+
+  function stopAllVoices({ clearPressedKeys = true } = {}) {
+    for (const voice of [...state.voices]) stopVoice(voice);
+    state.activeNotes.clear();
+    if (clearPressedKeys) state.pressedKeys.clear();
+  }
+
+  function flashPad(index, when, duration) {
+    if (!state.audioContext) return;
+    const delay = Math.max(0, (when - state.audioContext.currentTime) * 1000);
+    window.setTimeout(() => {
+      const pad = dom.pads.querySelector(`[data-slice="${index}"]`);
+      if (!pad) return;
+      const count = (state.padFlashCounts.get(index) || 0) + 1;
+      state.padFlashCounts.set(index, count);
+      pad.classList.add("is-playing");
+      window.setTimeout(() => {
+        const remaining = Math.max(0, (state.padFlashCounts.get(index) || 1) - 1);
+        state.padFlashCounts.set(index, remaining);
+        if (remaining === 0) pad.classList.remove("is-playing");
+      }, clamp(duration * 1000, 55, 240));
+    }, delay);
+  }
+
+  async function playRegion(region, velocity = 100, when = null, noteId = null, sliceIndex = null) {
+    if (!state.buffer) return null;
+    const context = await ensureAudioContext();
+    const scheduledTime = Math.max(context.currentTime + 0.002, when == null ? context.currentTime + 0.006 : when);
+
+    if (dom.chokeToggle.checked) stopAllVoices({ clearPressedKeys: false });
+    if (noteId && state.activeNotes.has(noteId)) stopVoice(state.activeNotes.get(noteId));
+
+    const voice = createScheduledSource(context, state.masterGain, region, velocity, scheduledTime);
+    state.voices.add(voice);
+    if (noteId) state.activeNotes.set(noteId, voice);
+    voice.noteId = noteId;
+
+    voice.source.onended = () => {
+      state.voices.delete(voice);
+      if (voice.noteId && state.activeNotes.get(voice.noteId) === voice) {
+        state.activeNotes.delete(voice.noteId);
+      }
+    };
+
+    state.playhead = {
+      when: scheduledTime,
+      endWhen: scheduledTime + voice.outputDuration,
+      start: region.start,
+      end: region.end,
+      rate: voice.rate,
+    };
+    requestWaveDraw();
+    if (sliceIndex != null) flashPad(sliceIndex, scheduledTime, voice.outputDuration);
+    return voice;
+  }
+
+  function playSlice(index, velocity = 100, when = null, noteId = null) {
+    const slice = getSlices()[index];
+    if (!slice) return null;
+    state.selectedSlice = index;
+    renderPadSelection();
+    requestWaveDraw();
+    return playRegion(slice, velocity, when, noteId, index);
+  }
+
+  function releaseNote(noteId) {
+    const voice = state.activeNotes.get(noteId);
+    if (!voice) return;
+    if (dom.triggerMode.value === "gate") stopVoice(voice);
+    state.activeNotes.delete(noteId);
+  }
+
+  function keyboardLabelForMidi(note) {
+    const base = (state.keyboardOctave + 1) * 12;
+    for (const [, offset, label] of KEYBOARD_LAYOUT) {
+      if (base + offset === note) return label;
+    }
+    return "";
+  }
+
+  function renderPads() {
+    dom.pads.innerHTML = "";
+    const slices = getSlices();
+    if (!slices.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-pads";
+      empty.textContent = "LOAD AUDIO TO CREATE SLICE PADS";
+      dom.pads.appendChild(empty);
+      return;
+    }
+
+    const root = clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127);
+    const fragment = document.createDocumentFragment();
+    for (const slice of slices) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "slice-pad";
+      button.dataset.slice = String(slice.index);
+      button.innerHTML = `
+        <span class="pad-number">SLICE ${String(slice.index + 1).padStart(2, "0")}</span>
+        <span class="pad-note">${noteName(root + slice.index)}</span>
+        <span class="pad-time">${formatTime(slice.start)} → ${formatTime(slice.end)}</span>
+        <span class="pad-key">${keyboardLabelForMidi(root + slice.index)}</span>
+      `;
+      if (slice.index === state.selectedSlice) button.classList.add("is-selected");
+      fragment.appendChild(button);
+    }
+    dom.pads.appendChild(fragment);
+  }
+
+  function renderPadSelection() {
+    for (const pad of dom.pads.querySelectorAll(".slice-pad")) {
+      pad.classList.toggle("is-selected", Number(pad.dataset.slice) === state.selectedSlice);
+    }
+  }
+
+  function totalSteps() {
+    return clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 8) * clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
+  }
+
+  function resizePattern(newLength = totalSteps()) {
+    const oldPattern = state.pattern;
+    state.pattern = Array.from({ length: newLength }, (_, index) => oldPattern[index] || new Map());
+  }
+
+  function prunePatternToSlices() {
+    const sliceCount = getSlices().length;
+    for (const step of state.pattern) {
+      for (const sliceIndex of [...step.keys()]) {
+        if (sliceIndex >= sliceCount) step.delete(sliceIndex);
+      }
+    }
+  }
+
+  function clearPattern(shouldToast = true) {
+    state.pattern = Array.from({ length: totalSteps() }, () => new Map());
+    renderSequencer();
+    if (shouldToast) showToast("Pattern cleared.");
+  }
+
+  function renderSequencer() {
+    resizePattern(totalSteps());
+    prunePatternToSlices();
+    dom.sequencerGrid.innerHTML = "";
+    const steps = totalSteps();
+    const bars = clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 8);
+    const stepsPerBar = clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
+    const stepsPerBeat = stepsPerBar / 4;
+    dom.sequencerGrid.style.setProperty("--total-steps", String(steps));
+
+    const header = document.createElement("div");
+    header.className = "seq-header-row";
+    const headerLabel = document.createElement("div");
+    headerLabel.className = "seq-label";
+    headerLabel.textContent = `${bars} BAR LOOP · ${getTargetBpm().toFixed(2)} BPM`;
+    header.appendChild(headerLabel);
+    for (let step = 0; step < steps; step += 1) {
+      const label = document.createElement("div");
+      label.className = "seq-step-label";
+      label.dataset.step = String(step);
+      const withinBar = step % stepsPerBar;
+      const bar = Math.floor(step / stepsPerBar) + 1;
+      if (withinBar === 0) {
+        label.classList.add("bar-start");
+        label.textContent = `B${bar}`;
+      } else {
+        if (Number.isInteger(withinBar / stepsPerBeat)) label.classList.add("beat-start");
+        label.textContent = String(withinBar + 1);
+      }
+      header.appendChild(label);
+    }
+    dom.sequencerGrid.appendChild(header);
+
+    const slices = getSlices();
+    if (!slices.length) {
+      const row = document.createElement("div");
+      row.className = "seq-row";
+      const label = document.createElement("div");
+      label.className = "seq-label";
+      label.textContent = "LOAD AUDIO TO SEQUENCE";
+      row.appendChild(label);
+      dom.sequencerGrid.appendChild(row);
+      return;
+    }
+
+    const root = clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127);
+    const fragment = document.createDocumentFragment();
+    for (const slice of slices) {
+      const row = document.createElement("div");
+      row.className = "seq-row";
+      const label = document.createElement("button");
+      label.type = "button";
+      label.className = "seq-label";
+      label.dataset.auditionSlice = String(slice.index);
+      label.textContent = `${String(slice.index + 1).padStart(2, "0")} · ${noteName(root + slice.index)}`;
+      row.appendChild(label);
+
+      for (let step = 0; step < steps; step += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "seq-cell";
+        cell.dataset.slice = String(slice.index);
+        cell.dataset.step = String(step);
+        cell.setAttribute("aria-label", `Slice ${slice.index + 1}, step ${step + 1}`);
+        if (step % stepsPerBar === 0) cell.classList.add("bar-start");
+        else if (Number.isInteger((step % stepsPerBar) / stepsPerBeat)) cell.classList.add("beat-start");
+        const velocity = state.pattern[step].get(slice.index) || 0;
+        if (velocity >= 120) cell.classList.add("is-accent");
+        else if (velocity > 0) cell.classList.add("is-on");
+        row.appendChild(cell);
+      }
+      fragment.appendChild(row);
+    }
+    dom.sequencerGrid.appendChild(fragment);
+    setCurrentStepVisual(state.sequencer.playing ? state.sequencer.visualStep : -1);
+  }
+
+  function updateSequenceCell(sliceIndex, step) {
+    const cell = dom.sequencerGrid.querySelector(`.seq-cell[data-slice="${sliceIndex}"][data-step="${step}"]`);
+    if (!cell) return;
+    const velocity = state.pattern[step]?.get(sliceIndex) || 0;
+    cell.classList.toggle("is-on", velocity > 0 && velocity < 120);
+    cell.classList.toggle("is-accent", velocity >= 120);
+  }
+
+  function setCurrentStepVisual(step) {
+    if (state.sequencer.visualStep >= 0) {
+      for (const element of dom.sequencerGrid.querySelectorAll(`[data-step="${state.sequencer.visualStep}"].is-current`)) {
+        element.classList.remove("is-current");
+      }
+    }
+    state.sequencer.visualStep = step;
+    if (step >= 0) {
+      for (const element of dom.sequencerGrid.querySelectorAll(`[data-step="${step}"]`)) {
+        element.classList.add("is-current");
+      }
+      const stepsPerBar = Number(dom.stepsPerBarSelect.value);
+      const bar = Math.floor(step / stepsPerBar) + 1;
+      const withinBar = (step % stepsPerBar) + 1;
+      dom.transportDisplay.textContent = `PLAYING · BAR ${bar} · STEP ${withinBar}`;
+    } else {
+      dom.transportDisplay.textContent = "STOPPED · BAR 1 · STEP 1";
+    }
+  }
+
+  function stepDurationSeconds() {
+    const stepsPerBar = clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
+    return (60 / getTargetBpm()) * (4 / stepsPerBar);
+  }
+
+  function swingDelayForStep(step) {
+    if (step % 2 === 0) return 0;
+    const amount = clamp(numericValue(dom.swing, 0), 0, 70) / 100;
+    return stepDurationSeconds() * amount * 0.5;
+  }
+
+  function scheduleSequencerStep(step, baseTime, generation) {
+    const eventTime = baseTime + swingDelayForStep(step);
+    const events = state.pattern[step] || new Map();
+    for (const [sliceIndex, velocity] of events.entries()) {
+      playSlice(sliceIndex, velocity, eventTime, null);
+    }
+    const delay = state.audioContext ? Math.max(0, (eventTime - state.audioContext.currentTime) * 1000) : 0;
+    window.setTimeout(() => {
+      if (!state.sequencer.playing || state.sequencer.generation !== generation) return;
+      setCurrentStepVisual(step);
+      if (step % Number(dom.stepsPerBarSelect.value) === 0) {
+        const label = dom.sequencerGrid.querySelector(`.seq-step-label[data-step="${step}"]`);
+        if (label) {
+          const left = label.offsetLeft - dom.sequencerScroller.clientWidth * 0.35;
+          if (left < dom.sequencerScroller.scrollLeft || left > dom.sequencerScroller.scrollLeft + dom.sequencerScroller.clientWidth * 0.75) {
+            dom.sequencerScroller.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+          }
+        }
+      }
+    }, delay);
+  }
+
+  function schedulerTick() {
+    if (!state.sequencer.playing || !state.audioContext) return;
+    const lookAhead = 0.12;
+    const generation = state.sequencer.generation;
+    while (state.sequencer.nextStepTime < state.audioContext.currentTime + lookAhead) {
+      const step = state.sequencer.currentStep;
+      scheduleSequencerStep(step, state.sequencer.nextStepTime, generation);
+      state.sequencer.nextStepTime += stepDurationSeconds();
+      state.sequencer.currentStep = (step + 1) % totalSteps();
+    }
+  }
+
+  async function startSequencer() {
+    if (state.sequencer.playing) return;
+    if (!state.buffer) {
+      showToast("Load a sample before starting the sequencer.");
+      return;
+    }
+    await ensureAudioContext();
+    state.sequencer.playing = true;
+    state.sequencer.generation += 1;
+    state.sequencer.currentStep = 0;
+    state.sequencer.nextStepTime = state.audioContext.currentTime + 0.07;
+    dom.playButton.classList.add("is-active");
+    dom.playButton.textContent = "▶ PLAYING";
+    schedulerTick();
+    state.sequencer.timer = window.setInterval(schedulerTick, 25);
+  }
+
+  function stopSequencer() {
+    state.sequencer.playing = false;
+    state.sequencer.generation += 1;
+    if (state.sequencer.timer) window.clearInterval(state.sequencer.timer);
+    state.sequencer.timer = null;
+    state.sequencer.currentStep = 0;
+    dom.playButton.classList.remove("is-active");
+    dom.playButton.textContent = "▶ PLAY";
+    setCurrentStepVisual(-1);
+    stopAllVoices();
+  }
+
+  async function toggleSequencer() {
+    if (state.sequencer.playing) stopSequencer();
+    else await startSequencer();
+  }
+
+  function detectBpmFromFilename(filename) {
+    const name = filename.replace(/\.[^.]+$/, "");
+    const explicit = name.match(/(?:^|[^0-9])(\d{2,3}(?:\.\d+)?)\s*bpm(?:[^0-9]|$)/i);
+    if (explicit) {
+      const value = Number(explicit[1]);
+      if (value >= 40 && value <= 300) return value;
+    }
+    const tokens = name.match(/\d{2,3}(?:\.\d+)?/g) || [];
+    for (const token of tokens) {
+      const value = Number(token);
+      if (value >= 50 && value <= 240) return value;
+    }
+    return null;
+  }
+
+  async function loadAudioFile(file) {
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase() || "";
+    const likelyAudio = file.type.startsWith("audio/") || ["wav", "wave", "aif", "aiff", "mp3", "flac", "ogg", "m4a", "aac"].includes(extension);
+    if (!likelyAudio) {
+      showToast("That file does not look like an audio file.");
+      return;
+    }
+
+    stopSequencer();
+    dom.fileName.textContent = `DECODING ${file.name.toUpperCase()}…`;
+    dom.fileMeta.textContent = "PLEASE WAIT";
+    await sleepFrame();
+
+    try {
+      const context = await ensureAudioContext();
+      const arrayBuffer = await file.arrayBuffer();
+      const decoded = await context.decodeAudioData(arrayBuffer.slice(0));
+      if (!decoded.length || !decoded.duration) throw new Error("The decoded audio buffer was empty.");
+
+      state.buffer = decoded;
+      state.loadedFileName = file.name;
+      state.peaks = buildPeakPyramid(decoded);
+      state.selection = null;
+      state.selectedSlice = 0;
+      state.viewStart = 0;
+      state.viewDuration = decoded.duration;
+      dom.fileName.textContent = file.name.toUpperCase();
+      dom.fileName.title = file.name;
+      dom.dropHint.classList.add("hidden");
+
+      const detectedBpm = detectBpmFromFilename(file.name);
+      if (detectedBpm) {
+        dom.sourceBpm.value = String(detectedBpm);
+        dom.targetBpm.value = String(detectedBpm);
+      }
+      updatePlaybackReadouts();
+      updateSelectionReadout();
+      makeEqualSlices(Number(dom.equalSliceCount.value), false);
+      updateSliceStatus();
+      requestWaveDraw();
+      showToast(`Loaded ${file.name}${detectedBpm ? ` · detected ${detectedBpm} BPM from the filename` : ""}.`, 3400);
+    } catch (error) {
+      console.error(error);
+      state.buffer = null;
+      state.peaks = [];
+      state.boundaries = [];
+      dom.fileName.textContent = "COULD NOT DECODE AUDIO";
+      dom.fileMeta.textContent = "TRY WAV, MP3, AIFF, FLAC, OGG, OR M4A IN A MODERN BROWSER";
+      dom.dropHint.classList.remove("hidden");
+      renderPads();
+      renderSequencer();
+      requestWaveDraw();
+      showToast(`Audio load failed: ${error.message || "unsupported or damaged file"}`, 5000);
+    }
+  }
+
+  function clearSample() {
+    stopSequencer();
+    state.buffer = null;
+    state.peaks = [];
+    state.boundaries = [];
+    state.selection = null;
+    state.selectedSlice = 0;
+    state.viewStart = 0;
+    state.viewDuration = 1;
+    state.loadedFileName = "";
+    dom.fileInput.value = "";
+    dom.fileName.textContent = "DROP A WAV / AIFF / MP3 / FLAC / OGG / M4A";
+    dom.fileName.title = "No sample loaded";
+    dom.dropHint.classList.remove("hidden");
+    updateSelectionReadout();
+    updateSliceStatus();
+    clearPattern(false);
+    renderPads();
+    requestWaveDraw();
+    showToast("Sample cleared.");
+  }
+
+  function detectTransients() {
+    if (!state.buffer) {
+      showToast("Load an audio file first.");
+      return;
+    }
+    const sampleRate = state.buffer.sampleRate;
+    const windowSize = 1024;
+    const hop = 512;
+    const frameCount = Math.max(1, Math.floor((state.buffer.length - windowSize) / hop));
+    const energies = new Float32Array(frameCount);
+    const channels = Array.from({ length: state.buffer.numberOfChannels }, (_, index) => state.buffer.getChannelData(index));
+
+    let maximumEnergy = 0;
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      const start = frame * hop;
+      let sum = 0;
+      for (let sample = 0; sample < windowSize; sample += 1) {
+        let peak = 0;
+        const sampleIndex = start + sample;
+        for (let channel = 0; channel < channels.length; channel += 1) {
+          peak = Math.max(peak, Math.abs(channels[channel][sampleIndex] || 0));
+        }
+        sum += peak * peak;
+      }
+      const rms = Math.sqrt(sum / windowSize);
+      energies[frame] = rms;
+      if (rms > maximumEnergy) maximumEnergy = rms;
+    }
+
+    const flux = new Float32Array(frameCount);
+    let mean = 0;
+    for (let frame = 1; frame < frameCount; frame += 1) {
+      const value = Math.max(0, energies[frame] - energies[frame - 1]);
+      flux[frame] = value;
+      mean += value;
+    }
+    mean /= Math.max(1, frameCount - 1);
+    let variance = 0;
+    for (let frame = 1; frame < frameCount; frame += 1) {
+      const delta = flux[frame] - mean;
+      variance += delta * delta;
+    }
+    const standardDeviation = Math.sqrt(variance / Math.max(1, frameCount - 1));
+    const sensitivity = clamp(numericValue(dom.transientThreshold, 34), 5, 90) / 100;
+    const cutoff = mean + standardDeviation * (0.35 + sensitivity * 2.9);
+    const minimumFrames = Math.max(1, Math.round((0.055 * sampleRate) / hop));
+    const candidates = [];
+    let lastAccepted = -minimumFrames;
+
+    for (let frame = 2; frame < frameCount - 2; frame += 1) {
+      const value = flux[frame];
+      if (value < cutoff || energies[frame] < maximumEnergy * 0.025) continue;
+      if (value < flux[frame - 1] || value <= flux[frame + 1]) continue;
+      if (frame - lastAccepted < minimumFrames) {
+        const previous = candidates[candidates.length - 1];
+        if (previous && value > previous.score) {
+          previous.frame = frame;
+          previous.score = value;
+          lastAccepted = frame;
+        }
+        continue;
+      }
+      candidates.push({ frame, score: value });
+      lastAccepted = frame;
+    }
+
+    const strongest = candidates
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 31)
+      .sort((a, b) => a.frame - b.frame);
+    const boundaries = [0, ...strongest.map((candidate) => (candidate.frame * hop) / sampleRate), state.buffer.duration];
+
+    if (strongest.length === 0) {
+      showToast("No strong transients found. Lower THRESH or use equal slicing.", 4000);
+      return;
+    }
+    state.selectedSlice = 0;
+    state.selection = null;
+    updateSelectionReadout();
+    setBoundaries(boundaries, { resetPattern: true });
+    showToast(`Detected ${strongest.length} transient markers · ${getSlices().length} slices.`);
+  }
+
+  function updateMidiUiStatus(message = null) {
+    dom.keyboardOctaveOutput.textContent = String(state.keyboardOctave);
+    dom.keyboardVelocityOutput.textContent = String(state.keyboardVelocity);
+    dom.rootNoteLabel.textContent = noteName(numericValue(dom.rootMidiNote, 48));
+    if (message) {
+      dom.midiStatus.textContent = message;
+    } else if (state.midiEnabled) {
+      const connected = state.midiAccess ? [...state.midiAccess.inputs.values()].filter((input) => input.state === "connected").length : 0;
+      dom.midiStatus.textContent = `KEYBOARD ${dom.keyboardToggle.checked ? "ON" : "OFF"} · WEB MIDI ON · ${connected} INPUT${connected === 1 ? "" : "S"}`;
+    } else {
+      dom.midiStatus.textContent = `KEYBOARD ${dom.keyboardToggle.checked ? "READY" : "OFF"} · MIDI NOT ENABLED`;
+    }
+  }
+
+  function refreshMidiInputs() {
+    const selected = dom.midiInputSelect.value;
+    dom.midiInputSelect.innerHTML = '<option value="all">ALL INPUTS</option>';
+    if (state.midiAccess) {
+      for (const input of state.midiAccess.inputs.values()) {
+        const option = document.createElement("option");
+        option.value = input.id;
+        option.textContent = `${input.name || "MIDI INPUT"}${input.manufacturer ? ` · ${input.manufacturer}` : ""}`;
+        option.disabled = input.state !== "connected";
+        dom.midiInputSelect.appendChild(option);
+        input.onmidimessage = handleMidiMessage;
+      }
+    }
+    if ([...dom.midiInputSelect.options].some((option) => option.value === selected && !option.disabled)) {
+      dom.midiInputSelect.value = selected;
+    }
+    updateMidiUiStatus();
+  }
+
+  async function enableMidi() {
+    if (!navigator.requestMIDIAccess) {
+      updateMidiUiStatus("WEB MIDI IS NOT AVAILABLE IN THIS BROWSER");
+      showToast("Web MIDI is unavailable. Computer-key triggering still works.", 4200);
+      return;
+    }
+    try {
+      state.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+      state.midiEnabled = true;
+      state.midiAccess.onstatechange = refreshMidiInputs;
+      refreshMidiInputs();
+      dom.midiEnableButton.textContent = "WEB MIDI ENABLED";
+      dom.midiEnableButton.classList.add("is-active");
+      showToast("Web MIDI enabled. Choose a port or leave ALL INPUTS selected.");
+    } catch (error) {
+      console.error(error);
+      updateMidiUiStatus("MIDI PERMISSION DENIED OR UNAVAILABLE");
+      showToast("Could not enable Web MIDI. Use HTTPS/localhost and grant MIDI permission.", 5000);
+    }
+  }
+
+  function handleMidiMessage(event) {
+    const input = event.currentTarget;
+    if (dom.midiInputSelect.value !== "all" && input.id !== dom.midiInputSelect.value) return;
+    const [status = 0, data1 = 0, data2 = 0] = event.data || [];
+    const command = status & 0xf0;
+    const channel = (status & 0x0f) + 1;
+    if (dom.midiChannelSelect.value !== "all" && Number(dom.midiChannelSelect.value) !== channel) return;
+
+    const note = data1;
+    const velocity = data2;
+    const root = clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127);
+    const sliceIndex = note - root;
+    const noteId = `midi:${input.id}:${channel}:${note}`;
+
+    if (command === 0x90 && velocity > 0) {
+      if (sliceIndex >= 0 && sliceIndex < getSlices().length) {
+        playSlice(sliceIndex, velocity, null, noteId);
+        updateMidiUiStatus(`${input.name || "MIDI"} · CH ${channel} · ${noteName(note)} · VEL ${velocity}`);
+      }
+    } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
+      releaseNote(noteId);
+    }
+  }
+
+  function isTypingTarget(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    return target.isContentEditable || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName);
+  }
+
+  function releaseAllComputerKeys() {
+    for (const [, value] of state.pressedKeys) releaseNote(value.noteId);
+    state.pressedKeys.clear();
+  }
+
+  function handleKeyDown(event) {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (isTypingTarget(event.target)) return;
+
+    if (event.code === "Space") {
+      event.preventDefault();
+      if (!event.repeat) toggleSequencer();
+      return;
+    }
+    if (event.code === "KeyM" && !event.repeat) {
+      dom.keyboardToggle.checked = !dom.keyboardToggle.checked;
+      if (!dom.keyboardToggle.checked) releaseAllComputerKeys();
+      updateMidiUiStatus();
+      showToast(`Computer keyboard ${dom.keyboardToggle.checked ? "enabled" : "disabled"}.`);
+      return;
+    }
+    if (!dom.keyboardToggle.checked) return;
+
+    if (event.code === "KeyZ" && !event.repeat) {
+      event.preventDefault();
+      state.keyboardOctave = clamp(state.keyboardOctave - 1, -1, 8);
+      updateMidiUiStatus();
+      renderPads();
+      return;
+    }
+    if (event.code === "KeyX" && !event.repeat) {
+      event.preventDefault();
+      state.keyboardOctave = clamp(state.keyboardOctave + 1, -1, 8);
+      updateMidiUiStatus();
+      renderPads();
+      return;
+    }
+    if (event.code === "KeyC" && !event.repeat) {
+      event.preventDefault();
+      state.keyboardVelocity = clamp(state.keyboardVelocity - 20, 1, 127);
+      updateMidiUiStatus();
+      return;
+    }
+    if (event.code === "KeyV" && !event.repeat) {
+      event.preventDefault();
+      state.keyboardVelocity = clamp(state.keyboardVelocity + 20, 1, 127);
+      updateMidiUiStatus();
+      return;
+    }
+
+    const mapped = KEYBOARD_BY_CODE.get(event.code);
+    if (!mapped || event.repeat || state.pressedKeys.has(event.code)) return;
+    event.preventDefault();
+    const note = (state.keyboardOctave + 1) * 12 + mapped.offset;
+    const root = clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127);
+    const sliceIndex = note - root;
+    const noteId = `keyboard:${event.code}`;
+    state.pressedKeys.set(event.code, { note, noteId });
+    if (sliceIndex >= 0 && sliceIndex < getSlices().length) {
+      playSlice(sliceIndex, state.keyboardVelocity, null, noteId);
+      updateMidiUiStatus(`COMPUTER KEY ${mapped.label} · ${noteName(note)} · VEL ${state.keyboardVelocity}`);
+    }
+  }
+
+  function handleKeyUp(event) {
+    const pressed = state.pressedKeys.get(event.code);
+    if (!pressed) return;
+    event.preventDefault();
+    releaseNote(pressed.noteId);
+    state.pressedKeys.delete(event.code);
+  }
+
+  function audioBufferToWav(buffer) {
+    const channels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const frameCount = buffer.length;
+    const bytesPerSample = 2;
+    const blockAlign = channels * bytesPerSample;
+    const output = new ArrayBuffer(44 + frameCount * blockAlign);
+    const view = new DataView(output);
+    let offset = 0;
+
+    const writeString = (value) => {
+      for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index));
+      offset += value.length;
+    };
+    const writeUint16 = (value) => {
+      view.setUint16(offset, value, true);
+      offset += 2;
+    };
+    const writeUint32 = (value) => {
+      view.setUint32(offset, value, true);
+      offset += 4;
+    };
+
+    writeString("RIFF");
+    writeUint32(36 + frameCount * blockAlign);
+    writeString("WAVE");
+    writeString("fmt ");
+    writeUint32(16);
+    writeUint16(1);
+    writeUint16(channels);
+    writeUint32(sampleRate);
+    writeUint32(sampleRate * blockAlign);
+    writeUint16(blockAlign);
+    writeUint16(16);
+    writeString("data");
+    writeUint32(frameCount * blockAlign);
+
+    const channelData = Array.from({ length: channels }, (_, channel) => buffer.getChannelData(channel));
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      for (let channel = 0; channel < channels; channel += 1) {
+        const sample = clamp(channelData[channel][frame], -1, 1);
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        offset += 2;
+      }
+    }
+    return output;
+  }
+
+  function safeBaseName(filename) {
+    const base = (filename || "clip-sesh-loop").replace(/\.[^.]+$/, "");
+    return base.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "") || "clip-sesh-loop";
+  }
+
+  async function exportLoopToWav() {
+    if (!state.buffer) {
+      showToast("Load a sample before exporting.");
+      return;
+    }
+    const eventCount = state.pattern.reduce((total, step) => total + step.size, 0);
+    if (eventCount === 0) {
+      showToast("Add at least one sequencer hit before exporting.");
+      return;
+    }
+
+    const originalText = dom.exportWavButton.textContent;
+    dom.exportWavButton.disabled = true;
+    dom.exportWavButton.textContent = "RENDERING…";
+    await sleepFrame();
+
+    try {
+      const bars = Number(dom.barsSelect.value);
+      const stepsPerBar = Number(dom.stepsPerBarSelect.value);
+      const duration = bars * 4 * (60 / getTargetBpm());
+      const sampleRate = clamp(Math.round(state.buffer.sampleRate), 22050, 48000);
+      const channelCount = Math.min(2, Math.max(1, state.buffer.numberOfChannels));
+      const frameCount = Math.max(1, Math.ceil(duration * sampleRate));
+      const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (!OfflineContext) throw new Error("OfflineAudioContext is unavailable in this browser.");
+      const offline = new OfflineContext(channelCount, frameCount, sampleRate);
+      const master = offline.createGain();
+      master.gain.value = getVolumeGain();
+      master.connect(offline.destination);
+      const stepDuration = (60 / getTargetBpm()) * (4 / stepsPerBar);
+
+      for (let step = 0; step < state.pattern.length; step += 1) {
+        const when = step * stepDuration + swingDelayForStep(step);
+        if (when >= duration) continue;
+        for (const [sliceIndex, velocity] of state.pattern[step]) {
+          const slice = getSlices()[sliceIndex];
+          if (!slice) continue;
+          createScheduledSource(offline, master, slice, velocity, when);
+        }
+      }
+
+      const rendered = await offline.startRendering();
+      const wav = audioBufferToWav(rendered);
+      const blob = new Blob([wav], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+      state.objectUrls.add(url);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${safeBaseName(state.loadedFileName)}-${bars}bar-${getTargetBpm().toFixed(2).replace(".", "_")}bpm.wav`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+        state.objectUrls.delete(url);
+      }, 30000);
+      showToast(`Rendered ${bars} bars to a ${channelCount === 1 ? "mono" : "stereo"} WAV.`);
+    } catch (error) {
+      console.error(error);
+      showToast(`WAV export failed: ${error.message || "unknown error"}`, 5000);
+    } finally {
+      dom.exportWavButton.disabled = false;
+      dom.exportWavButton.textContent = originalText;
+    }
+  }
+
+  function handleWavePointerDown(event) {
+    if (!state.buffer || event.button !== 0) return;
+    const boundaryIndex = findBoundaryNearEvent(event);
+    if (boundaryIndex >= 0 && event.shiftKey) {
+      event.preventDefault();
+      removeBoundary(boundaryIndex);
+      return;
+    }
+
+    dom.waveformCanvas.setPointerCapture(event.pointerId);
+    const rect = dom.waveformCanvas.getBoundingClientRect();
+    const time = waveEventTime(event);
+    if (boundaryIndex >= 0) {
+      state.pointer = {
+        mode: "marker",
+        pointerId: event.pointerId,
+        boundaryIndex,
+        startX: event.clientX,
+      };
+      dom.dropZone.style.cursor = "ew-resize";
+    } else if (event.shiftKey) {
+      state.pointer = {
+        mode: "pan",
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        originalViewStart: state.viewStart,
+        width: rect.width,
+      };
+      dom.dropZone.style.cursor = "grabbing";
+    } else {
+      state.pointer = {
+        mode: "select",
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startTime: time,
+        moved: false,
+      };
+      state.selection = { start: time, end: time };
+      updateSelectionReadout();
+      requestWaveDraw();
+    }
+  }
+
+  function handleWavePointerMove(event) {
+    if (!state.pointer || state.pointer.pointerId !== event.pointerId || !state.buffer) return;
+    if (state.pointer.mode === "pan") {
+      const deltaPixels = state.pointer.startX - event.clientX;
+      state.viewStart = state.pointer.originalViewStart + (deltaPixels / state.pointer.width) * state.viewDuration;
+      clampView();
+      requestWaveDraw();
+    } else if (state.pointer.mode === "marker") {
+      const index = state.pointer.boundaryIndex;
+      const previous = state.boundaries[index - 1];
+      const next = state.boundaries[index + 1];
+      const minimumGap = Math.min(0.005, state.buffer.duration / 1000);
+      state.boundaries[index] = clamp(waveEventTime(event), previous + minimumGap, next - minimumGap);
+      requestWaveDraw();
+    } else if (state.pointer.mode === "select") {
+      if (Math.abs(event.clientX - state.pointer.startX) > 2) state.pointer.moved = true;
+      state.selection.end = waveEventTime(event);
+      updateSelectionReadout();
+      requestWaveDraw();
+    }
+  }
+
+  function handleWavePointerUp(event) {
+    if (!state.pointer || state.pointer.pointerId !== event.pointerId) return;
+    const pointer = state.pointer;
+    state.pointer = null;
+    dom.dropZone.style.cursor = "crosshair";
+    try {
+      dom.waveformCanvas.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture can already be released by the browser.
+    }
+
+    if (pointer.mode === "marker") {
+      state.boundaries.sort((a, b) => a - b);
+      state.selectedSlice = clamp(pointer.boundaryIndex, 0, getSlices().length - 1);
+      renderPads();
+      renderSequencer();
+      updateSliceStatus();
+    } else if (pointer.mode === "select") {
+      const selection = normalizeSelection();
+      if (!pointer.moved || !selection || selection.end - selection.start < 0.003) {
+        const time = waveEventTime(event);
+        state.selection = null;
+        state.selectedSlice = findSliceIndexAtTime(time);
+        renderPadSelection();
+      } else {
+        state.selection = selection;
+        state.selectedSlice = findSliceIndexAtTime(selection.start);
+        renderPadSelection();
+      }
+      updateSelectionReadout();
+      requestWaveDraw();
+    }
+  }
+
+  function handleOverviewPointerDown(event) {
+    if (!state.buffer || event.button !== 0) return;
+    const rect = dom.overviewCanvas.getBoundingClientRect();
+    const x = clamp(event.clientX - rect.left, 0, rect.width);
+    const viewportStartX = (state.viewStart / state.buffer.duration) * rect.width;
+    const viewportWidth = (state.viewDuration / state.buffer.duration) * rect.width;
+    const withinViewport = x >= viewportStartX && x <= viewportStartX + viewportWidth;
+    const offset = withinViewport ? x - viewportStartX : viewportWidth / 2;
+    state.overviewPointer = { pointerId: event.pointerId, offset, rectWidth: rect.width };
+    dom.overviewCanvas.setPointerCapture(event.pointerId);
+    state.viewStart = (x / rect.width) * state.buffer.duration - (offset / rect.width) * state.buffer.duration;
+    clampView();
+    requestWaveDraw();
+  }
+
+  function handleOverviewPointerMove(event) {
+    if (!state.overviewPointer || state.overviewPointer.pointerId !== event.pointerId || !state.buffer) return;
+    const rect = dom.overviewCanvas.getBoundingClientRect();
+    const x = clamp(event.clientX - rect.left, 0, rect.width);
+    state.viewStart = (x / rect.width) * state.buffer.duration - (state.overviewPointer.offset / rect.width) * state.buffer.duration;
+    clampView();
+    requestWaveDraw();
+  }
+
+  function handleOverviewPointerUp(event) {
+    if (!state.overviewPointer || state.overviewPointer.pointerId !== event.pointerId) return;
+    state.overviewPointer = null;
+    try {
+      dom.overviewCanvas.releasePointerCapture(event.pointerId);
+    } catch {
+      // Ignore.
+    }
+  }
+
+  function wireEvents() {
+    for (const input of [dom.fineTune, dom.pitchSemitones, dom.volume, dom.sourceBpm, dom.targetBpm]) {
+      input.addEventListener("input", () => {
+        updatePlaybackReadouts();
+        if (input === dom.targetBpm) renderSequencer();
+      });
+    }
+    dom.attack.addEventListener("change", updatePlaybackReadouts);
+    dom.release.addEventListener("change", updatePlaybackReadouts);
+    dom.matchTempoButton.addEventListener("click", () => {
+      dom.targetBpm.value = dom.sourceBpm.value || "120";
+      updatePlaybackReadouts();
+      renderSequencer();
+    });
+
+    dom.loadButton.addEventListener("click", () => dom.fileInput.click());
+    dom.fileInput.addEventListener("change", () => loadAudioFile(dom.fileInput.files?.[0]));
+    dom.clearButton.addEventListener("click", clearSample);
+
+    for (const eventName of ["dragenter", "dragover"]) {
+      dom.dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dom.dropZone.classList.add("is-dragover");
+      });
+    }
+    for (const eventName of ["dragleave", "drop"]) {
+      dom.dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dom.dropZone.classList.remove("is-dragover");
+      });
+    }
+    dom.dropZone.addEventListener("drop", (event) => loadAudioFile(event.dataTransfer?.files?.[0]));
+
+    dom.waveformCanvas.addEventListener("pointerdown", handleWavePointerDown);
+    dom.waveformCanvas.addEventListener("pointermove", handleWavePointerMove);
+    dom.waveformCanvas.addEventListener("pointerup", handleWavePointerUp);
+    dom.waveformCanvas.addEventListener("pointercancel", handleWavePointerUp);
+    dom.waveformCanvas.addEventListener("dblclick", (event) => {
+      if (!state.buffer) return;
+      event.preventDefault();
+      if (addBoundary(waveEventTime(event))) showToast("Slice marker added.");
+    });
+    dom.waveformCanvas.addEventListener("wheel", (event) => {
+      if (!state.buffer) return;
+      event.preventDefault();
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        zoomAt(Math.exp(event.deltaY * 0.0024), waveEventTime(event));
+      } else {
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        state.viewStart += (delta / 850) * state.viewDuration;
+        clampView();
+        requestWaveDraw();
+      }
+    }, { passive: false });
+
+    dom.overviewCanvas.addEventListener("pointerdown", handleOverviewPointerDown);
+    dom.overviewCanvas.addEventListener("pointermove", handleOverviewPointerMove);
+    dom.overviewCanvas.addEventListener("pointerup", handleOverviewPointerUp);
+    dom.overviewCanvas.addEventListener("pointercancel", handleOverviewPointerUp);
+
+    dom.zoomInButton.addEventListener("click", () => zoomAt(0.5));
+    dom.zoomOutButton.addEventListener("click", () => zoomAt(2));
+    dom.zoomFullButton.addEventListener("click", showAllWaveform);
+    dom.zoomSelectionButton.addEventListener("click", () => {
+      const selection = normalizeSelection();
+      if (!state.buffer || !selection || selection.end - selection.start < 0.001) {
+        showToast("Drag a waveform selection first.");
+        return;
+      }
+      const padding = Math.max(0.002, (selection.end - selection.start) * 0.06);
+      state.viewStart = selection.start - padding;
+      state.viewDuration = selection.end - selection.start + padding * 2;
+      clampView();
+      requestWaveDraw();
+    });
+    dom.auditionSelectionButton.addEventListener("click", () => {
+      const selection = normalizeSelection();
+      if (!selection || selection.end - selection.start < 0.001) {
+        const slice = getSlices()[state.selectedSlice];
+        if (slice) playRegion(slice, state.keyboardVelocity, null, null, state.selectedSlice);
+        else showToast("Select a waveform region first.");
+        return;
+      }
+      playRegion(selection, state.keyboardVelocity);
+    });
+    dom.makeSliceButton.addEventListener("click", () => {
+      const selection = normalizeSelection();
+      if (!selection || selection.end - selection.start < 0.005) {
+        showToast("Drag a selection of at least 5 ms first.");
+        return;
+      }
+      const addedStart = addBoundary(selection.start);
+      const addedEnd = addBoundary(selection.end);
+      state.selectedSlice = findSliceIndexAtTime(selection.start + 0.0001);
+      renderPads();
+      renderSequencer();
+      requestWaveDraw();
+      if (addedStart || addedEnd) showToast("Selection converted to slice boundaries.");
+      else showToast("Those slice boundaries already exist.");
+    });
+    dom.clearSelectionButton.addEventListener("click", () => {
+      state.selection = null;
+      updateSelectionReadout();
+      requestWaveDraw();
+    });
+
+    dom.equalSliceButton.addEventListener("click", () => makeEqualSlices(Number(dom.equalSliceCount.value)));
+    dom.transientThreshold.addEventListener("input", () => {
+      dom.thresholdOutput.textContent = dom.transientThreshold.value;
+    });
+    dom.transientSliceButton.addEventListener("click", detectTransients);
+
+    dom.pads.addEventListener("pointerdown", (event) => {
+      const pad = event.target.closest(".slice-pad");
+      if (!pad) return;
+      event.preventDefault();
+      const sliceIndex = Number(pad.dataset.slice);
+      const noteId = `pad:${event.pointerId}`;
+      pad.setPointerCapture?.(event.pointerId);
+      pad.dataset.noteId = noteId;
+      playSlice(sliceIndex, state.keyboardVelocity, null, noteId);
+    });
+    const releasePadPointer = (event) => {
+      const pad = event.target.closest(".slice-pad");
+      if (!pad) return;
+      const noteId = pad.dataset.noteId;
+      if (noteId) releaseNote(noteId);
+      delete pad.dataset.noteId;
+    };
+    dom.pads.addEventListener("pointerup", releasePadPointer);
+    dom.pads.addEventListener("pointercancel", releasePadPointer);
+    dom.pads.addEventListener("click", (event) => {
+      if (event.detail !== 0) return;
+      const pad = event.target.closest(".slice-pad");
+      if (pad) playSlice(Number(pad.dataset.slice), state.keyboardVelocity);
+    });
+
+    dom.midiEnableButton.addEventListener("click", enableMidi);
+    dom.rootMidiNote.addEventListener("input", () => {
+      dom.rootMidiNote.value = String(clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127));
+      updateMidiUiStatus();
+      renderPads();
+      renderSequencer();
+    });
+    dom.keyboardToggle.addEventListener("change", () => {
+      if (!dom.keyboardToggle.checked) releaseAllComputerKeys();
+      updateMidiUiStatus();
+    });
+
+    dom.playButton.addEventListener("click", startSequencer);
+    dom.stopButton.addEventListener("click", stopSequencer);
+    dom.barsSelect.addEventListener("change", () => {
+      stopSequencer();
+      resizePattern(totalSteps());
+      renderSequencer();
+    });
+    dom.stepsPerBarSelect.addEventListener("change", () => {
+      stopSequencer();
+      resizePattern(totalSteps());
+      renderSequencer();
+    });
+    dom.swing.addEventListener("input", () => {
+      dom.swingOutput.textContent = `${dom.swing.value}%`;
+    });
+    dom.clearPatternButton.addEventListener("click", () => clearPattern(true));
+    dom.exportWavButton.addEventListener("click", exportLoopToWav);
+
+    dom.sequencerGrid.addEventListener("click", (event) => {
+      const audition = event.target.closest("[data-audition-slice]");
+      if (audition) {
+        playSlice(Number(audition.dataset.auditionSlice), state.keyboardVelocity);
+        return;
+      }
+      const cell = event.target.closest(".seq-cell");
+      if (!cell) return;
+      const sliceIndex = Number(cell.dataset.slice);
+      const step = Number(cell.dataset.step);
+      const current = state.pattern[step].get(sliceIndex) || 0;
+      let next;
+      if (event.shiftKey) next = 127;
+      else if (current === 0) next = 100;
+      else if (current < 120) next = 127;
+      else next = 0;
+      if (next) state.pattern[step].set(sliceIndex, next);
+      else state.pattern[step].delete(sliceIndex);
+      updateSequenceCell(sliceIndex, step);
+      playSlice(sliceIndex, next || state.keyboardVelocity);
+    });
+    dom.sequencerGrid.addEventListener("contextmenu", (event) => {
+      const cell = event.target.closest(".seq-cell");
+      if (!cell) return;
+      event.preventDefault();
+      const sliceIndex = Number(cell.dataset.slice);
+      const step = Number(cell.dataset.step);
+      state.pattern[step].delete(sliceIndex);
+      updateSequenceCell(sliceIndex, step);
+    });
+
+    dom.helpButton.addEventListener("click", () => dom.helpDialog.showModal());
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", releaseAllComputerKeys);
+    window.addEventListener("resize", requestWaveDraw);
+    window.addEventListener("beforeunload", () => {
+      for (const url of state.objectUrls) URL.revokeObjectURL(url);
+    });
+  }
+
+  function initialize() {
+    updatePlaybackReadouts();
+    updateSelectionReadout();
+    updateSliceStatus();
+    updateMidiUiStatus();
+    dom.thresholdOutput.textContent = dom.transientThreshold.value;
+    dom.swingOutput.textContent = `${dom.swing.value}%`;
+    resizePattern(totalSteps());
+    renderPads();
+    renderSequencer();
+    requestWaveDraw();
+    wireEvents();
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("./sw.js").catch(() => {
+        // Offline support is optional; failure should not affect the sampler.
+      });
+    }
+  }
+
+  initialize();
+})();
+
+  </script>
+</body>
+</html>
