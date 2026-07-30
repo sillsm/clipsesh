@@ -36,8 +36,8 @@
   --shadow: 0 14px 40px rgba(0, 0, 0, .48);
   --topbar-h: 48px;
   --fx-h: 86px;
-  --wave-h: 150px;
-  --browser-h: 300px;
+  --wave-h: clamp(90px, 13dvh, 150px);
+  --browser-h: clamp(170px, 25dvh, 300px);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
@@ -54,9 +54,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .app-shell {
   width: 100vw;
   height: 100dvh;
-  min-height: 620px;
+  min-height: 0;
   display: grid;
-  grid-template-rows: var(--topbar-h) var(--fx-h) var(--wave-h) minmax(260px, 1fr) var(--browser-h);
+  grid-template-rows: var(--topbar-h) var(--fx-h) var(--wave-h) minmax(300px, 1fr) var(--browser-h);
   background: linear-gradient(#0c0e11, #07080a);
   overflow: hidden;
 }
@@ -160,7 +160,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .waveform-tools output { min-width: 45px; text-align: center; font-size: 9px; color: #b6bec8; }
 
 /* Decks & mixer */
-.performance-area { min-height: 0; display: grid; grid-template-columns: minmax(380px, 1fr) 230px minmax(380px, 1fr); background: #090b0e; overflow: hidden; border-bottom: 1px solid #000; }
+.performance-area { min-height: 300px; display: grid; grid-template-columns: minmax(380px, 1fr) 230px minmax(380px, 1fr); grid-template-rows: minmax(0, 1fr); align-items: stretch; background: #090b0e; overflow: hidden; border-bottom: 1px solid #000; }
+.performance-area > .deck, .performance-area > .mixer { min-height: 0; height: 100%; }
 .deck { min-width: 0; min-height: 0; display: grid; grid-template-rows: 52px 35px 1fr; border-right: 1px solid #000; background: linear-gradient(#14171b, #0d0f12); }
 .deck-2 { border-right: 0; border-left: 1px solid #252a31; }
 .deck-header { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto 24px; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #2b3037; background: #1b1e23; }
@@ -181,7 +182,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .overview-playhead { position: absolute; top: 0; bottom: 0; width: 2px; left: 0; background: var(--red); pointer-events: none; transform: translateX(-1px); }
 .deck-2 .overview-playhead { background: var(--orange); }
 .deck-body { min-height: 0; display: grid; grid-template-columns: minmax(230px, 1.4fr) minmax(150px, .85fr); overflow: hidden; }
-.transport-bank { min-width: 0; min-height: 0; padding: 6px 7px; display: grid; grid-template-rows: 28px 20px minmax(86px, 1fr) 42px; border-right: 1px solid #2b3037; }
+.transport-bank { min-width: 0; min-height: 0; padding: 6px 7px; display: grid; grid-template-rows: 28px 20px minmax(112px, 1fr) 42px; border-right: 1px solid #2b3037; }
 .sync-row { display: flex; align-items: center; gap: 5px; }
 .sync-row button { height: 25px; border: 1px solid #3a414a; border-radius: 3px; background: #1b1f24; color: #aab2bc; font-size: 8px; font-weight: 800; cursor: pointer; line-height: .95; }
 .sync-button { width: 46px; }
@@ -202,7 +203,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .play-button.playing { background: #12331d; box-shadow: 0 0 13px rgba(49,214,107,.32); }
 .play-button.playing .play-symbol { display: none; }
 .play-button.playing .pause-symbol { display: inline; }
-.jog-wheel { justify-self: center; width: clamp(92px, 10vw, 132px); aspect-ratio: 1; border-radius: 50%; position: relative; background: radial-gradient(circle, #07090b 0 47%, #1b2026 48% 51%, #aab3bc 52% 54%, #262b31 55% 62%, #d7dce2 63% 65%, #171a1f 66% 73%, #3b424b 74% 75%, #0c0e11 76%); box-shadow: 0 1px 8px #000, inset 0 0 12px #000; touch-action: none; cursor: grab; }
+.jog-wheel { justify-self: center; width: clamp(88px, 9vw, 124px); aspect-ratio: 1; border-radius: 50%; position: relative; background: radial-gradient(circle, #07090b 0 47%, #1b2026 48% 51%, #aab3bc 52% 54%, #262b31 55% 62%, #d7dce2 63% 65%, #171a1f 66% 73%, #3b424b 74% 75%, #0c0e11 76%); box-shadow: 0 1px 8px #000, inset 0 0 12px #000; touch-action: none; cursor: grab; }
 .jog-wheel:active { cursor: grabbing; }
 .jog-ring { position: absolute; inset: 7%; border-radius: 50%; transform: rotate(var(--jog-angle, 0deg)); }
 .jog-ring i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--red); top: 6px; left: 50%; box-shadow: 0 0 5px rgba(255,45,61,.8); }
@@ -241,14 +242,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .hotcue-grid span { font-size: 9px; font-weight: 900; }
 
 .mixer { min-width: 0; display: grid; grid-template-columns: 1fr 66px 1fr; grid-template-rows: minmax(0, 1fr) 48px; gap: 0; background: linear-gradient(#181b20, #0d0f12); box-shadow: inset 0 0 0 1px #282d34; }
-.channel-strip { min-width: 0; padding: 5px 5px 2px; display: grid; grid-template-rows: 36px 54px repeat(4, minmax(30px, 1fr)) 26px minmax(70px, 1.3fr); align-items: center; justify-items: center; border-right: 1px solid #272c33; }
+.channel-strip { min-width: 0; padding: 5px 5px 2px; display: grid; grid-template-rows: 34px 44px repeat(4, 42px) 26px minmax(68px, 1fr); row-gap: 2px; align-items: center; align-content: stretch; justify-items: center; border-right: 1px solid #272c33; }
 .channel-strip[data-channel="2"] { border-left: 1px solid #272c33; border-right: 0; }
 .rotary-control { width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #919aa5; font-size: 7px; font-weight: 800; }
+.rotary-control.trim { height: 32px; flex-direction: row; justify-content: center; gap: 4px; }
+.rotary-control.trim .knob { width: 28px; height: 28px; }
 .knob { --p: 50%; appearance: none; width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(from 225deg, var(--blue) 0 var(--p), #343a42 var(--p) 75%, transparent 75% 100%), radial-gradient(circle, #1b2026 0 44%, #0b0d10 45% 55%, #4a515a 56% 59%, #171a1f 60%); cursor: ns-resize; }
 .channel-strip[data-channel="2"] .knob { background: conic-gradient(from 225deg, var(--orange) 0 var(--p), #343a42 var(--p) 75%, transparent 75% 100%), radial-gradient(circle, #1b2026 0 44%, #0b0d10 45% 55%, #4a515a 56% 59%, #171a1f 60%); }
 .knob::-webkit-slider-thumb { appearance: none; width: 5px; height: 5px; background: white; border-radius: 50%; opacity: 0; }
 .knob::-moz-range-thumb { width: 5px; height: 5px; opacity: 0; }
-.channel-meter { height: 48px; width: 9px; align-self: center; background: repeating-linear-gradient(to top, #252b32 0 3px, #101317 3px 5px); border: 1px solid #303740; display: flex; align-items: flex-end; }
+.channel-meter { height: 42px; width: 9px; align-self: center; background: repeating-linear-gradient(to top, #252b32 0 3px, #101317 3px 5px); border: 1px solid #303740; display: flex; align-items: flex-end; }
 .channel-meter .meter-fill { width: 100%; height: 1%; background: linear-gradient(to top, var(--green), var(--green) 68%, var(--orange) 68% 88%, var(--red) 88%); }
 .headphone-cue, .mixer-small { height: 22px; border: 1px solid #3d444d; border-radius: 2px; background: #1a1e23; font-size: 7px; font-weight: 900; cursor: pointer; }
 .channel-fader-label { height: 100%; display: flex; flex-direction: column; align-items: center; color: #747d87; font-size: 7px; font-weight: 800; }
@@ -387,6 +390,51 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .mapping-table th { background: #1a1e24; color: #929ca7; font-size: 8px; }
 .mapping-table td:last-child { width: 45px; }
 .mapping-table button { padding: 3px 6px; }
+.midi-profile-panel { margin: 12px 0 14px; padding: 12px; border: 1px solid #31475a; background: #0c1218; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.midi-profile-panel strong, .midi-profile-panel span { display: block; }
+.midi-profile-panel span { margin-top: 3px; color: #8fa0b0; font-size: 9px; line-height: 1.4; }
+.midi-profile-badge { flex: 0 0 auto; min-width: 66px; margin: 0 !important; padding: 6px 8px; border: 1px solid #46515d; border-radius: 3px; color: #9da7b2 !important; text-align: center; font-size: 8px !important; font-weight: 900; letter-spacing: .08em; }
+.midi-profile-badge.active { border-color: var(--green); color: #8cf0a8 !important; background: rgba(49,214,107,.09); box-shadow: 0 0 12px rgba(49,214,107,.12); }
+.midi-profile-details { margin: -5px 0 16px; border: 1px solid #29313a; background: #0d1013; color: #8f99a5; font-size: 9px; }
+.midi-profile-details summary { padding: 9px 11px; cursor: pointer; color: #b6bec7; font-weight: 700; }
+.midi-profile-details p { margin: 0; padding: 0 11px 11px; line-height: 1.5; }
+.midi-monitor-page { min-height: 0; }
+.midi-monitor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; padding: 9px; border: 1px solid #303740; background: #0d1013; }
+.midi-monitor-toolbar-actions, .midi-monitor-toolbar-status { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.midi-monitor-toolbar-status { color: #89939f; font-size: 8px; justify-content: flex-end; }
+.midi-monitor-toolbar-status strong { color: var(--green); letter-spacing: .08em; }
+.midi-monitor-toolbar-status strong.stopped { color: var(--orange); }
+.midi-monitor-layout { height: min(500px, calc(88dvh - 205px)); min-height: 330px; display: grid; grid-template-columns: 220px minmax(0, 1fr); border: 1px solid #303740; background: #090b0e; overflow: hidden; }
+.midi-monitor-layout.filters-hidden { grid-template-columns: 0 minmax(0, 1fr); }
+.midi-monitor-filters { min-width: 0; overflow: auto; border-right: 1px solid #303740; background: #111419; transition: width .15s ease; }
+.midi-monitor-layout.filters-hidden .midi-monitor-filters { visibility: hidden; overflow: hidden; }
+.midi-monitor-filter-section { padding: 11px; border-bottom: 1px solid #2b3037; }
+.midi-monitor-filter-header { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 8px; }
+.midi-monitor-filter-header strong { color: #7f8995; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+.midi-monitor-filter-actions { display: flex; gap: 5px; }
+.midi-monitor-filter-actions button { border: 0; background: transparent; color: var(--blue-2); padding: 0; font-size: 8px; }
+.midi-monitor-filter-list { display: flex; flex-direction: column; gap: 5px; }
+.midi-monitor-filter-list.channels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.midi-monitor-filter-list label { min-width: 0; display: flex; align-items: center; gap: 6px; color: #a0a9b3; font-size: 9px; cursor: pointer; }
+.midi-monitor-filter-list label span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.midi-monitor-empty-filter { color: #69737e; font-size: 9px; font-style: italic; }
+.midi-monitor-content { min-width: 0; min-height: 0; display: grid; grid-template-rows: 36px 1fr; }
+.midi-monitor-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 10px; border-bottom: 1px solid #303740; background: #15191e; color: #8f99a4; font-size: 9px; }
+.midi-monitor-banner strong { color: #cbd2da; }
+.midi-monitor-table-wrap { min-height: 0; overflow: auto; }
+.midi-monitor-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9px; }
+.midi-monitor-table thead { position: sticky; top: 0; z-index: 2; background: #20252c; }
+.midi-monitor-table th, .midi-monitor-table td { height: 29px; padding: 0 8px; border-right: 1px solid #292f36; border-bottom: 1px solid #20262d; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.midi-monitor-table th { color: #929ca7; font-size: 8px; }
+.midi-monitor-table tbody tr:hover { background: #151e27; }
+.midi-monitor-table .monitor-time { width: 108px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.midi-monitor-table .monitor-device { width: 155px; }
+.midi-monitor-table .monitor-type { width: 145px; }
+.midi-monitor-table .monitor-channel { width: 62px; text-align: center; }
+.midi-data-hex { color: var(--blue-2); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-right: 8px; }
+.midi-data-description { color: #858f9a; }
+.midi-data-mapping { color: #8be6a3; margin-left: 8px; }
+.midi-monitor-empty td { height: 90px; text-align: center; color: #6f7984; font-style: italic; }
 .keyboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin: 15px 0; }
 .keyboard-binding { display: grid; grid-template-columns: 1fr 100px; align-items: center; min-height: 38px; border-bottom: 1px solid #292f36; }
 .keyboard-binding span { color: #a7b0ba; font-size: 9px; }
@@ -426,6 +474,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 .app-shell.compact-decks .deck-body { grid-template-columns: 1fr; }
 
 /* Responsive/touch */
+@media (min-width: 901px) and (max-height: 760px) {
+  :root { --fx-h: 72px; --wave-h: 82px; --browser-h: 170px; }
+  .app-shell { grid-template-rows: var(--topbar-h) var(--fx-h) var(--wave-h) minmax(280px, 1fr) var(--browser-h); }
+  .performance-area { min-height: 280px; }
+  .fx-unit { padding-top: 4px; padding-bottom: 4px; }
+  .transport-bank { grid-template-rows: 27px 18px minmax(92px, 1fr) 38px; }
+  .jog-wheel { width: clamp(82px, 8vw, 102px); }
+}
+
 @media (max-width: 1220px) {
   :root { --browser-h: 270px; --wave-h: 128px; }
   .performance-area { grid-template-columns: minmax(320px, 1fr) 190px minmax(320px, 1fr); }
@@ -452,14 +509,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
   .fx-unit { grid-template-columns: 43px 80px minmax(100px, 1fr) 67px minmax(90px, 1fr) 44px; min-height: 74px; }
   .fx-unit .fx-secondary { display: none; }
   .fx-unit .fx-param:nth-of-type(2) { display: none; }
-  .performance-area { display: grid; grid-template-columns: 1fr 150px 1fr; min-height: 430px; }
-  .deck { grid-template-rows: 48px 32px 1fr; }
+  .performance-area { display: grid; grid-template-columns: 1fr 150px 1fr; min-height: 560px; height: 560px; grid-template-rows: minmax(0, 1fr); }
+  .deck { grid-template-rows: 48px 32px minmax(0, 1fr); }
   .deck-body { grid-template-columns: 1fr; }
   .loop-pad-bank { display: none; }
   .transport-bank { border-right: 0; }
   .jog-cluster { grid-template-columns: 40px 1fr 40px; }
   .cue-button, .play-button { width: 40px; height: 40px; }
   .mixer { grid-template-columns: 1fr 40px 1fr; }
+  .channel-strip { grid-template-rows: 30px 38px repeat(4, 36px) 24px minmax(58px, 1fr); row-gap: 1px; }
+  .channel-strip .knob { width: 30px; height: 30px; }
+  .channel-strip .rotary-control.trim .knob { width: 24px; height: 24px; }
+  .channel-meter { height: 36px; }
   .mixer-center .headphone-mix, .mixer-center .headphone-level, #autoGainButton { display: none; }
   .browser-panel { grid-template-columns: 180px 1fr; }
   .track-table th:nth-child(3), .track-table td:nth-child(3), .track-table th:nth-child(4), .track-table td:nth-child(4), .track-table th:nth-child(7), .track-table td:nth-child(7) { display: none; }
@@ -469,10 +530,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
   .app-shell { min-height: 1450px; grid-template-rows: 56px auto 170px auto 380px; }
   .brand-block small { display: none; }
   .global-tools .tool-button:nth-child(2) { display: none; }
-  .performance-area { display: flex; flex-direction: column; }
-  .deck { min-height: 390px; border: 0; }
+  .performance-area { display: flex; flex-direction: column; min-height: 1140px; height: 1140px; }
+  .performance-area > .deck { min-height: 390px; height: 390px; flex: 0 0 390px; border: 0; }
   .deck-2 { order: 3; }
-  .mixer { order: 2; min-height: 300px; grid-template-columns: 1fr 70px 1fr; }
+  .mixer { order: 2; min-height: 360px; height: 360px; flex: 0 0 360px; grid-template-columns: 1fr 70px 1fr; }
   .loop-pad-bank { display: grid; }
   .deck-body { grid-template-columns: minmax(220px, 1.3fr) minmax(130px, .8fr); }
   .browser-panel { grid-template-columns: 1fr; }
@@ -490,6 +551,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
   .setting-row > select, .setting-row > input, .setting-action, .switch, .value-range { justify-self: stretch; align-items: flex-start; }
   .setting-row.stacked label { grid-template-columns: 1fr; }
   .midi-learn-panel { grid-template-columns: 1fr; }
+  .midi-monitor-toolbar { align-items: flex-start; flex-direction: column; }
+  .midi-monitor-toolbar-status { justify-content: flex-start; }
+  .midi-monitor-layout { height: calc(100dvh - 245px); min-height: 360px; grid-template-columns: 1fr; grid-template-rows: minmax(110px, 180px) minmax(0, 1fr); }
+  .midi-monitor-layout.filters-hidden { grid-template-columns: 1fr; grid-template-rows: 0 minmax(0, 1fr); }
+  .midi-monitor-filters { border-right: 0; border-bottom: 1px solid #303740; }
+  .midi-monitor-table .monitor-device { width: 125px; }
+  .midi-monitor-table .monitor-type { width: 120px; }
   .keyboard-grid, .feature-columns { grid-template-columns: 1fr; }
 }
 
@@ -815,6 +883,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
           <button type="button" class="active" data-settings-tab="library">Library</button>
           <button type="button" data-settings-tab="audio">Audio & Interface</button>
           <button type="button" data-settings-tab="midi">MIDI Mapping</button>
+          <button type="button" data-settings-tab="midi-monitor">MIDI Monitor</button>
           <button type="button" data-settings-tab="keyboard">Keyboard</button>
           <button type="button" data-settings-tab="about">About</button>
         </nav>
@@ -877,6 +946,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
               <div><strong id="midiSupportText">Web MIDI not initialized</strong><span id="midiDevicesText">No device information</span></div>
               <button type="button" id="enableMidiButton">Enable MIDI</button>
             </div>
+            <div class="midi-profile-panel">
+              <div><strong>DJControl Starlight default profile</strong><span id="midiProfileStatus">Built in and waiting for a matching controller.</span></div>
+              <span id="midiProfileBadge" class="midi-profile-badge">AUTO</span>
+            </div>
+            <details class="midi-profile-details">
+              <summary>Starlight assignments</summary>
+              <p>Auto-recognizes “DJControl Starlight” and maps transport, cue monitoring, vinyl/scratch and pitch-bend jog behavior, 14-bit tempo and gain controls, channel faders, bass/filter controls, crossfader, hot cues, loop pads, FX pads, and shifted transport functions. Sampler pads fall back to Hot Cues 5–8 because Clip Sesh DJ does not have a sampler deck. A custom learned mapping overrides the matching built-in control.</p>
+            </details>
             <div class="midi-learn-panel">
               <label>Control action<select id="midiActionSelect"></select></label>
               <label>Value mode<select id="midiModeSelect"><option value="absolute">Absolute CC / pitch</option><option value="toggle">Toggle button</option><option value="momentary">Momentary button</option><option value="relative-twos">Relative — two's complement</option><option value="relative-binary">Relative — binary offset</option><option value="relative-signmag">Relative — sign/magnitude</option></select></label>
@@ -885,6 +962,52 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
             <div id="midiLearnStatus" class="learn-status">Choose an action, then move a knob, fader, pad, or jog wheel.</div>
             <table class="mapping-table"><thead><tr><th>Action</th><th>Message</th><th>Mode</th><th>Device</th><th></th></tr></thead><tbody id="midiMappingsBody"></tbody></table>
             <div class="inline-actions"><button type="button" id="exportMidiMapButton">Export map</button><button type="button" id="importMidiMapButton">Import map</button><button type="button" id="resetMidiMapButton" class="danger-button">Reset</button></div>
+          </section>
+
+
+
+          <section class="settings-page midi-monitor-page" data-settings-page="midi-monitor">
+            <h2>MIDI Monitor</h2>
+            <p class="settings-intro">Real-time MIDI message monitoring and analysis. Use this to verify that a controller is connected, identify every note or CC it sends, and see which Clip Sesh action a built-in or custom mapping triggered.</p>
+            <div class="midi-monitor-toolbar">
+              <div class="midi-monitor-toolbar-actions">
+                <button type="button" id="midiMonitorRunButton" class="primary-button">Start</button>
+                <button type="button" id="midiMonitorClearButton">Clear</button>
+                <button type="button" id="midiMonitorHideFiltersButton">Hide filters</button>
+                <button type="button" id="midiMonitorRefreshButton">Refresh devices</button>
+                <button type="button" id="midiMonitorEnableButton">Enable MIDI</button>
+              </div>
+              <div class="midi-monitor-toolbar-status">
+                <strong id="midiMonitorState" class="stopped">STOPPED</strong>
+                <span id="midiMonitorCount">0 messages</span>
+                <span id="midiMonitorDeviceCount">0 devices</span>
+              </div>
+            </div>
+            <div id="midiMonitorLayout" class="midi-monitor-layout">
+              <aside class="midi-monitor-filters">
+                <section class="midi-monitor-filter-section">
+                  <div class="midi-monitor-filter-header"><strong>MIDI Devices</strong><div class="midi-monitor-filter-actions"><button type="button" id="midiMonitorDevicesAll">All</button><button type="button" id="midiMonitorDevicesNone">None</button></div></div>
+                  <div id="midiMonitorDeviceFilters" class="midi-monitor-filter-list"><span class="midi-monitor-empty-filter">No MIDI inputs connected.</span></div>
+                </section>
+                <section class="midi-monitor-filter-section">
+                  <div class="midi-monitor-filter-header"><strong>Message Types</strong><div class="midi-monitor-filter-actions"><button type="button" id="midiMonitorTypesAll">All</button><button type="button" id="midiMonitorTypesNone">None</button></div></div>
+                  <div id="midiMonitorTypeFilters" class="midi-monitor-filter-list"></div>
+                </section>
+                <section class="midi-monitor-filter-section">
+                  <div class="midi-monitor-filter-header"><strong>MIDI Channels</strong><div class="midi-monitor-filter-actions"><button type="button" id="midiMonitorChannelsAll">All</button><button type="button" id="midiMonitorChannelsNone">None</button></div></div>
+                  <div id="midiMonitorChannelFilters" class="midi-monitor-filter-list channels"></div>
+                </section>
+              </aside>
+              <div class="midi-monitor-content">
+                <div class="midi-monitor-banner"><strong>Incoming messages</strong><span>Newest first · maximum 2,000 retained</span></div>
+                <div class="midi-monitor-table-wrap">
+                  <table class="midi-monitor-table">
+                    <thead><tr><th class="monitor-time">Timestamp</th><th class="monitor-device">Device</th><th class="monitor-type">Type</th><th>Data</th><th class="monitor-channel">Channel</th></tr></thead>
+                    <tbody id="midiMonitorRows"><tr class="midi-monitor-empty"><td colspan="5">Press Start, then move a MIDI control.</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section class="settings-page" data-settings-page="keyboard">
@@ -903,7 +1026,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
             <div class="feature-columns">
               <div><h3>Core engine</h3><p>Dual decks, tempo control, approximate pitch lock, beat/phase sync, quantized loops, cues, scratching, EQ, filters, crossfader, and master limiting.</p></div>
               <div><h3>Effects</h3><p>Delay, echo, reverb, dub echo, filter, flanger, phaser, spiral, trans/gate, distortion, bit crush, and roll. Effects are isolated in the embedded <code>Effects / DSP</code> script module near the end of this page.</p></div>
-              <div><h3>Control</h3><p>Mouse, touch, keyboard, Web MIDI, absolute and relative encoders, and persisted custom mappings.</p></div>
+              <div><h3>Control</h3><p>Mouse, touch, keyboard, Web MIDI, absolute and relative encoders, a real-time MIDI monitor, auto-recognized DJControl Starlight defaults, and persisted custom mappings.</p></div>
               <div><h3>Privacy</h3><p>Local files stay local. Google Drive imports request only public resources that the user chooses.</p></div>
             </div>
             <p class="source-note"><strong>Single-file build:</strong> open this page with “View Source” to inspect the seven separately labeled embedded script modules and the embedded stylesheet.</p>
@@ -1919,24 +2042,106 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
 
   const STORAGE_KEY = 'clipSeshDj.midiMappings.v2';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+  // Built-in controller profile. MIDI byte assignments follow the Hercules
+  // DJControl Starlight implementation used by Hercules Technical Support and
+  // Mixxx. Custom learned mappings take priority over these defaults.
+  const STARLIGHT_PROFILE = Object.freeze({
+    id: 'hercules-djcontrol-starlight',
+    label: 'Hercules DJControl Starlight',
+    match(device) {
+      const identity = `${device && device.manufacturer || ''} ${device && device.name || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+      return identity.includes('djcontrol starlight') || identity.includes('dj control starlight') || /\bstarlight\b/.test(identity);
+    }
+  });
+
+  const STARLIGHT_NOTE_ACTIONS = Object.freeze({
+    '1:5': 'deck1.sync', '1:6': 'deck1.cue', '1:7': 'deck1.play', '1:12': 'deck1.headphoneCue',
+    '2:5': 'deck2.sync', '2:6': 'deck2.cue', '2:7': 'deck2.play', '2:12': 'deck2.headphoneCue',
+    '4:5': 'deck1.syncOff', '4:6': 'deck1.start', '4:7': 'deck1.stutter', '4:12': 'master.headphoneMaster',
+    '5:5': 'deck2.syncOff', '5:6': 'deck2.start', '5:7': 'deck2.stutter', '5:12': 'master.headphoneSplit',
+    '6:0': 'deck1.hotCue1', '6:1': 'deck1.hotCue2', '6:2': 'deck1.hotCue3', '6:3': 'deck1.hotCue4',
+    '6:8': 'deck1.clearHotCue1', '6:9': 'deck1.clearHotCue2', '6:10': 'deck1.clearHotCue3', '6:11': 'deck1.clearHotCue4',
+    '6:16': 'deck1.loopBeat1', '6:17': 'deck1.loopBeat2', '6:18': 'deck1.loopBeat4', '6:19': 'deck1.loopBeat8',
+    '6:32': 'fx1.toggle', '6:33': 'fx1.parameterStep', '6:34': 'fx1.depthStep', '6:35': 'fx1.beatCycle',
+    '6:40': 'fx1.effectPrevious', '6:41': 'fx1.effectNext', '6:42': 'fx1.effectNext',
+    '6:48': 'deck1.hotCue5', '6:49': 'deck1.hotCue6', '6:50': 'deck1.hotCue7', '6:51': 'deck1.hotCue8',
+    '7:0': 'deck2.hotCue1', '7:1': 'deck2.hotCue2', '7:2': 'deck2.hotCue3', '7:3': 'deck2.hotCue4',
+    '7:8': 'deck2.clearHotCue1', '7:9': 'deck2.clearHotCue2', '7:10': 'deck2.clearHotCue3', '7:11': 'deck2.clearHotCue4',
+    '7:16': 'deck2.loopBeat1', '7:17': 'deck2.loopBeat2', '7:18': 'deck2.loopBeat4', '7:19': 'deck2.loopBeat8',
+    '7:32': 'fx2.toggle', '7:33': 'fx2.parameterStep', '7:34': 'fx2.depthStep', '7:35': 'fx2.beatCycle',
+    '7:40': 'fx2.effectPrevious', '7:41': 'fx2.effectNext', '7:42': 'fx2.effectNext',
+    '7:48': 'deck2.hotCue5', '7:49': 'deck2.hotCue6', '7:50': 'deck2.hotCue7', '7:51': 'deck2.hotCue8'
+  });
+
+  const STARLIGHT_14BIT_CONTROLS = Object.freeze([
+    { channel: 0, lsb: 32, msb: 0, action: 'mixer.crossfader' },
+    { channel: 0, lsb: 35, msb: 3, action: 'master.volume' },
+    { channel: 0, lsb: 36, msb: 4, action: 'master.headphoneVolume' },
+    { channel: 1, lsb: 32, msb: 0, action: 'deck1.fader' },
+    { channel: 1, lsb: 33, msb: 1, action: 'deck1.filter' },
+    { channel: 1, lsb: 34, msb: 2, action: 'deck1.eqLow' },
+    { channel: 1, lsb: 40, msb: 8, action: 'deck1.tempo' },
+    { channel: 2, lsb: 32, msb: 0, action: 'deck2.fader' },
+    { channel: 2, lsb: 33, msb: 1, action: 'deck2.filter' },
+    { channel: 2, lsb: 34, msb: 2, action: 'deck2.eqLow' },
+    { channel: 2, lsb: 40, msb: 8, action: 'deck2.tempo' }
+  ]);
+
+  const STARLIGHT_PAD_MODES = Object.freeze({ 15: 'Hot Cue', 16: 'Loop', 17: 'FX', 18: 'Sampler' });
+
+  function noteName(number) {
+    const value = clamp(Number(number) || 0, 0, 127);
+    return `${NOTE_NAMES[value % 12]}${Math.floor(value / 12) - 1}`;
+  }
+
+  function decodedBase(type, monitorType, typeLabel, channel, number, value, normalized, description, extras) {
+    return {
+      type, monitorType, typeLabel, channel, number, value, normalized,
+      edge: 'change', mappable: channel != null, description,
+      ...(extras || {})
+    };
+  }
 
   function decodeMessage(data) {
-    const status = data[0] || 0;
+    const bytes = Array.from(data || []);
+    const status = bytes[0] == null ? 0 : bytes[0];
     const command = status & 0xf0;
-    const channel = status & 0x0f;
-    const number = data[1] || 0;
-    const value = data[2] || 0;
+    const channel = status < 0xf0 ? status & 0x0f : null;
+    const number = bytes[1] || 0;
+    const value = bytes[2] || 0;
+    const channelLabel = channel == null ? '' : `Ch ${channel + 1} - `;
 
-    if (command === 0x90 && value > 0) return { type: 'note', edge: 'on', channel, number, value, normalized: value / 127 };
-    if (command === 0x80 || (command === 0x90 && value === 0)) return { type: 'note', edge: 'off', channel, number, value: 0, normalized: 0 };
-    if (command === 0xb0) return { type: 'cc', edge: 'change', channel, number, value, normalized: value / 127 };
+    if (command === 0x80 || (command === 0x90 && value === 0)) {
+      return decodedBase('note', 'noteOff', 'Note Off', channel, number, 0, 0, `${channelLabel}Note: ${number} (${noteName(number)}) Vel: ${value} OFF`, { edge: 'off', releaseVelocity: value });
+    }
+    if (command === 0x90) {
+      return decodedBase('note', 'noteOn', 'Note On', channel, number, value, value / 127, `${channelLabel}Note: ${number} (${noteName(number)}) Vel: ${value} ON`, { edge: 'on' });
+    }
+    if (command === 0xa0) return decodedBase('polyAftertouch', 'polyAftertouch', 'Polyphonic Aftertouch', channel, number, value, value / 127, `${channelLabel}Note: ${number} Pressure: ${value}`);
+    if (command === 0xb0) return decodedBase('cc', 'controlChange', 'Control Change (CC)', channel, number, value, value / 127, `${channelLabel}CC: ${number} Value: ${value}`);
+    if (command === 0xc0) return decodedBase('program', 'programChange', 'Program Change', channel, number, number, number / 127, `${channelLabel}Program: ${number}`);
+    if (command === 0xd0) return decodedBase('aftertouch', 'channelAftertouch', 'Channel Aftertouch', channel, 0, number, number / 127, `${channelLabel}Pressure: ${number}`);
     if (command === 0xe0) {
       const fourteenBit = number | (value << 7);
-      return { type: 'pitch', edge: 'change', channel, number: 0, value: fourteenBit, normalized: fourteenBit / 16383 };
+      return decodedBase('pitch', 'pitchBend', 'Pitch Bend', channel, 0, fourteenBit, fourteenBit / 16383, `${channelLabel}Value: ${fourteenBit} (${fourteenBit - 8192 >= 0 ? '+' : ''}${fourteenBit - 8192})`);
     }
-    if (command === 0xa0) return { type: 'polyAftertouch', edge: 'change', channel, number, value, normalized: value / 127 };
-    if (command === 0xd0) return { type: 'aftertouch', edge: 'change', channel, number: 0, value: number, normalized: number / 127 };
-    return null;
+
+    const systemCommon = {
+      0xf1: ['MIDI Time Code Quarter Frame', `Value: ${number}`],
+      0xf2: ['Song Position Pointer', `Position: ${number | (value << 7)}`],
+      0xf3: ['Song Select', `Song: ${number}`],
+      0xf6: ['Tune Request', 'Tune request']
+    };
+    const systemRealtime = {
+      0xf8: ['Timing Clock', 'Clock'], 0xfa: ['Start', 'Start'], 0xfb: ['Continue', 'Continue'],
+      0xfc: ['Stop', 'Stop'], 0xfe: ['Active Sensing', 'Active sensing'], 0xff: ['System Reset', 'Reset']
+    };
+    if (status === 0xf0 || status === 0xf7) return decodedBase('system', 'systemExclusive', 'System Exclusive', null, 0, 0, 0, `SysEx · ${bytes.length} bytes`, { mappable: false });
+    if (systemCommon[status]) return decodedBase('system', 'systemCommon', systemCommon[status][0], null, 0, 0, 0, systemCommon[status][1], { mappable: false });
+    if (systemRealtime[status]) return decodedBase('system', 'systemRealtime', systemRealtime[status][0], null, 0, 0, 0, systemRealtime[status][1], { mappable: false });
+    return decodedBase('unknown', 'unknown', 'Unknown', channel, number, value, value / 127, `Status 0x${status.toString(16).padStart(2, '0').toUpperCase()}`, { mappable: false });
   }
 
   function relativeDelta(value, mode) {
@@ -1959,6 +2164,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       super();
       this.access = null;
       this.inputs = new Map();
+      this.outputs = new Map();
+      this.profileStates = new Map();
+      this.initializedProfileOutputs = new Set();
       this.mappings = [];
       this.learning = null;
       this.enabled = false;
@@ -1981,14 +2189,49 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
     }
 
     refreshInputs() {
+      const previousProfiles = this.profileStates;
       this.inputs.clear();
+      this.outputs.clear();
+      this.profileStates = new Map();
       if (!this.access) return;
       for (const input of this.access.inputs.values()) {
         input.onmidimessage = (event) => this.handleMessage(input, event);
         this.inputs.set(input.id, input);
+        if (STARLIGHT_PROFILE.match(input)) {
+          const previous = previousProfiles.get(input.id);
+          this.profileStates.set(input.id, previous || {
+            profile: STARLIGHT_PROFILE,
+            deviceId: input.id,
+            deviceName: input.name || STARLIGHT_PROFILE.label,
+            vinyl: true,
+            shifted: false,
+            bassFilterMode: 'filter',
+            touched: { 1: false, 2: false },
+            padMode: { 1: 'Hot Cue', 2: 'Hot Cue' },
+            cc14: new Map()
+          });
+        }
       }
+      for (const output of this.access.outputs.values()) this.outputs.set(output.id, output);
+      this.initializeProfileOutputs();
       this.dispatchEvent(new CustomEvent('devices', { detail: this.getDevices() }));
+      this.dispatchEvent(new CustomEvent('profiles', { detail: this.getActiveProfiles() }));
       this.dispatchEvent(new CustomEvent('status', { detail: this.getStatus() }));
+    }
+
+    initializeProfileOutputs() {
+      for (const state of this.profileStates.values()) {
+        const output = Array.from(this.outputs.values()).find((candidate) => STARLIGHT_PROFILE.match(candidate));
+        if (!output || this.initializedProfileOutputs.has(output.id)) continue;
+        try {
+          // Ask the controller to transmit all current knob and slider values,
+          // then light the Vinyl indicator to match the profile's scratch default.
+          output.send([0xb0, 0x7f, 0x7f]);
+          output.send([0x91, 0x03, 0x7f]);
+          this.initializedProfileOutputs.add(output.id);
+          state.outputId = output.id;
+        } catch (_) { /* MIDI output can be unavailable while the input remains usable. */ }
+      }
     }
 
     getDevices() {
@@ -1997,7 +2240,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         name: input.name || 'Unnamed MIDI input',
         manufacturer: input.manufacturer || '',
         state: input.state,
-        connection: input.connection
+        connection: input.connection,
+        profileId: this.profileStates.get(input.id)?.profile.id || null
+      }));
+    }
+
+    getOutputs() {
+      return Array.from(this.outputs.values()).map((output) => ({
+        id: output.id,
+        name: output.name || 'Unnamed MIDI output',
+        manufacturer: output.manufacturer || '',
+        state: output.state,
+        connection: output.connection
+      }));
+    }
+
+    getActiveProfiles() {
+      return Array.from(this.profileStates.values()).map((state) => ({
+        id: state.profile.id,
+        label: state.profile.label,
+        deviceId: state.deviceId,
+        deviceName: state.deviceName,
+        outputConnected: Boolean(state.outputId)
       }));
     }
 
@@ -2006,24 +2270,27 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         supported: MidiManager.supported,
         enabled: this.enabled,
         deviceCount: this.inputs.size,
-        devices: this.getDevices()
+        outputCount: this.outputs.size,
+        devices: this.getDevices(),
+        profiles: this.getActiveProfiles()
       };
     }
 
     handleMessage(input, event) {
       const message = decodeMessage(event.data);
-      if (!message) return;
       const raw = {
         ...message,
-        data: Array.from(event.data),
+        data: Array.from(event.data || []),
         timestamp: event.timeStamp,
+        receivedAt: Date.now(),
         deviceId: input.id,
-        deviceName: input.name || 'Unnamed MIDI input'
+        deviceName: input.name || 'Unnamed MIDI input',
+        deviceManufacturer: input.manufacturer || '',
+        mappedActions: []
       };
+      raw.hex = raw.data.map((byte) => Number(byte).toString(16).padStart(2, '0').toUpperCase()).join(' ');
 
-      this.dispatchEvent(new CustomEvent('message', { detail: raw }));
-
-      if (this.learning) {
+      if (this.learning && message.mappable) {
         // Learn on note-on/change, not on release, to avoid registering note-off velocity 0.
         if (!(message.type === 'note' && message.edge === 'off')) {
           const mapping = {
@@ -2045,12 +2312,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
           this.saveMappings();
           const learning = this.learning;
           this.learning = null;
+          raw.mappedActions.push(mapping.action);
+          this.dispatchEvent(new CustomEvent('message', { detail: raw }));
           this.dispatchEvent(new CustomEvent('learned', { detail: { mapping, learning, raw } }));
           this.dispatchEvent(new CustomEvent('mappings', { detail: this.getMappings() }));
           return;
         }
       }
 
+      const customMatched = this.dispatchCustomMappings(input, message, raw);
+      if (!customMatched) this.dispatchDeviceProfile(input, message, raw);
+      this.dispatchEvent(new CustomEvent('message', { detail: raw }));
+    }
+
+    dispatchCustomMappings(input, message, raw) {
+      let matched = false;
       for (const mapping of this.mappings) {
         if (mapping.type !== message.type) continue;
         if (Number(mapping.channel) !== message.channel) continue;
@@ -2058,6 +2334,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         // Keep mappings portable across reconnects with changed IDs: match exact ID when it is present,
         // otherwise allow the same device name.
         if (mapping.deviceId && mapping.deviceId !== input.id && mapping.deviceName !== input.name) continue;
+        matched = true;
 
         let value = message.normalized;
         let delta = 0;
@@ -2080,11 +2357,117 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
           value = Number(mapping.min || 0) + value * (Number(mapping.max || 1) - Number(mapping.min || 0));
           value = clamp(value, Math.min(mapping.min || 0, mapping.max || 1), Math.max(mapping.min || 0, mapping.max || 1));
         }
-
-        this.dispatchEvent(new CustomEvent('control', {
-          detail: { action: mapping.action, value, delta, active, mapping, raw }
-        }));
+        this.dispatchControl(mapping.action, value, delta, active, mapping, raw);
       }
+      return matched;
+    }
+
+    dispatchDeviceProfile(input, message, raw) {
+      const state = this.profileStates.get(input.id);
+      if (!state || state.profile.id !== STARLIGHT_PROFILE.id) return false;
+
+      if (message.type === 'note') {
+        const pressed = message.edge === 'on';
+        if (message.channel === 0 && message.number === 3) {
+          state.shifted = pressed;
+          raw.profileEvent = pressed ? 'Starlight Shift held' : 'Starlight Shift released';
+          return true;
+        }
+        if (message.channel === 0 && message.number === 1 && pressed) {
+          state.bassFilterMode = state.bassFilterMode === 'filter' ? 'bass' : 'filter';
+          raw.profileEvent = `Bass / Filter mode: ${state.bassFilterMode}`;
+          return true;
+        }
+        if (message.channel === 2 && message.number === 3 && pressed) {
+          state.vinyl = !state.vinyl;
+          raw.profileEvent = `Vinyl mode ${state.vinyl ? 'on' : 'off'}`;
+          this.dispatchEvent(new CustomEvent('profilemode', { detail: { profile: state.profile, deviceId: input.id, vinyl: state.vinyl } }));
+          return true;
+        }
+        if ((message.channel === 1 || message.channel === 2) && message.number === 8) {
+          const deck = message.channel;
+          state.touched[deck] = pressed;
+          raw.profileEvent = `Deck ${deck} jog touch ${pressed ? 'on' : 'off'}`;
+          return true;
+        }
+        if ((message.channel === 4 || message.channel === 5) && message.number === 8) {
+          const deck = message.channel - 3;
+          state.touched[deck] = pressed;
+          raw.profileEvent = `Deck ${deck} shifted jog touch ${pressed ? 'on' : 'off'}`;
+          return true;
+        }
+        if ((message.channel === 1 || message.channel === 2) && STARLIGHT_PAD_MODES[message.number] && pressed) {
+          state.padMode[message.channel] = STARLIGHT_PAD_MODES[message.number];
+          raw.profileEvent = `Deck ${message.channel} pad mode: ${STARLIGHT_PAD_MODES[message.number]}`;
+          return true;
+        }
+        const action = STARLIGHT_NOTE_ACTIONS[`${message.channel}:${message.number}`];
+        if (action && pressed) {
+          this.dispatchControl(action, 1, 0, true, this.profileMapping(state, action, message), raw);
+          return true;
+        }
+        return false;
+      }
+
+      if (message.type !== 'cc') return false;
+      const pair = STARLIGHT_14BIT_CONTROLS.find((item) => item.channel === message.channel && (item.lsb === message.number || item.msb === message.number));
+      if (pair) {
+        const pairKey = `${pair.channel}:${pair.lsb}:${pair.msb}`;
+        const values = state.cc14.get(pairKey) || { lsb: 0, msb: 0, seenLsb: false };
+        if (message.number === pair.lsb) {
+          values.lsb = message.value;
+          values.seenLsb = true;
+          state.cc14.set(pairKey, values);
+          raw.profileEvent = `${pair.action} 14-bit LSB`;
+          return true;
+        }
+        values.msb = message.value;
+        state.cc14.set(pairKey, values);
+        const combined = (values.msb << 7) | values.lsb;
+        const normalized = clamp(combined / 16383, 0, 1);
+        raw.profileEvent = `${pair.action} 14-bit value ${combined}`;
+        this.dispatchControl(pair.action, normalized, 0, true, this.profileMapping(state, pair.action, message), raw);
+        return true;
+      }
+
+      if ([1, 2, 4, 5].includes(message.channel) && (message.number === 9 || message.number === 10)) {
+        const deck = message.channel === 1 || message.channel === 4 ? 1 : 2;
+        const delta = message.value < 0x40 ? 1 : -1;
+        let action = `deck${deck}.jogBend`;
+        let scaledDelta = delta;
+        if (message.channel === 4 || message.channel === 5) {
+          action = `deck${deck}.jog`;
+          scaledDelta *= 4;
+        } else if (message.number === 10 && state.touched[deck] && state.vinyl) {
+          action = `deck${deck}.jog`;
+        }
+        this.dispatchControl(action, scaledDelta, scaledDelta, true, this.profileMapping(state, action, message), raw);
+        return true;
+      }
+      return false;
+    }
+
+    profileMapping(state, action, message) {
+      return {
+        id: `profile:${state.profile.id}:${action}`,
+        action,
+        label: action,
+        type: message.type,
+        channel: message.channel,
+        number: message.number,
+        mode: 'device-profile',
+        deviceId: state.deviceId,
+        deviceName: state.deviceName,
+        profile: true,
+        profileId: state.profile.id
+      };
+    }
+
+    dispatchControl(action, value, delta, active, mapping, raw) {
+      if (!raw.mappedActions.includes(action)) raw.mappedActions.push(action);
+      this.dispatchEvent(new CustomEvent('control', {
+        detail: { action, value, delta, active, mapping, raw }
+      }));
     }
 
     learn(action, options) {
@@ -2156,7 +2539,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
     }
   }
 
-  window.ClipSeshMidi = Object.freeze({ MidiManager, decodeMessage, relativeDelta });
+  window.ClipSeshMidi = Object.freeze({
+    MidiManager,
+    decodeMessage,
+    relativeDelta,
+    deviceProfiles: [{ id: STARLIGHT_PROFILE.id, label: STARLIGHT_PROFILE.label }]
+  });
 })();
 
   </script>
@@ -3588,6 +3976,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
   const KEYBOARD_KEY = 'clipSeshDj.keyboardMap.v2';
   const LOOP_VALUES = [1 / 16, 1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8, 16, 32];
   const TEMPO_RANGES = [6, 10, 16, 100];
+  const MIDI_MONITOR_TYPES = [
+    ['noteOff', 'Note Off'], ['noteOn', 'Note On'], ['polyAftertouch', 'Polyphonic Aftertouch'],
+    ['controlChange', 'Control Change (CC)'], ['programChange', 'Program Change'],
+    ['channelAftertouch', 'Channel Aftertouch'], ['pitchBend', 'Pitch Bend'],
+    ['systemExclusive', 'System Exclusive'], ['systemCommon', 'System Common'],
+    ['systemRealtime', 'System Realtime'], ['unknown', 'Unknown']
+  ];
 
   const DEFAULT_SETTINGS = {
     autoAnalyze: true,
@@ -3643,22 +4038,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
   };
 
   const ACTIONS = [
-    ['deck1.play', 'Deck 1 · Play / Pause'], ['deck1.cue', 'Deck 1 · Cue'], ['deck1.sync', 'Deck 1 · Beat Sync'], ['deck1.master', 'Deck 1 · Make Master'],
-    ['deck1.tempo', 'Deck 1 · Tempo fader'], ['deck1.jog', 'Deck 1 · Jog / scratch'], ['deck1.nudgeDown', 'Deck 1 · Pitch bend −'], ['deck1.nudgeUp', 'Deck 1 · Pitch bend +'],
+    ['deck1.play', 'Deck 1 · Play / Pause'], ['deck1.stutter', 'Deck 1 · Stutter from cue'], ['deck1.cue', 'Deck 1 · Cue'], ['deck1.sync', 'Deck 1 · Beat Sync'], ['deck1.syncOff', 'Deck 1 · Beat Sync off'], ['deck1.master', 'Deck 1 · Make Master'], ['deck1.start', 'Deck 1 · Return to start'], ['deck1.headphoneCue', 'Deck 1 · Headphone cue'],
+    ['deck1.tempo', 'Deck 1 · Tempo fader'], ['deck1.jog', 'Deck 1 · Jog / scratch'], ['deck1.jogBend', 'Deck 1 · Jog pitch bend'], ['deck1.nudgeDown', 'Deck 1 · Pitch bend −'], ['deck1.nudgeUp', 'Deck 1 · Pitch bend +'],
     ['deck1.loop', 'Deck 1 · Auto loop'], ['deck1.loopHalf', 'Deck 1 · Halve loop'], ['deck1.loopDouble', 'Deck 1 · Double loop'], ['deck1.reloop', 'Deck 1 · Reloop / exit'],
     ['deck1.filter', 'Deck 1 · Filter'], ['deck1.trim', 'Deck 1 · Trim'], ['deck1.eqHigh', 'Deck 1 · EQ high'], ['deck1.eqMid', 'Deck 1 · EQ mid'], ['deck1.eqLow', 'Deck 1 · EQ low'], ['deck1.fader', 'Deck 1 · Channel fader'],
     ['deck1.masterTempo', 'Deck 1 · Master Tempo'], ['deck1.quantize', 'Deck 1 · Quantize'], ['deck1.slip', 'Deck 1 · Slip'],
-    ['deck2.play', 'Deck 2 · Play / Pause'], ['deck2.cue', 'Deck 2 · Cue'], ['deck2.sync', 'Deck 2 · Beat Sync'], ['deck2.master', 'Deck 2 · Make Master'],
-    ['deck2.tempo', 'Deck 2 · Tempo fader'], ['deck2.jog', 'Deck 2 · Jog / scratch'], ['deck2.nudgeDown', 'Deck 2 · Pitch bend −'], ['deck2.nudgeUp', 'Deck 2 · Pitch bend +'],
+    ['deck2.play', 'Deck 2 · Play / Pause'], ['deck2.stutter', 'Deck 2 · Stutter from cue'], ['deck2.cue', 'Deck 2 · Cue'], ['deck2.sync', 'Deck 2 · Beat Sync'], ['deck2.syncOff', 'Deck 2 · Beat Sync off'], ['deck2.master', 'Deck 2 · Make Master'], ['deck2.start', 'Deck 2 · Return to start'], ['deck2.headphoneCue', 'Deck 2 · Headphone cue'],
+    ['deck2.tempo', 'Deck 2 · Tempo fader'], ['deck2.jog', 'Deck 2 · Jog / scratch'], ['deck2.jogBend', 'Deck 2 · Jog pitch bend'], ['deck2.nudgeDown', 'Deck 2 · Pitch bend −'], ['deck2.nudgeUp', 'Deck 2 · Pitch bend +'],
     ['deck2.loop', 'Deck 2 · Auto loop'], ['deck2.loopHalf', 'Deck 2 · Halve loop'], ['deck2.loopDouble', 'Deck 2 · Double loop'], ['deck2.reloop', 'Deck 2 · Reloop / exit'],
     ['deck2.filter', 'Deck 2 · Filter'], ['deck2.trim', 'Deck 2 · Trim'], ['deck2.eqHigh', 'Deck 2 · EQ high'], ['deck2.eqMid', 'Deck 2 · EQ mid'], ['deck2.eqLow', 'Deck 2 · EQ low'], ['deck2.fader', 'Deck 2 · Channel fader'],
     ['deck2.masterTempo', 'Deck 2 · Master Tempo'], ['deck2.quantize', 'Deck 2 · Quantize'], ['deck2.slip', 'Deck 2 · Slip'],
-    ['mixer.crossfader', 'Mixer · Crossfader'], ['master.volume', 'Master · Volume'], ['record.toggle', 'Master · Record WAV'],
-    ['fx1.toggle', 'FX1 · On / off'], ['fx1.depth', 'FX1 · Level / depth'], ['fx1.parameter', 'FX1 · Parameter'],
-    ['fx2.toggle', 'FX2 · On / off'], ['fx2.depth', 'FX2 · Level / depth'], ['fx2.parameter', 'FX2 · Parameter']
+    ['mixer.crossfader', 'Mixer · Crossfader'], ['master.volume', 'Master · Volume'], ['master.headphoneVolume', 'Master · Headphone volume'], ['master.headphoneMaster', 'Master · Headphone master cue'], ['master.headphoneSplit', 'Master · Headphone cue + master'], ['record.toggle', 'Master · Record WAV'],
+    ['fx1.toggle', 'FX1 · On / off'], ['fx1.depth', 'FX1 · Level / depth'], ['fx1.parameter', 'FX1 · Parameter'], ['fx1.parameterStep', 'FX1 · Step parameter'], ['fx1.depthStep', 'FX1 · Step depth'], ['fx1.beatCycle', 'FX1 · Cycle beat value'], ['fx1.effectPrevious', 'FX1 · Previous effect'], ['fx1.effectNext', 'FX1 · Next effect'],
+    ['fx2.toggle', 'FX2 · On / off'], ['fx2.depth', 'FX2 · Level / depth'], ['fx2.parameter', 'FX2 · Parameter'], ['fx2.parameterStep', 'FX2 · Step parameter'], ['fx2.depthStep', 'FX2 · Step depth'], ['fx2.beatCycle', 'FX2 · Cycle beat value'], ['fx2.effectPrevious', 'FX2 · Previous effect'], ['fx2.effectNext', 'FX2 · Next effect']
   ];
   for (let deck = 1; deck <= 2; deck += 1) {
     for (let cue = 1; cue <= 8; cue += 1) ACTIONS.push([`deck${deck}.hotCue${cue}`, `Deck ${deck} · Hot Cue ${cue}`]);
+    for (let cue = 1; cue <= 4; cue += 1) ACTIONS.push([`deck${deck}.clearHotCue${cue}`, `Deck ${deck} · Clear Hot Cue ${cue}`]);
+    for (const beats of [1, 2, 4, 8]) ACTIONS.push([`deck${deck}.loopBeat${beats}`, `Deck ${deck} · ${beats}-beat loop`]);
   }
   const ACTION_LABELS = Object.fromEntries(ACTIONS);
 
@@ -3691,6 +4088,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       this.loadEstimate = 0;
       this.lastClockSecond = -1;
       this.midiAbsoluteState = new Map();
+      this.midiMonitorMessages = [];
+      this.midiMonitorRunning = true;
+      this.midiMonitorFiltersVisible = true;
+      this.midiMonitorKnownDevices = new Set();
+      this.midiMonitorDeviceFilter = new Set();
+      this.midiMonitorTypeFilter = new Set(MIDI_MONITOR_TYPES.map(([id]) => id));
+      this.midiMonitorChannelFilter = new Set(Array.from({ length: 16 }, (_, index) => index));
+      this.midiMonitorRenderPending = false;
       this.layoutIndex = 0;
       this.recordingStartedAt = 0;
     }
@@ -4030,6 +4435,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       ACTIONS.forEach(([value, label]) => actionSelect.add(new Option(label, value)));
       $('#enableMidiButton').addEventListener('click', () => this.enableMidi());
       $('#midiButton').addEventListener('click', () => this.openSettings('midi'));
+      this.setupMidiMonitor();
       $('#midiLearnButton').addEventListener('click', async () => {
         try {
           if (!this.midi.access) await this.enableMidi();
@@ -4050,7 +4456,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       });
 
       this.midi.addEventListener('status', (event) => this.updateMidiStatus(event.detail));
-      this.midi.addEventListener('devices', () => this.updateMidiStatus(this.midi.getStatus()));
+      this.midi.addEventListener('devices', () => {
+        this.updateMidiStatus(this.midi.getStatus());
+        this.renderMidiMonitorDevices();
+        this.renderMidiMonitor();
+      });
+      this.midi.addEventListener('profiles', () => this.updateMidiStatus(this.midi.getStatus()));
+      this.midi.addEventListener('message', (event) => this.captureMidiMessage(event.detail));
       this.midi.addEventListener('learning', () => {
         const status = $('#midiLearnStatus');
         status.classList.add('listening');
@@ -4066,6 +4478,168 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       this.midi.addEventListener('control', (event) => this.handleMidiControl(event.detail));
       this.updateMidiStatus(this.midi.getStatus());
       this.renderMidiMappings();
+      this.renderMidiMonitorDevices();
+      this.renderMidiMonitor();
+      this.autoEnableMidiIfGranted();
+    }
+
+    setupMidiMonitor() {
+      const typeContainer = $('#midiMonitorTypeFilters');
+      MIDI_MONITOR_TYPES.forEach(([id, label]) => {
+        const wrapper = document.createElement('label');
+        const input = document.createElement('input'); input.type = 'checkbox'; input.checked = true; input.dataset.monitorType = id;
+        const text = document.createElement('span'); text.textContent = label;
+        input.addEventListener('change', () => {
+          if (input.checked) this.midiMonitorTypeFilter.add(id); else this.midiMonitorTypeFilter.delete(id);
+          this.renderMidiMonitor();
+        });
+        wrapper.append(input, text); typeContainer.append(wrapper);
+      });
+      const channelContainer = $('#midiMonitorChannelFilters');
+      for (let channel = 0; channel < 16; channel += 1) {
+        const wrapper = document.createElement('label');
+        const input = document.createElement('input'); input.type = 'checkbox'; input.checked = true; input.dataset.monitorChannel = channel;
+        const text = document.createElement('span'); text.textContent = String(channel + 1);
+        input.addEventListener('change', () => {
+          if (input.checked) this.midiMonitorChannelFilter.add(channel); else this.midiMonitorChannelFilter.delete(channel);
+          this.renderMidiMonitor();
+        });
+        wrapper.append(input, text); channelContainer.append(wrapper);
+      }
+
+      $('#midiMonitorRunButton').addEventListener('click', async () => {
+        if (!this.midi.access) {
+          try { await this.enableMidi(); } catch (error) { this.toast('MIDI unavailable', error.message, 'error'); return; }
+        }
+        this.midiMonitorRunning = !this.midiMonitorRunning;
+        this.updateMidiMonitorStatus();
+      });
+      $('#midiMonitorEnableButton').addEventListener('click', () => this.enableMidi().catch((error) => this.toast('MIDI unavailable', error.message, 'error')));
+      $('#midiMonitorClearButton').addEventListener('click', () => { this.midiMonitorMessages = []; this.renderMidiMonitor(); });
+      $('#midiMonitorHideFiltersButton').addEventListener('click', () => {
+        this.midiMonitorFiltersVisible = !this.midiMonitorFiltersVisible;
+        $('#midiMonitorLayout').classList.toggle('filters-hidden', !this.midiMonitorFiltersVisible);
+        $('#midiMonitorHideFiltersButton').textContent = this.midiMonitorFiltersVisible ? 'Hide filters' : 'Show filters';
+      });
+      $('#midiMonitorRefreshButton').addEventListener('click', async () => {
+        try {
+          if (!this.midi.access) await this.enableMidi(); else this.midi.refreshInputs();
+        } catch (error) { this.toast('MIDI unavailable', error.message, 'error'); }
+      });
+      this.bindMidiMonitorBulkButtons();
+      this.updateMidiMonitorStatus();
+    }
+
+    bindMidiMonitorBulkButtons() {
+      const setChecks = (selector, values, enabled, dataKey) => {
+        values.clear();
+        $$(selector).forEach((input) => {
+          input.checked = enabled;
+          if (enabled) values.add(dataKey === 'monitorChannel' ? Number(input.dataset[dataKey]) : input.dataset[dataKey]);
+        });
+        this.renderMidiMonitor();
+      };
+      $('#midiMonitorDevicesAll').addEventListener('click', () => setChecks('#midiMonitorDeviceFilters input', this.midiMonitorDeviceFilter, true, 'monitorDevice'));
+      $('#midiMonitorDevicesNone').addEventListener('click', () => setChecks('#midiMonitorDeviceFilters input', this.midiMonitorDeviceFilter, false, 'monitorDevice'));
+      $('#midiMonitorTypesAll').addEventListener('click', () => setChecks('#midiMonitorTypeFilters input', this.midiMonitorTypeFilter, true, 'monitorType'));
+      $('#midiMonitorTypesNone').addEventListener('click', () => setChecks('#midiMonitorTypeFilters input', this.midiMonitorTypeFilter, false, 'monitorType'));
+      $('#midiMonitorChannelsAll').addEventListener('click', () => setChecks('#midiMonitorChannelFilters input', this.midiMonitorChannelFilter, true, 'monitorChannel'));
+      $('#midiMonitorChannelsNone').addEventListener('click', () => setChecks('#midiMonitorChannelFilters input', this.midiMonitorChannelFilter, false, 'monitorChannel'));
+    }
+
+    async autoEnableMidiIfGranted() {
+      if (!window.ClipSeshMidi.MidiManager.supported || !navigator.permissions || !navigator.permissions.query) return;
+      try {
+        const permission = await navigator.permissions.query({ name: 'midi', sysex: false });
+        if (permission.state === 'granted') await this.enableMidi(true);
+      } catch (_) { /* Permissions API support varies; the explicit Enable button remains available. */ }
+    }
+
+    captureMidiMessage(message) {
+      if (!this.midiMonitorRunning) return;
+      this.midiMonitorMessages.unshift(message);
+      if (this.midiMonitorMessages.length > 2000) this.midiMonitorMessages.length = 2000;
+      if (this.midiMonitorRenderPending) return;
+      this.midiMonitorRenderPending = true;
+      requestAnimationFrame(() => {
+        this.midiMonitorRenderPending = false;
+        this.renderMidiMonitor();
+      });
+    }
+
+    renderMidiMonitorDevices() {
+      const container = $('#midiMonitorDeviceFilters');
+      if (!container) return;
+      const devices = this.midi.getDevices();
+      container.replaceChildren();
+      if (!devices.length) {
+        const empty = document.createElement('span'); empty.className = 'midi-monitor-empty-filter'; empty.textContent = 'No MIDI inputs connected.'; container.append(empty);
+      }
+      devices.forEach((device) => {
+        if (!this.midiMonitorKnownDevices.has(device.id)) {
+          this.midiMonitorKnownDevices.add(device.id);
+          this.midiMonitorDeviceFilter.add(device.id);
+        }
+        const wrapper = document.createElement('label');
+        const input = document.createElement('input'); input.type = 'checkbox'; input.checked = this.midiMonitorDeviceFilter.has(device.id); input.dataset.monitorDevice = device.id;
+        const text = document.createElement('span'); text.textContent = device.name;
+        input.addEventListener('change', () => {
+          if (input.checked) this.midiMonitorDeviceFilter.add(device.id); else this.midiMonitorDeviceFilter.delete(device.id);
+          this.renderMidiMonitor();
+        });
+        wrapper.append(input, text); container.append(wrapper);
+      });
+      this.updateMidiMonitorStatus();
+    }
+
+    renderMidiMonitor() {
+      const body = $('#midiMonitorRows');
+      if (!body) return;
+      body.replaceChildren();
+      const filtered = this.midiMonitorMessages.filter((message) => {
+        if (!this.midiMonitorDeviceFilter.has(message.deviceId)) return false;
+        if (!this.midiMonitorTypeFilter.has(message.monitorType)) return false;
+        return message.channel == null || this.midiMonitorChannelFilter.has(message.channel);
+      }).slice(0, 500);
+      if (!filtered.length) {
+        const row = document.createElement('tr'); row.className = 'midi-monitor-empty';
+        const cell = document.createElement('td'); cell.colSpan = 5; cell.textContent = this.midiMonitorRunning ? 'Listening… move a MIDI control.' : 'Press Start, then move a MIDI control.';
+        row.append(cell); body.append(row);
+      }
+      filtered.forEach((message) => {
+        const row = document.createElement('tr');
+        const time = document.createElement('td'); time.className = 'monitor-time'; time.textContent = this.formatMidiTimestamp(message.receivedAt);
+        const device = document.createElement('td'); device.className = 'monitor-device'; device.textContent = message.deviceName;
+        const type = document.createElement('td'); type.className = 'monitor-type'; type.textContent = message.typeLabel;
+        const data = document.createElement('td');
+        const hex = document.createElement('span'); hex.className = 'midi-data-hex'; hex.textContent = message.hex;
+        const description = document.createElement('span'); description.className = 'midi-data-description'; description.textContent = message.description;
+        data.append(hex, description);
+        const mappingText = message.mappedActions && message.mappedActions.length ? message.mappedActions.map((action) => ACTION_LABELS[action] || action).join(' · ') : message.profileEvent;
+        if (mappingText) { const mapped = document.createElement('span'); mapped.className = 'midi-data-mapping'; mapped.textContent = `→ ${mappingText}`; data.append(mapped); }
+        const channel = document.createElement('td'); channel.className = 'monitor-channel'; channel.textContent = message.channel == null ? '—' : String(message.channel + 1);
+        row.append(time, device, type, data, channel); body.append(row);
+      });
+      this.updateMidiMonitorStatus();
+    }
+
+    formatMidiTimestamp(timestamp) {
+      const date = new Date(Number(timestamp) || Date.now());
+      const base = date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return `${base}.${String(date.getMilliseconds()).padStart(3, '0')}`;
+    }
+
+    updateMidiMonitorStatus() {
+      const run = $('#midiMonitorRunButton');
+      const state = $('#midiMonitorState');
+      if (!run || !state) return;
+      run.textContent = this.midiMonitorRunning ? 'Stop' : 'Start';
+      state.textContent = this.midiMonitorRunning ? 'RUNNING' : 'STOPPED';
+      state.classList.toggle('stopped', !this.midiMonitorRunning);
+      $('#midiMonitorCount').textContent = `${this.midiMonitorMessages.length} message${this.midiMonitorMessages.length === 1 ? '' : 's'}`;
+      const count = this.midi.getDevices().length;
+      $('#midiMonitorDeviceCount').textContent = `${count} device${count === 1 ? '' : 's'}`;
+      $('#midiMonitorEnableButton').textContent = this.midi.access ? 'MIDI enabled' : 'Enable MIDI';
     }
 
     setupKeyboard() {
@@ -4778,11 +5352,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       }
     }
 
-    async enableMidi() {
+    async enableMidi(silent) {
       try {
         await this.midi.enable();
         this.updateMidiStatus(this.midi.getStatus());
-        this.toast('MIDI enabled', `${this.midi.getDevices().length} input device${this.midi.getDevices().length === 1 ? '' : 's'} connected.`, 'success');
+        this.renderMidiMonitorDevices();
+        if (!silent) this.toast('MIDI enabled', `${this.midi.getDevices().length} input device${this.midi.getDevices().length === 1 ? '' : 's'} connected.`, 'success');
       } catch (error) {
         this.updateMidiStatus(this.midi.getStatus());
         throw error;
@@ -4814,9 +5389,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         const deck = ui.engine;
         const trigger = value > 0 || (meta && meta.edge === 'down');
         if (command === 'play' && trigger) this.toggleDeckPlay(id);
-        else if (command === 'cue' && trigger) this.handleCue(id);
+        else if (command === 'stutter' && trigger) {
+          if (!deck.hasTrack) return;
+          deck.seek(deck.cuePoint || 0);
+          deck.play();
+          this.updateDeckPlayState(id);
+        } else if (command === 'cue' && trigger) this.handleCue(id);
         else if (command === 'sync' && trigger) this.toggleSync(id);
-        else if (command === 'master' && trigger) this.engine.setMasterDeck(id);
+        else if (command === 'syncOff' && trigger) {
+          if (deck.syncEnabled) this.engine.disableSync(id);
+          this.updateSyncButtons(); this.updateDeckTempoUi(id);
+        } else if (command === 'master' && trigger) this.engine.setMasterDeck(id);
+        else if (command === 'start' && trigger) {
+          deck.pause(); deck.seek(0); this.updateDeckPlayState(id);
+        } else if (command === 'headphoneCue' && trigger) {
+          $(`.channel-strip[data-channel="${id}"] .headphone-cue`)?.click();
+        }
         else if (command === 'tempo') {
           const percent = clamp(Number(value), 0, 1) * ui.tempoRangeValue * 2 - ui.tempoRangeValue;
           ui.tempo.value = percent; deck.setTempoPercent(percent);
@@ -4825,12 +5413,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
           deck.scratchBy(Number(value) * 0.015 * this.settings.scratchSensitivity);
           clearTimeout(deck._midiScratchTimer);
           deck._midiScratchTimer = setTimeout(() => deck.endScratch(), 80);
+        } else if (command === 'jogBend') {
+          const direction = Math.sign(Number(value));
+          if (!direction) return;
+          if (deck.playing) {
+            deck.beginNudge(direction, 0.018);
+            clearTimeout(deck._midiBendTimer);
+            deck._midiBendTimer = setTimeout(() => deck.endNudge(), 55);
+          } else {
+            deck.seek(deck.getPosition() + direction * 0.035);
+          }
         } else if (command === 'nudgeDown') {
           if (trigger) deck.beginNudge(-1, 0.04); else deck.endNudge();
         } else if (command === 'nudgeUp') {
           if (trigger) deck.beginNudge(1, 0.04); else deck.endNudge();
         } else if (command === 'loop' && trigger) this.toggleAutoLoop(id);
-        else if (command === 'loopHalf' && trigger) this.changeLoopBeats(id, -1);
+        else if (command.startsWith('loopBeat') && trigger) {
+          ui.loopBeats = Number(command.replace('loopBeat', '')) || 4;
+          ui.loopBeatsLabel.textContent = this.formatBeatValue(ui.loopBeats);
+          this.toggleAutoLoop(id);
+        } else if (command === 'loopHalf' && trigger) this.changeLoopBeats(id, -1);
         else if (command === 'loopDouble' && trigger) this.changeLoopBeats(id, 1);
         else if (command === 'reloop' && trigger) deck.loop.active ? deck.exitLoop() : deck.reloop();
         else if (command === 'filter') this.setMixerControl(id, '.filter-knob', clamp(Number(value), 0, 1) * 2 - 1);
@@ -4842,6 +5444,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         else if (command === 'masterTempo' && trigger) { deck.setPitchLock(!deck.pitchLock); ui.masterTempo.classList.toggle('active', deck.pitchLock); }
         else if (command === 'quantize' && trigger) { deck.quantize = !deck.quantize; ui.quantize.classList.toggle('active', deck.quantize); }
         else if (command === 'slip' && trigger) { deck.slip = !deck.slip; ui.slip.classList.toggle('active', deck.slip); }
+        else if (command.startsWith('clearHotCue') && trigger) this.clearHotCue(id, Number(command.replace('clearHotCue', '')) - 1);
         else if (command.startsWith('hotCue') && trigger) this.handleHotCue(id, Number(command.replace('hotCue', '')) - 1, { shiftKey: false });
         return;
       }
@@ -4852,6 +5455,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       else if (action === 'mixer.crossfaderCenter') { this.dom.crossfader.value = 0; this.engine.setCrossfader(0); this.updateCrossfaderReadout(); }
       else if (action === 'mixer.crossfaderRight') { this.nudgeCrossfader(0.08); }
       else if (action === 'master.volume') { this.dom.masterVolume.value = clamp(Number(value), 0, 1) * 1.2; this.engine.setMasterVolume(this.dom.masterVolume.value); }
+      else if (action === 'master.headphoneVolume') { const control = $('#headphoneLevel'); if (control) control.value = clamp(Number(value), 0, 1); }
+      else if (action === 'master.headphoneMaster' && value > 0) { const control = $('#headphoneMix'); if (control) control.value = Number(control.value) > 0.85 ? 0.5 : 1; }
+      else if (action === 'master.headphoneSplit' && value > 0) { const control = $('#headphoneMix'); if (control) control.value = Number(control.value) < 0.25 ? 0.5 : 0; }
       else if (action === 'record.toggle' && value > 0) this.toggleRecording();
       else if (/^fx[12]\./.test(action)) {
         const unit = Number(action[2]) - 1;
@@ -4865,8 +5471,42 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
           this.fxStates[unit].parameter = clamp(Number(value), 0, 1);
           $$('.fx-unit')[unit].querySelector('.fx-secondary').value = this.fxStates[unit].parameter;
           this.refreshFx(unit);
-        }
+        } else if (command === 'parameterStep' && value > 0) this.stepFxValue(unit, 'parameter');
+        else if (command === 'depthStep' && value > 0) this.stepFxValue(unit, 'mix');
+        else if (command === 'beatCycle' && value > 0) this.cycleFxBeat(unit);
+        else if (command === 'effectPrevious' && value > 0) this.cycleFxEffect(unit, -1);
+        else if (command === 'effectNext' && value > 0) this.cycleFxEffect(unit, 1);
       }
+    }
+
+    stepFxValue(unit, property) {
+      const state = this.fxStates[unit];
+      state[property] = Math.round(((state[property] + 0.25) % 1.25) * 100) / 100;
+      if (state[property] > 1) state[property] = 0;
+      const selector = property === 'mix' ? '.fx-depth' : '.fx-secondary';
+      $$('.fx-unit')[unit].querySelector(selector).value = state[property];
+      this.refreshFx(unit);
+    }
+
+    cycleFxBeat(unit) {
+      const divisions = window.ClipSeshFX.beatDivisions.map((item) => Number(item.value));
+      const current = divisions.findIndex((value) => value === Number(this.fxStates[unit].beatDivision));
+      const next = divisions[(current + 1 + divisions.length) % divisions.length];
+      this.fxStates[unit].beatDivision = next;
+      $$('.fx-unit')[unit].querySelector('.fx-beat').value = String(next);
+      this.refreshFx(unit);
+    }
+
+    cycleFxEffect(unit, direction) {
+      const definitions = window.ClipSeshFX.effectDefinitions;
+      const current = definitions.findIndex((item) => item.id === this.fxStates[unit].effectId);
+      const next = definitions[modulo(current + direction, definitions.length)];
+      this.fxStates[unit].effectId = next.id;
+      this.fxStates[unit].parameter = next.defaultParameter;
+      const element = $$('.fx-unit')[unit];
+      $('.fx-select', element).value = next.id;
+      $('.fx-secondary', element).value = next.defaultParameter;
+      this.refreshFx(unit);
     }
 
     setMixerControl(deckId, selector, value) {
@@ -4888,6 +5528,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       const support = $('#midiSupportText');
       const devices = $('#midiDevicesText');
       const enable = $('#enableMidiButton');
+      const profileStatus = $('#midiProfileStatus');
+      const profileBadge = $('#midiProfileBadge');
       if (!status.supported) {
         support.textContent = 'Web MIDI is not supported';
         devices.textContent = 'Use a current Chromium browser on localhost or HTTPS.';
@@ -4902,6 +5544,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
         devices.textContent = status.devices.length ? status.devices.map((device) => `${device.manufacturer} ${device.name}`.trim()).join(' · ') : 'Connect a device, then move a control.';
         enable.textContent = 'MIDI enabled';
       }
+      const profiles = status.profiles || [];
+      if (profileStatus && profileBadge) {
+        if (profiles.length) {
+          profileStatus.textContent = `${profiles.map((profile) => profile.deviceName).join(' · ')} recognized. Transport, 14-bit faders, jog wheels, pad modes, and FX defaults are active${profiles.some((profile) => profile.outputConnected) ? '; controller state requested over MIDI output' : ''}.`;
+          profileBadge.textContent = 'ACTIVE';
+          profileBadge.classList.add('active');
+        } else {
+          profileStatus.textContent = status.enabled ? 'Built in. Connect a device whose MIDI port name contains “DJControl Starlight”.' : 'Built in and waiting for MIDI permission and a matching controller.';
+          profileBadge.textContent = 'AUTO';
+          profileBadge.classList.remove('active');
+        }
+      }
+      this.updateMidiMonitorStatus();
     }
 
     renderMidiMappings() {
@@ -4909,7 +5564,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
       body.replaceChildren();
       const mappings = this.midi.getMappings();
       if (!mappings.length) {
-        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 5; cell.textContent = 'No custom mappings yet.'; row.append(cell); body.append(row); return;
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 5; cell.textContent = 'No custom mappings yet. Built-in device profiles remain active.'; row.append(cell); body.append(row); return;
       }
       mappings.forEach((mapping) => {
         const row = document.createElement('tr');
@@ -4971,6 +5626,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-vi
     selectSettingsTab(tab) {
       $$('.settings-tabs button', this.dom.settingsDialog).forEach((button) => button.classList.toggle('active', button.dataset.settingsTab === tab));
       $$('.settings-page', this.dom.settingsDialog).forEach((page) => page.classList.toggle('active', page.dataset.settingsPage === tab));
+      if (tab === 'midi-monitor') {
+        this.renderMidiMonitorDevices();
+        this.renderMidiMonitor();
+      }
     }
 
     updateDirectoryUi() {
