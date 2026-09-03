@@ -1406,6 +1406,55 @@ body.test-mode .test-deck { display: block; }
   .fx-device-controls { grid-template-columns: 1fr; }
 }
 
+
+/* Measure-lock BPM workflow ------------------------------------------------ */
+.measure-lock-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
+}
+.measure-lock-controls[hidden], .time-slice-controls[hidden] { display: none !important; }
+.slice-mode-toggle { display: inline-flex; gap: 4px; }
+.slice-mode-toggle .rack-button { min-width: 72px; }
+.slice-mode-toggle .rack-button.is-active { background: var(--green); color: var(--black); }
+.loop-status {
+  min-width: 270px;
+  flex: 1;
+  color: var(--cream);
+  border: 3px solid var(--cream);
+  background: rgba(0,0,0,.17);
+  padding: 7px 9px;
+  font-weight: 900;
+}
+.loop-status.is-locked { color: var(--green); background: #111; }
+.project-bpm-control input {
+  width: 92px;
+  min-height: 34px;
+  border: 3px solid var(--cream);
+  border-right-color: var(--shadow);
+  border-bottom-color: var(--shadow);
+  background: #9f8769;
+  padding: 3px 7px;
+  text-align: center;
+  font-weight: 900;
+}
+.audio-library-status {
+  grid-column: 1 / -1;
+  color: var(--cream);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.score-box.seam { background: #151515; color: var(--yellow); }
+.wave-canvas-wrap.is-loop-sliding { cursor: grab; }
+.wave-canvas-wrap.is-loop-sliding:active { cursor: grabbing; }
+.test-suite-actions .audio-library-button { background: #8298a9; }
+@media (max-width: 760px) {
+  .loop-status { min-width: 100%; }
+  .measure-lock-controls .rack-button { flex: 1 1 auto; }
+}
+
   </style>
 </head>
 <body>
@@ -1467,7 +1516,7 @@ body.test-mode .test-deck { display: block; }
             <input id="sourceBpm" type="number" min="20" max="400" value="120" step="0.01" />
           </label>
           <label class="value-box">
-            <span>TARGET BPM</span>
+            <span>PROJECT BPM</span>
             <input id="targetBpm" type="number" min="20" max="400" value="120" step="0.01" />
           </label>
           <div class="value-box readout-box">
@@ -1508,18 +1557,22 @@ body.test-mode .test-deck { display: block; }
           <div class="score-box"><small>WAVE CORR</small><strong id="waveScore">—</strong></div>
           <div class="score-box"><small>LOUDNESS</small><strong id="loudnessScore">—</strong></div>
           <div class="score-box"><small>DURATION / ALIGN</small><strong id="durationScore">—</strong><small id="alignmentReadout">—</small></div>
+          <div class="score-box seam"><small>SEAMS</small><strong id="seamScore">—</strong></div>
         </div>
       </section>
 
       <section class="file-strip panel-border" aria-label="Audio file controls">
         <div class="file-label">SAMPLENAME:</div>
         <div id="fileName" class="filename" title="Click to reveal the FX chain" role="button" tabindex="0" aria-expanded="false">DROP A WAV / AIFF / MP3 / FLAC / OGG / M4A</div>
-        <button id="loadButton" class="rack-button" type="button">LOAD AUDIO</button>
+        <button id="loadButton" class="rack-button" type="button">LOAD SOURCE</button>
+        <button id="loadAudioLibraryButton" class="rack-button" type="button">LOAD AUDIO FILES</button>
         <button id="clearButton" class="rack-button danger" type="button">CLEAR</button>
-        <button id="saveSessionButton" class="rack-button session-button" type="button">SAVE SESSION</button>
-        <button id="loadSessionButton" class="rack-button session-button" type="button">OPEN SESSION</button>
+        <button id="saveSessionButton" class="rack-button session-button" type="button">SAVE SESSION JSON</button>
+        <button id="loadSessionButton" class="rack-button session-button" type="button">OPEN SESSION JSON</button>
         <input id="fileInput" type="file" accept="audio/*,.wav,.wave,.aif,.aiff,.flac,.ogg,.mp3,.m4a" hidden />
-        <input id="sessionInput" type="file" accept=".clipsesh,.zip,application/zip" hidden />
+        <input id="audioLibraryInput" type="file" accept="audio/*,.wav,.wave,.aif,.aiff,.flac,.ogg,.mp3,.m4a" multiple hidden />
+        <input id="sessionInput" type="file" accept=".json,application/json" hidden />
+        <div id="audioLibraryStatus" class="audio-library-status">AUDIO LIBRARY: 0 FILES · JSON SESSIONS RESOLVE SOURCE/REFERENCE BY MD5</div>
       </section>
 
 
@@ -1587,22 +1640,46 @@ body.test-mode .test-deck { display: block; }
           <button id="zoomFullButton" class="rack-button" type="button">SHOW ALL</button>
           <button id="zoomSelectionButton" class="rack-button" type="button">ZOOM SELECT</button>
           <button id="auditionSelectionButton" class="rack-button" type="button">AUDITION</button>
+          <button id="fitBarButton" class="rack-button" type="button">FIT 1 BAR</button>
+          <button id="nudgeLoopLeftButton" class="rack-button" type="button">◀ 1 MS</button>
+          <button id="nudgeLoopRightButton" class="rack-button" type="button">1 MS ▶</button>
+          <button id="lockBarButton" class="rack-button export" type="button">LOCK 1 BAR</button>
+          <button id="unlockBarButton" class="rack-button" type="button">UNLOCK</button>
           <button id="makeSliceButton" class="rack-button" type="button">SLICE SELECTION</button>
           <button id="clearSelectionButton" class="rack-button" type="button">CLEAR SELECT</button>
           <div id="selectionInfo" class="toolbar-readout">SELECT: —</div>
+          <div id="loopStatus" class="loop-status">BPM MODE · FIT OR SELECT A SOURCE MEASURE, SLIDE IT, THEN LOCK</div>
         </div>
       </section>
 
       <section class="slice-rack panel-border">
         <div class="slice-controls">
           <div class="control-group">
-            <span class="control-title">SLICE MODE</span>
-            <label>COUNT
-              <select id="equalSliceCount">
-                <option>4</option><option>8</option><option selected>16</option><option>24</option><option>32</option>
-              </select>
-            </label>
-            <button id="equalSliceButton" class="rack-button" type="button">EQUAL SLICE</button>
+            <span class="control-title">SLICE DISPLAY</span>
+            <div class="slice-mode-toggle" role="group" aria-label="Slice scale mode">
+              <button id="sliceModeBpmButton" class="rack-button is-active" type="button">BPM</button>
+              <button id="sliceModeTimeButton" class="rack-button" type="button">TIME</button>
+            </div>
+            <div id="bpmSliceControls" class="measure-lock-controls">
+              <label>GRID
+                <select id="bpmDivision">
+                  <option value="2">1/2</option>
+                  <option value="1" selected>1/4</option>
+                  <option value="0.5">1/8</option>
+                  <option value="0.25">1/16</option>
+                </select>
+              </label>
+              <button id="cutBpmButton" class="rack-button" type="button">CUT LOCKED BAR</button>
+              <button id="placeBpmButton" class="rack-button export" type="button">PLACE IN ORDER</button>
+            </div>
+            <div id="timeSliceControls" class="time-slice-controls" hidden>
+              <label>COUNT
+                <select id="equalSliceCount">
+                  <option>4</option><option>8</option><option selected>16</option><option>24</option><option>32</option>
+                </select>
+              </label>
+              <button id="equalSliceButton" class="rack-button" type="button">EQUAL SLICE</button>
+            </div>
           </div>
           <div class="control-group">
             <span class="control-title">AUTO TRANSIENT</span>
@@ -1663,6 +1740,9 @@ body.test-mode .test-deck { display: block; }
             <button id="playButton" class="rack-button transport" type="button">▶ PLAY</button>
             <button id="stopButton" class="rack-button transport" type="button">■ STOP</button>
           </div>
+          <label class="project-bpm-control">PROJECT BPM
+            <input id="projectBpm" type="number" min="20" max="400" value="120" step="0.01" />
+          </label>
           <label>BARS
             <select id="barsSelect">
               <option>1</option><option>2</option><option>3</option><option selected>4</option>
@@ -1703,19 +1783,20 @@ body.test-mode .test-deck { display: block; }
           <button id="testDesignModeButton" class="rack-button" type="button">DESIGN</button>
         </div>
         <div id="testSuiteActions" class="test-suite-actions">
-          <button id="importTestsButton" class="rack-button" type="button">IMPORT ZIP</button>
+          <button id="testLoadAudioLibraryButton" class="rack-button audio-library-button" type="button">LOAD AUDIO FILES</button>
+          <button id="importTestsButton" class="rack-button" type="button">IMPORT TEST JSON</button>
           <button id="runAllTestsButton" class="rack-button export" type="button">RUN ALL</button>
-          <input id="testBundleInput" type="file" accept=".zip,application/zip" multiple hidden />
+          <input id="testBundleInput" type="file" accept=".json,application/json" multiple hidden />
         </div>
         <div id="testDesignControls" class="test-design-controls" hidden>
           <label class="sidebar-field">TEST NAME<input id="testNameInput" type="text" value="Untitled sampler test" maxlength="120" /></label>
           <label class="sidebar-field">PASS THRESHOLD %<input id="testThresholdInput" type="number" min="1" max="100" step="0.1" value="95" /></label>
           <button id="loadReferenceButton" class="rack-button" type="button">LOAD REFERENCE</button>
           <input id="referenceInput" type="file" accept="audio/*,.wav,.wave,.aif,.aiff,.flac,.ogg,.mp3,.m4a" hidden />
-          <button id="exportTestButton" class="rack-button export" type="button">EXPORT TEST ZIP</button>
+          <button id="exportTestButton" class="rack-button export" type="button">EXPORT TEST JSON</button>
           <div class="sidebar-field">DESIGN STATUS<textarea id="testDesignStatus" rows="4" readonly>Load a source into the sampler, load a reference here, create the sequence and FX, then analyze.</textarea></div>
         </div>
-        <div id="testList" class="test-list"><div class="test-list-empty">No tests imported yet. Import a test ZIP, or switch to DESIGN and export one.</div></div>
+        <div id="testList" class="test-list"><div class="test-list-empty">No tests imported yet. Load audio dependencies, then import a test JSON—or switch to DESIGN and export one.</div></div>
         <div class="test-sidebar-footer">
           <button id="resetTestSolutionButton" class="rack-button" type="button" disabled>RESET SOLUTION</button>
           <span id="testSuiteStatus">TEST SUITE READY</span>
@@ -1743,7 +1824,7 @@ body.test-mode .test-deck { display: block; }
         </section>
         <section>
           <h3>Tempo and pitch</h3>
-          <p>The app uses tape-style playback: changing Source BPM → Target BPM changes speed and pitch together. PITCH and FINE TUNE add semitone/cents offsets on top.</p>
+          <p>The app uses tape-style playback: a locked source measure is globally stretched or shrunk to PROJECT BPM, so its beat cuts stay on the measure grid when tempo changes. PITCH and FINE TUNE add semitone/cents offsets on top.</p>
         </section>
         <section>
           <h3>MIDI from a DAW</h3>
@@ -1751,11 +1832,11 @@ body.test-mode .test-deck { display: block; }
         </section>
         <section>
           <h3>Test bench</h3>
-          <p>Press <kbd>T</kbd> in the window corner. RUN imports portable test ZIPs and compares the rendered loop to a reference. DESIGN packages the source, reference, solution recipe, threshold, and hashes.</p>
+          <p>Press <kbd>T</kbd> in the window corner. RUN loads external audio dependencies, imports a single test JSON, and compares the rendered loop to its MD5-addressed reference. DESIGN exports the session recipe and dependency hashes as JSON.</p>
         </section>
         <section>
           <h3>Sessions and FX</h3>
-          <p>SAVE SESSION creates a portable <kbd>.clipsesh</kbd> bundle containing the original audio, waveform MD5, cuts, controls, FX, and sequencer MIDI. Click the sample filename to reveal the FX chain.</p>
+          <p>SAVE SESSION creates one JSON recipe containing dependency MD5s, loop lock, cuts, controls, FX, and sequencer MIDI. LOAD AUDIO FILES supplies the external audio bytes. Click the sample filename to reveal the FX chain.</p>
         </section>
       </div>
     </form>
@@ -1789,6 +1870,9 @@ body.test-mode .test-deck { display: block; }
     fileMeta: $("fileMeta"),
     fileInput: $("fileInput"),
     loadButton: $("loadButton"),
+    loadAudioLibraryButton: $("loadAudioLibraryButton"),
+    audioLibraryInput: $("audioLibraryInput"),
+    audioLibraryStatus: $("audioLibraryStatus"),
     clearButton: $("clearButton"),
     saveSessionButton: $("saveSessionButton"),
     loadSessionButton: $("loadSessionButton"),
@@ -1808,7 +1892,20 @@ body.test-mode .test-deck { display: block; }
     auditionSelectionButton: $("auditionSelectionButton"),
     makeSliceButton: $("makeSliceButton"),
     clearSelectionButton: $("clearSelectionButton"),
+    fitBarButton: $("fitBarButton"),
+    nudgeLoopLeftButton: $("nudgeLoopLeftButton"),
+    nudgeLoopRightButton: $("nudgeLoopRightButton"),
+    lockBarButton: $("lockBarButton"),
+    unlockBarButton: $("unlockBarButton"),
+    loopStatus: $("loopStatus"),
     selectionInfo: $("selectionInfo"),
+    sliceModeBpmButton: $("sliceModeBpmButton"),
+    sliceModeTimeButton: $("sliceModeTimeButton"),
+    bpmSliceControls: $("bpmSliceControls"),
+    timeSliceControls: $("timeSliceControls"),
+    bpmDivision: $("bpmDivision"),
+    cutBpmButton: $("cutBpmButton"),
+    placeBpmButton: $("placeBpmButton"),
     equalSliceCount: $("equalSliceCount"),
     equalSliceButton: $("equalSliceButton"),
     transientThreshold: $("transientThreshold"),
@@ -1829,6 +1926,7 @@ body.test-mode .test-deck { display: block; }
     midiStatus: $("midiStatus"),
     playButton: $("playButton"),
     stopButton: $("stopButton"),
+    projectBpm: $("projectBpm"),
     barsSelect: $("barsSelect"),
     stepsPerBarSelect: $("stepsPerBarSelect"),
     swing: $("swing"),
@@ -1861,6 +1959,7 @@ body.test-mode .test-deck { display: block; }
     waveScore: $("waveScore"),
     loudnessScore: $("loudnessScore"),
     durationScore: $("durationScore"),
+    seamScore: $("seamScore"),
     alignmentReadout: $("alignmentReadout"),
     testSidebar: $("testSidebar"),
     closeTestSidebarButton: $("closeTestSidebarButton"),
@@ -1868,6 +1967,7 @@ body.test-mode .test-deck { display: block; }
     testDesignModeButton: $("testDesignModeButton"),
     testSuiteActions: $("testSuiteActions"),
     testDesignControls: $("testDesignControls"),
+    testLoadAudioLibraryButton: $("testLoadAudioLibraryButton"),
     importTestsButton: $("importTestsButton"),
     runAllTestsButton: $("runAllTestsButton"),
     testBundleInput: $("testBundleInput"),
@@ -1978,6 +2078,11 @@ body.test-mode .test-deck { display: block; }
     midiEnabled: false,
     pattern: [],
     selectedSequencerCell: null,
+    sliceDisplayMode: "bpm",
+    loopLock: { locked: false, start: 0, end: 0, beats: 4, divisionBeats: 1 },
+    audioLibrary: new Map(),
+    audioLibraryRecords: [],
+    pendingDocument: null,
     test: {
       open: false,
       mode: "run",
@@ -2014,11 +2119,11 @@ body.test-mode .test-deck { display: block; }
 
   const TEXT_ENCODER = new TextEncoder();
   const TEXT_DECODER = new TextDecoder();
-  const SESSION_SCHEMA = "clip-sesh-session";
-  const TEST_SCHEMA = "clip-sesh-test";
+  const SESSION_SCHEMA = "clip-sesh-session-json";
+  const TEST_SCHEMA = "clip-sesh-test-json";
   const RECIPE_SCHEMA = "clip-sesh-recipe";
-  const FORMAT_VERSION = 1;
-  const METRIC_VERSION = "clip-sesh-composite-v1";
+  const FORMAT_VERSION = 2;
+  const METRIC_VERSION = "clip-sesh-seam-composite-v2";
   const CANONICAL_SAMPLE_RATE = 48000;
   const WAVEFORM_HASH_FORMAT = `pcm16le-interleaved-${CANONICAL_SAMPLE_RATE}hz-v1`;
 
@@ -2026,7 +2131,7 @@ body.test-mode .test-deck { display: block; }
     "fineTune", "pitchSemitones", "volume", "attack", "release",
     "sourceBpm", "targetBpm", "equalSliceCount", "transientThreshold",
     "triggerMode", "chokeToggle", "midiInputSelect", "midiChannelSelect",
-    "rootMidiNote", "keyboardToggle", "barsSelect", "stepsPerBarSelect", "swing",
+    "rootMidiNote", "keyboardToggle", "projectBpm", "barsSelect", "stepsPerBarSelect", "swing",
   ];
 
   const FX_DEFAULTS = Object.freeze({
@@ -2577,6 +2682,264 @@ body.test-mode .test-deck { display: block; }
     if (open) window.setTimeout(requestWaveDraw, 230);
   }
 
+
+  function syncProjectBpm(value, source = null) {
+    const bpm = clamp(Number.parseFloat(value) || 120, 20, 400);
+    if (dom.targetBpm && source !== dom.targetBpm) dom.targetBpm.value = String(bpm);
+    if (dom.projectBpm && source !== dom.projectBpm) dom.projectBpm.value = String(bpm);
+    updatePlaybackReadouts();
+    updateLoopUi();
+    renderSequencer();
+    scheduleAutoScore();
+  }
+
+  function sourceBarDurationSeconds() {
+    return 4 * 60 / getSourceBpm();
+  }
+
+  function activeLoopWindow() {
+    if (state.loopLock.locked) return { start: state.loopLock.start, end: state.loopLock.end };
+    return normalizeSelection();
+  }
+
+  function updateLoopUi() {
+    if (!dom.loopStatus) return;
+    const bpmMode = state.sliceDisplayMode === "bpm";
+    dom.sliceModeBpmButton?.classList.toggle("is-active", bpmMode);
+    dom.sliceModeTimeButton?.classList.toggle("is-active", !bpmMode);
+    if (dom.bpmSliceControls) dom.bpmSliceControls.hidden = !bpmMode;
+    if (dom.timeSliceControls) dom.timeSliceControls.hidden = bpmMode;
+    if (dom.bpmDivision) dom.bpmDivision.value = String(state.loopLock.divisionBeats || 1);
+    dom.loopStatus.classList.toggle("is-locked", bpmMode && state.loopLock.locked);
+    if (!bpmMode) {
+      dom.loopStatus.textContent = "TIME MODE · SLICE BY ELAPSED SECONDS";
+      return;
+    }
+    if (!state.buffer) {
+      dom.loopStatus.textContent = "BPM MODE · LOAD A SOURCE, FIT/SELECT ONE MEASURE, SLIDE IT, THEN LOCK";
+      return;
+    }
+    const window = activeLoopWindow();
+    if (!window || window.end - window.start < 0.001) {
+      dom.loopStatus.textContent = `BPM MODE · SOURCE ${getSourceBpm().toFixed(3)} BPM · FIT 1 BAR TO BEGIN`;
+      return;
+    }
+    const duration = window.end - window.start;
+    if (state.loopLock.locked) {
+      const count = getSlices().length;
+      dom.loopStatus.textContent = `LOCKED 1 BAR · ${formatTime(window.start)} → ${formatTime(window.end)} · ${duration.toFixed(6)} S · ${count} GRID SLICES · ${getPlaybackRate().toFixed(6)}× @ ${getTargetBpm().toFixed(2)} BPM`;
+    } else {
+      dom.loopStatus.textContent = `UNLOCKED BAR CANDIDATE · ${formatTime(window.start)} → ${formatTime(window.end)} · DRAG INSIDE TO SLIDE · LOCK WHEN ALIGNED`;
+    }
+  }
+
+  function setSliceDisplayMode(mode, { clear = false } = {}) {
+    state.sliceDisplayMode = mode === "time" ? "time" : "bpm";
+    if (clear) clearPattern(false);
+    updateLoopUi();
+    updateSelectionReadout();
+    renderPads();
+    renderSequencer();
+    updateSliceStatus();
+    requestWaveDraw();
+    scheduleAutoScore();
+  }
+
+  function fitSelectionToSourceBar() {
+    if (!state.buffer) { showToast("Load a source sample first."); return; }
+    const duration = Math.min(state.buffer.duration, sourceBarDurationSeconds());
+    const current = normalizeSelection();
+    let start = current ? current.start : state.viewStart;
+    start = clamp(start, 0, Math.max(0, state.buffer.duration - duration));
+    state.loopLock.locked = false;
+    state.selection = { start, end: start + duration };
+    state.selectedSlice = 0;
+    updateSelectionReadout();
+    updateLoopUi();
+    requestWaveDraw();
+    showToast(`One source measure fitted at ${getSourceBpm().toFixed(3)} BPM. Drag inside the yellow window to slide it.`);
+  }
+
+  function moveLoopWindow(deltaSeconds) {
+    if (!state.buffer) return;
+    const window = activeLoopWindow();
+    if (!window) { fitSelectionToSourceBar(); return; }
+    const span = Math.max(0.001, window.end - window.start);
+    const start = clamp(window.start + deltaSeconds, 0, Math.max(0, state.buffer.duration - span));
+    const end = start + span;
+    state.selection = { start, end };
+    if (state.loopLock.locked) {
+      state.loopLock.start = start;
+      state.loopLock.end = end;
+    }
+    updateSelectionReadout();
+    updateLoopUi();
+    renderPads();
+    renderSequencer();
+    requestWaveDraw();
+    scheduleAutoScore();
+  }
+
+  function lockSelectionToBar({ silent = false } = {}) {
+    if (!state.buffer) { if (!silent) showToast("Load a source sample first."); return false; }
+    if (state.sliceDisplayMode !== "bpm") setSliceDisplayMode("bpm");
+    let selection = normalizeSelection();
+    if (!selection) {
+      fitSelectionToSourceBar();
+      selection = normalizeSelection();
+    }
+    const duration = Math.min(state.buffer.duration, sourceBarDurationSeconds());
+    const start = clamp(selection.start, 0, Math.max(0, state.buffer.duration - duration));
+    state.loopLock = {
+      locked: true,
+      start,
+      end: start + duration,
+      beats: 4,
+      divisionBeats: clamp(Number(dom.bpmDivision?.value) || Number(state.loopLock.divisionBeats) || 1, 0.25, 2),
+    };
+    state.selection = { start: state.loopLock.start, end: state.loopLock.end };
+    state.selectedSlice = 0;
+    clearPattern(false);
+    updatePlaybackReadouts();
+    updateSelectionReadout();
+    updateLoopUi();
+    renderPads();
+    renderSequencer();
+    updateSliceStatus();
+    requestWaveDraw();
+    if (!silent) showToast(`Locked one source measure to one project measure · global rate ${getPlaybackRate().toFixed(6)}×.`);
+    return true;
+  }
+
+  function unlockBar() {
+    if (!state.loopLock.locked) return;
+    state.selection = { start: state.loopLock.start, end: state.loopLock.end };
+    state.loopLock.locked = false;
+    clearPattern(false);
+    updatePlaybackReadouts();
+    updateSelectionReadout();
+    updateLoopUi();
+    renderPads();
+    renderSequencer();
+    requestWaveDraw();
+    showToast("Bar unlocked. Drag inside the yellow window to reposition it, then lock again.");
+  }
+
+  function cutLockedBar() {
+    if (!state.loopLock.locked && !lockSelectionToBar({ silent: true })) return;
+    state.loopLock.divisionBeats = clamp(Number(dom.bpmDivision?.value) || 1, 0.25, 2);
+    state.selectedSlice = 0;
+    clearPattern(false);
+    updateLoopUi();
+    renderPads();
+    renderSequencer();
+    updateSliceStatus();
+    requestWaveDraw();
+    showToast(`Cut locked bar into ${getSlices().length} ${dom.bpmDivision.options[dom.bpmDivision.selectedIndex].text} slices. Source boundaries remain fixed when PROJECT BPM changes.`);
+  }
+
+  function placeLockedSlicesInOrder() {
+    if (!state.loopLock.locked) {
+      if (!lockSelectionToBar({ silent: true })) return;
+    }
+    state.loopLock.divisionBeats = clamp(Number(dom.bpmDivision?.value) || 1, 0.25, 2);
+    const division = state.loopLock.divisionBeats;
+    const requiredStepsPerBar = division < 1 ? 16 : Number(dom.stepsPerBarSelect.value || 16);
+    if (requiredStepsPerBar < 16 && division < 1) dom.stepsPerBarSelect.value = "16";
+    dom.barsSelect.value = "1";
+    dom.swing.value = "0";
+    dom.swingOutput.textContent = "0%";
+    const stepsPerBar = Number(dom.stepsPerBarSelect.value);
+    const stepStride = division * stepsPerBar / 4;
+    if (!Number.isInteger(stepStride)) {
+      dom.stepsPerBarSelect.value = "16";
+    }
+    resizePattern(totalSteps());
+    state.pattern = Array.from({ length: totalSteps() }, () => new Map());
+    const actualStride = division * Number(dom.stepsPerBarSelect.value) / 4;
+    const velocity = clamp(Math.round(state.keyboardVelocity || 100), 1, 127);
+    getSlices().forEach((slice, index) => {
+      const step = Math.round(index * actualStride);
+      if (step < state.pattern.length) state.pattern[step].set(slice.index, velocity);
+    });
+    state.selectedSequencerCell = null;
+    updateStepVelocityEditor();
+    renderPads();
+    renderSequencer();
+    updateLoopUi();
+    scheduleAutoScore();
+    showToast(`Placed ${getSlices().length} sequential events. Contiguous equal-velocity slices play as one continuous source—no internal retriggers.`);
+  }
+
+  function getSeamlessBarChain(barIndex) {
+    if (!state.buffer || state.sliceDisplayMode !== "bpm" || !state.loopLock.locked) return null;
+    if (Math.abs(numericValue(dom.swing, 0)) > 1e-9) return null;
+    const slices = getSlices();
+    if (!slices.length) return null;
+    const stepsPerBar = Number(dom.stepsPerBarSelect.value);
+    const stride = state.loopLock.divisionBeats * stepsPerBar / 4;
+    if (!Number.isInteger(stride) || stride < 1) return null;
+    const barStart = barIndex * stepsPerBar;
+    let velocity = null;
+    for (let within = 0; within < stepsPerBar; within += 1) {
+      const events = state.pattern[barStart + within] || new Map();
+      const expectedIndex = within % stride === 0 ? within / stride : -1;
+      if (expectedIndex >= 0 && expectedIndex < slices.length) {
+        if (events.size !== 1 || !events.has(expectedIndex)) return null;
+        const value = events.get(expectedIndex);
+        if (velocity == null) velocity = value;
+        if (value !== velocity) return null;
+      } else if (events.size !== 0) {
+        return null;
+      }
+    }
+    if (slices.length * stride !== stepsPerBar) return null;
+    return {
+      barIndex,
+      barStart,
+      velocity: velocity || 100,
+      slices,
+      stride,
+      region: { start: state.loopLock.start, end: state.loopLock.end },
+    };
+  }
+
+  function lockedStructureChecks() {
+    const chain = getSeamlessBarChain(0);
+    const slices = getSlices();
+    const rate = getPlaybackRate();
+    const expectedRate = state.loopLock.locked
+      ? (state.loopLock.end - state.loopLock.start) / (state.loopLock.beats * 60 / getTargetBpm()) * Math.pow(2, (numericValue(dom.pitchSemitones, 0) + numericValue(dom.fineTune, 0) / 100) / 12)
+      : rate;
+    const checks = {
+      bpmMode: state.sliceDisplayMode === "bpm",
+      lockedOneBar: Boolean(state.loopLock.locked && Math.abs(state.loopLock.beats - 4) < 1e-9),
+      sourceWindowValid: Boolean(state.loopLock.locked && state.loopLock.end > state.loopLock.start),
+      globalRateOnly: Math.abs(rate - expectedRate) < 1e-9,
+      sequentialChain: Boolean(chain),
+      gridCount: slices.length === Math.round(4 / state.loopLock.divisionBeats),
+    };
+    return { pass: Object.values(checks).every(Boolean), checks, rate, sliceCount: slices.length };
+  }
+
+  async function renderLockedContinuousReference() {
+    if (!state.buffer || !state.loopLock.locked) throw new Error("Lock a source measure first.");
+    const duration = state.loopLock.beats * 60 / getTargetBpm();
+    const sampleRate = clamp(Math.round(state.buffer.sampleRate), 22050, 48000);
+    const channelCount = Math.min(2, Math.max(1, state.buffer.numberOfChannels));
+    const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OfflineContext) throw new Error("OfflineAudioContext is unavailable in this browser.");
+    const offline = new OfflineContext(channelCount, Math.max(1, Math.ceil(duration * sampleRate)), sampleRate);
+    const inputGain = offline.createGain();
+    inputGain.gain.value = getVolumeGain();
+    createFxChain(offline, inputGain, offline.destination, readFxSettings(), duration);
+    createScheduledSource(offline, inputGain, { start: state.loopLock.start, end: state.loopLock.end }, state.keyboardVelocity || 100, 0, {
+      rate: getPlaybackRate(), attackSeconds: getAttackSeconds(), releaseSeconds: getReleaseSeconds(), buffer: state.buffer,
+    });
+    return offline.startRendering();
+  }
+
+
   function captureRecipe() {
     const controls = {};
     for (const id of SESSION_CONTROL_IDS) {
@@ -2584,11 +2947,15 @@ body.test-mode .test-deck { display: block; }
       if (!element) continue;
       controls[id] = element.type === "checkbox" ? element.checked : element.value;
     }
+    controls.targetBpm = String(getTargetBpm());
+    controls.projectBpm = String(getTargetBpm());
     return {
       schema: RECIPE_SCHEMA,
       version: FORMAT_VERSION,
       controls,
       fx: readFxSettings(),
+      sliceDisplayMode: state.sliceDisplayMode,
+      loopLock: { ...state.loopLock },
       boundaries: state.boundaries.slice(),
       selection: state.selection ? { ...state.selection } : null,
       selectedSlice: state.selectedSlice,
@@ -2607,6 +2974,19 @@ body.test-mode .test-deck { display: block; }
       if (element.type === "checkbox") element.checked = Boolean(value);
       else element.value = String(value);
     }
+    const bpm = controls.projectBpm ?? controls.targetBpm ?? getTargetBpm();
+    if (dom.projectBpm) dom.projectBpm.value = String(bpm);
+    if (dom.targetBpm) dom.targetBpm.value = String(bpm);
+    state.sliceDisplayMode = recipe.sliceDisplayMode === "time" ? "time" : "bpm";
+    const savedLoop = recipe.loopLock || {};
+    state.loopLock = {
+      locked: Boolean(savedLoop.locked),
+      start: Number(savedLoop.start || 0),
+      end: Number(savedLoop.end || 0),
+      beats: Number(savedLoop.beats || 4),
+      divisionBeats: clamp(Number(savedLoop.divisionBeats || 1), 0.25, 2),
+    };
+    if (dom.bpmDivision) dom.bpmDivision.value = String(state.loopLock.divisionBeats);
     state.keyboardOctave = clamp(Math.round(recipe.keyboard?.octave ?? state.keyboardOctave), -1, 8);
     state.keyboardVelocity = clamp(Math.round(recipe.keyboard?.velocity ?? state.keyboardVelocity), 1, 127);
     updatePlaybackReadouts();
@@ -2627,7 +3007,7 @@ body.test-mode .test-deck { display: block; }
       }
       return map;
     });
-    state.selection = recipe.selection ? { start: Number(recipe.selection.start), end: Number(recipe.selection.end) } : null;
+    state.selection = recipe.selection ? { start: Number(recipe.selection.start), end: Number(recipe.selection.end) } : (state.loopLock.locked ? { start: state.loopLock.start, end: state.loopLock.end } : null);
     state.selectedSlice = clamp(Math.round(recipe.selectedSlice || 0), 0, Math.max(0, getSlices().length - 1));
     if (state.buffer) {
       state.viewStart = Number(recipe.view?.start ?? 0);
@@ -2637,73 +3017,214 @@ body.test-mode .test-deck { display: block; }
     state.selectedSequencerCell = null;
     updateStepVelocityEditor();
     updateSelectionReadout();
+    updateLoopUi();
     renderPads();
     renderSequencer();
     updateSliceStatus();
     requestWaveDraw();
   }
 
-  async function saveFullSession() {
-    if (!state.buffer || !state.loadedFileBytes) {
-      showToast("Load an audio file before saving a full session.");
-      return;
+
+  function addAudioLibraryRecord(record) {
+    if (!record?.fileMd5 || !record?.buffer || !record?.bytes) return record;
+    const existing = state.audioLibraryRecords.find((item) => item.fileMd5 === record.fileMd5);
+    const stored = existing || record;
+    if (!existing) state.audioLibraryRecords.push(stored);
+    state.audioLibrary.set(record.fileMd5, stored);
+    if (record.waveformMd5) state.audioLibrary.set(record.waveformMd5, stored);
+    updateAudioLibraryStatus();
+    return stored;
+  }
+
+  function updateAudioLibraryStatus(extra = "") {
+    if (!dom.audioLibraryStatus) return;
+    const names = state.audioLibraryRecords.map((record) => record.name).slice(0, 4).join(" · ");
+    dom.audioLibraryStatus.textContent = `AUDIO LIBRARY: ${state.audioLibraryRecords.length} FILE${state.audioLibraryRecords.length === 1 ? "" : "S"}${names ? ` · ${names}` : ""}${extra ? ` · ${extra}` : ""}`;
+  }
+
+  async function registerAudioDependency(value, metadata = {}) {
+    const bytes = value instanceof Uint8Array ? value.slice() : new Uint8Array(value);
+    const fileMd5 = md5Bytes(bytes);
+    const known = state.audioLibrary.get(fileMd5);
+    if (known) return known;
+    const context = await ensureAudioContext();
+    const copy = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    const decoded = await context.decodeAudioData(copy);
+    if (!decoded.length || !decoded.duration) throw new Error(`${metadata.name || "Audio"} decoded to an empty buffer.`);
+    const waveformMd5 = await waveformMd5ForAudioBytes(bytes, decoded);
+    return addAudioLibraryRecord({
+      name: metadata.name || "audio.wav",
+      type: metadata.type || "application/octet-stream",
+      bytes,
+      buffer: decoded,
+      fileMd5,
+      waveformMd5,
+      sampleRate: decoded.sampleRate,
+      channels: decoded.numberOfChannels,
+      frames: decoded.length,
+    });
+  }
+
+  async function loadAudioLibraryFiles(files) {
+    if (!files?.length) return;
+    const oldText = dom.loadAudioLibraryButton.textContent;
+    dom.loadAudioLibraryButton.disabled = true;
+    dom.testLoadAudioLibraryButton.disabled = true;
+    let loaded = 0;
+    try {
+      for (const file of files) {
+        dom.loadAudioLibraryButton.textContent = `${loaded + 1}/${files.length}`;
+        try {
+          await registerAudioDependency(new Uint8Array(await file.arrayBuffer()), { name: file.name, type: file.type });
+          loaded += 1;
+        } catch (error) {
+          console.error(error);
+          showToast(`${file.name}: ${error.message || "could not decode"}`, 5000);
+        }
+      }
+      updateAudioLibraryStatus(`${loaded} LOADED THIS STEP`);
+      if (state.pendingDocument) {
+        const pending = state.pendingDocument;
+        state.pendingDocument = null;
+        if (pending.kind === "session") await loadSessionDocument(pending.document);
+        else if (pending.kind === "test") await loadTestDocument(pending.document, { analyze: true });
+      }
+      showToast(`Indexed ${loaded} audio file${loaded === 1 ? "" : "s"} by MD5.`);
+    } finally {
+      dom.loadAudioLibraryButton.disabled = false;
+      dom.testLoadAudioLibraryButton.disabled = false;
+      dom.loadAudioLibraryButton.textContent = oldText;
+      dom.audioLibraryInput.value = "";
     }
+  }
+
+  function audioDependencyDescriptor(record, role) {
+    if (!record) return null;
+    return {
+      role,
+      name: record.name,
+      type: record.type || "application/octet-stream",
+      fileMd5: record.fileMd5,
+      waveformMd5: record.waveformMd5,
+      sampleRate: record.buffer?.sampleRate || record.sampleRate,
+      channels: record.buffer?.numberOfChannels || record.channels,
+      frames: record.buffer?.length || record.frames,
+      waveformHashFormat: WAVEFORM_HASH_FORMAT,
+    };
+  }
+
+  function currentSourceRecord() {
+    if (!state.buffer || !state.loadedFileMd5) return null;
+    return state.audioLibrary.get(state.loadedFileMd5) || addAudioLibraryRecord({
+      name: state.loadedFileName,
+      type: state.loadedFileType,
+      bytes: state.loadedFileBytes,
+      buffer: state.buffer,
+      fileMd5: state.loadedFileMd5,
+      waveformMd5: state.waveformMd5,
+    });
+  }
+
+  function currentReferenceRecord() {
+    if (!state.test.referenceBuffer || !state.test.referenceFileMd5) return null;
+    return state.audioLibrary.get(state.test.referenceFileMd5) || addAudioLibraryRecord({
+      name: state.test.referenceName,
+      type: state.test.referenceType,
+      bytes: state.test.referenceBytes,
+      buffer: state.test.referenceBuffer,
+      fileMd5: state.test.referenceFileMd5,
+      waveformMd5: state.test.referenceWaveformMd5,
+    });
+  }
+
+  function resolveAudioDependency(descriptor) {
+    if (!descriptor) return null;
+    return state.audioLibrary.get(descriptor.fileMd5) || state.audioLibrary.get(descriptor.waveformMd5) || null;
+  }
+
+  function buildSessionDocument() {
+    const source = currentSourceRecord();
+    if (!source) throw new Error("Load the source audio first.");
+    const reference = currentReferenceRecord();
+    return {
+      schema: SESSION_SCHEMA,
+      version: FORMAT_VERSION,
+      createdAt: new Date().toISOString(),
+      description: "Clip Sesh single-JSON session. Audio bytes are external and resolved by MD5.",
+      audioDependencies: {
+        source: audioDependencyDescriptor(source, "source"),
+        reference: audioDependencyDescriptor(reference, "reference"),
+      },
+      recipe: captureRecipe(),
+      workspace: {
+        testOpen: state.test.open,
+        testMode: state.test.mode,
+        testName: dom.testNameInput.value,
+        testThreshold: clamp(numericValue(dom.testThresholdInput, 95), 1, 100),
+        autoScore: dom.autoScoreToggle.checked,
+        fxDrawerOpen: dom.fxDrawer.classList.contains("is-open"),
+      },
+    };
+  }
+
+  function missingDependencyMessage(descriptors) {
+    return descriptors.map((dep) => `${dep.name || dep.role}: ${dep.fileMd5 || dep.waveformMd5 || "NO HASH"}`).join(" · ");
+  }
+
+  async function loadSessionDocument(document, options = {}) {
+    if (!document || document.schema !== SESSION_SCHEMA || Number(document.version) !== FORMAT_VERSION) {
+      throw new Error("Unsupported Clip Sesh JSON session.");
+    }
+    const sourceDescriptor = document.audioDependencies?.source;
+    const referenceDescriptor = document.audioDependencies?.reference;
+    const missing = [sourceDescriptor, referenceDescriptor].filter(Boolean).filter((dep) => !resolveAudioDependency(dep));
+    if (missing.length) {
+      state.pendingDocument = { kind: options.pendingKind || "session", document: options.pendingDocument || document };
+      updateAudioLibraryStatus(`MISSING ${missing.length}: ${missingDependencyMessage(missing)}`);
+      showToast(`Load the matching audio file${missing.length === 1 ? "" : "s"}: ${missingDependencyMessage(missing)}`, 8000);
+      return false;
+    }
+    const source = resolveAudioDependency(sourceDescriptor);
+    state.test.suppressAutoScore = true;
+    await loadAudioBytes(source.bytes, { name: source.name, type: source.type }, { detectBpm: false, toast: false });
+    if (sourceDescriptor.fileMd5 && state.loadedFileMd5 !== sourceDescriptor.fileMd5) throw new Error("Resolved source MD5 does not match the session.");
+    applyRecipe(document.recipe);
+    if (referenceDescriptor) {
+      const reference = resolveAudioDependency(referenceDescriptor);
+      await loadReferenceBytes(reference.bytes, { name: reference.name, type: reference.type }, { toast: false });
+      if (referenceDescriptor.fileMd5 && state.test.referenceFileMd5 !== referenceDescriptor.fileMd5) throw new Error("Resolved reference MD5 does not match the session.");
+    } else {
+      clearReference();
+    }
+    const workspace = document.workspace || {};
+    dom.testNameInput.value = String(workspace.testName || dom.testNameInput.value || "Untitled sampler test");
+    dom.testThresholdInput.value = String(clamp(Number(workspace.testThreshold ?? 95), 1, 100));
+    dom.autoScoreToggle.checked = workspace.autoScore !== false;
+    toggleFxDrawer(Boolean(workspace.fxDrawerOpen));
+    if (options.restoreWorkspace !== false) {
+      switchTestWorkspace(workspace.testMode === "design" ? "design" : "run");
+      setTestMode(Boolean(workspace.testOpen || referenceDescriptor));
+    }
+    state.test.suppressAutoScore = false;
+    updateAudioLibraryStatus("SESSION RESOLVED BY MD5");
+    scheduleAutoScore();
+    return true;
+  }
+
+
+  async function saveFullSession() {
+    if (!state.buffer) { showToast("Load a source before saving a session."); return; }
     const oldText = dom.saveSessionButton.textContent;
     dom.saveSessionButton.disabled = true;
-    dom.saveSessionButton.textContent = "PACKING…";
-    await sleepFrame();
+    dom.saveSessionButton.textContent = "SAVING…";
     try {
-      const sourceName = safeEntryName(state.loadedFileName, "sample.bin");
-      const sourcePath = `audio/${sourceName}`;
-      const manifest = {
-        schema: SESSION_SCHEMA,
-        version: FORMAT_VERSION,
-        createdAt: new Date().toISOString(),
-        sample: {
-          path: sourcePath,
-          name: state.loadedFileName,
-          type: state.loadedFileType || "application/octet-stream",
-          fileMd5: state.loadedFileMd5,
-          waveformMd5: state.waveformMd5,
-          sampleRate: state.buffer.sampleRate,
-          channels: state.buffer.numberOfChannels,
-          frames: state.buffer.length,
-          waveformHashFormat: WAVEFORM_HASH_FORMAT,
-        },
-        recipe: captureRecipe(),
-        workspace: {
-          testOpen: state.test.open,
-          testMode: state.test.mode,
-          testName: dom.testNameInput.value,
-          testThreshold: clamp(numericValue(dom.testThresholdInput, 95), 1, 100),
-          autoScore: dom.autoScoreToggle.checked,
-          fxDrawerOpen: dom.fxDrawer.classList.contains("is-open"),
-        },
-      };
-      const entries = [
-        { name: "session.json", data: TEXT_ENCODER.encode(JSON.stringify(manifest, null, 2)) },
-        { name: sourcePath, data: state.loadedFileBytes },
-      ];
-      if (state.test.referenceBytes && state.test.referenceBuffer) {
-        const referenceName = safeEntryName(state.test.referenceName, "reference.bin");
-        const referencePath = `reference/${referenceName}`;
-        manifest.reference = {
-          path: referencePath,
-          name: state.test.referenceName,
-          type: state.test.referenceType || "application/octet-stream",
-          fileMd5: state.test.referenceFileMd5,
-          waveformMd5: state.test.referenceWaveformMd5,
-          waveformHashFormat: WAVEFORM_HASH_FORMAT,
-        };
-        entries[0] = { name: "session.json", data: TEXT_ENCODER.encode(JSON.stringify(manifest, null, 2)) };
-        entries.push({ name: referencePath, data: state.test.referenceBytes });
-      }
-      const zip = createZip(entries);
-      downloadBytes(zip, `${safeBaseName(state.loadedFileName)}.clipsesh`, "application/zip");
-      showToast(`Saved full session · waveform MD5 ${state.waveformMd5.slice(0, 10)}…`);
+      const document = buildSessionDocument();
+      const bytes = TEXT_ENCODER.encode(JSON.stringify(document, null, 2));
+      downloadBytes(bytes, `${safeBaseName(state.loadedFileName)}.clipsesh-session.json`, "application/json");
+      showToast(`Saved one JSON session · source MD5 ${document.audioDependencies.source.fileMd5.slice(0, 10)}…`);
     } catch (error) {
       console.error(error);
-      showToast(`Session save failed: ${error.message || "unknown error"}`, 5000);
+      showToast(`Session save failed: ${error.message || "unknown error"}`, 5500);
     } finally {
       dom.saveSessionButton.disabled = false;
       dom.saveSessionButton.textContent = oldText;
@@ -2714,64 +3235,14 @@ body.test-mode .test-deck { display: block; }
     if (!file) return;
     const oldText = dom.loadSessionButton.textContent;
     dom.loadSessionButton.disabled = true;
-    dom.loadSessionButton.textContent = "OPENING…";
+    dom.loadSessionButton.textContent = "READING…";
     try {
-      const files = await parseZip(new Uint8Array(await file.arrayBuffer()));
-      const manifestBytes = files.get("session.json");
-      if (!manifestBytes) throw new Error("session.json is missing.");
-      const manifest = JSON.parse(TEXT_DECODER.decode(manifestBytes));
-      if (manifest.schema !== SESSION_SCHEMA || manifest.version !== FORMAT_VERSION) throw new Error("Unsupported Clip Sesh session format.");
-      const source = files.get(manifest.sample?.path);
-      if (!source) throw new Error("The session's source audio is missing.");
-      if (manifest.sample.fileMd5 && md5Bytes(source) !== manifest.sample.fileMd5) {
-        throw new Error("The session source file failed its MD5 integrity check.");
-      }
-      state.test.suppressAutoScore = true;
-      let waveformHashWarning = false;
-      await loadAudioBytes(source, { name: manifest.sample.name, type: manifest.sample.type }, { detectBpm: false, toast: false });
-      if (manifest.sample.waveformMd5 && state.waveformMd5 !== manifest.sample.waveformMd5) {
-        waveformHashWarning = true;
-        console.warn("The source bytes are intact, but this browser decoded a different canonical waveform MD5.");
-      }
-      applyRecipe(manifest.recipe);
-      let restoredReference = false;
-      if (manifest.reference?.path) {
-        const reference = files.get(manifest.reference.path);
-        if (!reference) throw new Error("The session's reference audio is missing.");
-        if (manifest.reference.fileMd5 && md5Bytes(reference) !== manifest.reference.fileMd5) {
-          throw new Error("The session reference file failed its MD5 integrity check.");
-        }
-        await loadReferenceBytes(reference, { name: manifest.reference.name, type: manifest.reference.type }, { toast: false });
-        if (manifest.reference.waveformMd5 && state.test.referenceWaveformMd5 !== manifest.reference.waveformMd5) {
-          waveformHashWarning = true;
-          console.warn("The reference bytes are intact, but this browser decoded a different canonical waveform MD5.");
-        }
-        restoredReference = true;
-      } else {
-        clearReference();
-      }
-
-      state.test.selectedId = null;
-      state.test.selectedBundle = null;
-      dom.resetTestSolutionButton.disabled = true;
-      const workspace = manifest.workspace || null;
-      if (workspace) {
-        dom.testNameInput.value = String(workspace.testName || "Untitled sampler test");
-        dom.testThresholdInput.value = String(clamp(Number(workspace.testThreshold ?? 95), 1, 100));
-        dom.autoScoreToggle.checked = workspace.autoScore !== false;
-        switchTestWorkspace(workspace.testMode === "design" ? "design" : "run");
-        setTestMode(Boolean(workspace.testOpen));
-        toggleFxDrawer(Boolean(workspace.fxDrawerOpen));
-      } else {
-        setTestMode(restoredReference);
-      }
-      state.test.suppressAutoScore = false;
-      showToast(`Opened ${file.name} · waveform MD5 ${state.waveformMd5.slice(0, 10)}…${waveformHashWarning ? " · decoder hash warning" : ""}`, waveformHashWarning ? 6500 : 4200);
-      scheduleAutoScore();
+      const document = JSON.parse(await file.text());
+      const loaded = await loadSessionDocument(document);
+      if (loaded) showToast(`Opened ${file.name} · all external audio dependencies matched by MD5.`, 4300);
     } catch (error) {
-      state.test.suppressAutoScore = false;
       console.error(error);
-      showToast(`Session open failed: ${error.message || "invalid session"}`, 6000);
+      showToast(`Session open failed: ${error.message || "invalid JSON session"}`, 6500);
     } finally {
       dom.loadSessionButton.disabled = false;
       dom.loadSessionButton.textContent = oldText;
@@ -2846,15 +3317,10 @@ body.test-mode .test-deck { display: block; }
 
   function clearSimilarityReadout() {
     state.test.analysis = null;
-    dom.overallScore.textContent = "—";
-    dom.passStatus.textContent = "WAITING";
-    dom.spectrumScore.textContent = "—";
-    dom.envelopeScore.textContent = "—";
-    dom.waveScore.textContent = "—";
-    dom.loudnessScore.textContent = "—";
-    dom.durationScore.textContent = "—";
-    dom.alignmentReadout.textContent = "—";
-    dom.overallScoreBox.classList.remove("is-fail");
+    dom.overallScore.textContent = "—"; dom.passStatus.textContent = "WAITING";
+    dom.spectrumScore.textContent = "—"; dom.envelopeScore.textContent = "—"; dom.waveScore.textContent = "—";
+    dom.loudnessScore.textContent = "—"; dom.durationScore.textContent = "—"; dom.seamScore.textContent = "—";
+    dom.alignmentReadout.textContent = "—"; dom.overallScoreBox.classList.remove("is-fail");
   }
 
   function clearReference() {
@@ -2882,13 +3348,22 @@ body.test-mode .test-deck { display: block; }
     state.test.referenceType = metadata.type || "audio/wav";
     state.test.referenceFileMd5 = md5Bytes(bytes);
     state.test.referenceWaveformMd5 = await waveformMd5ForAudioBytes(bytes, decoded);
+    addAudioLibraryRecord({
+      name: state.test.referenceName,
+      type: state.test.referenceType,
+      bytes,
+      buffer: decoded,
+      fileMd5: state.test.referenceFileMd5,
+      waveformMd5: state.test.referenceWaveformMd5,
+    });
     state.test.renderedBuffer = null;
-    dom.referenceMeta.textContent = `${state.test.referenceName} · ${formatTime(decoded.duration)} · MD5 ${state.test.referenceWaveformMd5.slice(0, 8)}…`;
+    dom.referenceMeta.textContent = `${state.test.referenceName} · ${formatTime(decoded.duration)} · FILE MD5 ${state.test.referenceFileMd5.slice(0, 8)}…`;
     dom.renderedMeta.textContent = "NO RENDER YET";
     clearSimilarityReadout();
     drawTestBuffers();
     if (options.toast !== false) showToast(`Loaded reference ${state.test.referenceName}.`);
     scheduleAutoScore();
+    return decoded;
   }
 
   async function loadReferenceFile(file) {
@@ -3095,23 +3570,53 @@ body.test-mode .test-deck { display: block; }
     return clamp(dot / Math.sqrt(normA * normB), 0, 1);
   }
 
+
+  function seamSimilarity(rendered, reference, alignmentSeconds = 0) {
+    if (!state.loopLock.locked) return 0;
+    const targetRate = 12000;
+    const a = resampleMono(reference, targetRate);
+    const b = resampleMono(rendered, targetRate);
+    const barDuration = state.loopLock.beats * 60 / getTargetBpm();
+    const boundaryCount = Math.max(1, Math.round(state.loopLock.beats / state.loopLock.divisionBeats));
+    const halfWindow = Math.max(24, Math.round(0.018 * targetRate));
+    const shift = Math.round(alignmentSeconds * targetRate);
+    let total = 0;
+    let used = 0;
+    for (let index = 1; index < boundaryCount; index += 1) {
+      const centerA = Math.round(index * barDuration / boundaryCount * targetRate);
+      const centerB = centerA + shift;
+      const startA = centerA - halfWindow;
+      const startB = centerB - halfWindow;
+      if (startA < 0 || startB < 0 || startA + 2 * halfWindow > a.length || startB + 2 * halfWindow > b.length) continue;
+      const aa = a.subarray(startA, startA + 2 * halfWindow);
+      const bb = b.subarray(startB, startB + 2 * halfWindow);
+      const corr = clamp(correlationAt(aa, bb, 0, true), 0, 1);
+      let diff = 0, energy = 0;
+      for (let n = 0; n < aa.length; n += 1) {
+        const d = aa[n] - bb[n]; diff += d * d; energy += aa[n] * aa[n] + bb[n] * bb[n];
+      }
+      const mseScore = Math.exp(-8 * diff / Math.max(energy, 1e-12));
+      total += 0.65 * corr + 0.35 * mseScore;
+      used += 1;
+    }
+    return used ? clamp(total / used, 0, 1) * 100 : 100;
+  }
+
+
   async function analyzeSimilarity(rendered, reference) {
     await sleepFrame();
     const referenceEnvelope = makeRmsEnvelope(reference, 200);
     const renderedEnvelope = makeRmsEnvelope(rendered, 200);
     const alignment = bestAlignment(referenceEnvelope, renderedEnvelope, 200);
     const envelope = clamp(correlationAt(referenceEnvelope, renderedEnvelope, alignment.lag, false), 0, 1);
-
     const referenceWave = resampleMono(reference, 4000);
     const renderedWave = resampleMono(rendered, 4000);
     const coarseLag = Math.round(alignment.seconds * 4000);
-    let wave = 0;
-    let waveLag = coarseLag;
+    let wave = 0; let waveLag = coarseLag;
     for (let lag = coarseLag - 12; lag <= coarseLag + 12; lag += 1) {
       const score = Math.max(0, correlationAt(referenceWave, renderedWave, lag, true));
       if (score > wave) { wave = score; waveLag = lag; }
     }
-
     await sleepFrame();
     const spectrum = cosineSimilarity(spectralFingerprint(reference), spectralFingerprint(rendered));
     const referenceLoudness = loudnessStats(reference);
@@ -3121,7 +3626,8 @@ body.test-mode .test-deck { display: block; }
     const loudness = clamp(0.72 * Math.exp(-rmsDbDifference / 5) + 0.28 * Math.exp(-peakDbDifference / 7), 0, 1);
     const durationRatio = Math.max(rendered.duration, 1e-6) / Math.max(reference.duration, 1e-6);
     const duration = clamp(Math.exp(-Math.abs(Math.log(durationRatio)) * 5), 0, 1);
-    const overall = clamp(0.30 * spectrum + 0.28 * envelope + 0.20 * wave + 0.14 * loudness + 0.08 * duration, 0, 1);
+    const seam = seamSimilarity(rendered, reference, waveLag / 4000) / 100;
+    const overall = clamp(0.25 * spectrum + 0.20 * envelope + 0.20 * wave + 0.15 * loudness + 0.05 * duration + 0.15 * seam, 0, 1);
     return {
       metric: METRIC_VERSION,
       overall: overall * 100,
@@ -3130,6 +3636,7 @@ body.test-mode .test-deck { display: block; }
       wave: wave * 100,
       loudness: loudness * 100,
       duration: duration * 100,
+      seam: seam * 100,
       alignmentSeconds: waveLag / 4000,
       rmsDbDifference,
       peakDbDifference,
@@ -3148,19 +3655,25 @@ body.test-mode .test-deck { display: block; }
 
   function displayAnalysis(analysis) {
     const threshold = testThreshold();
-    const passed = analysis.overall >= threshold;
+    const selected = state.test.tests.find((test) => test.id === state.test.selectedId);
+    const seamMinimum = Number(selected?.manifest?.checks?.minimumSeamScore ?? 95);
+    const structural = analysis.structural || lockedStructureChecks();
+    const passed = analysis.overall >= threshold && analysis.seam >= seamMinimum && structural.pass;
     dom.overallScore.textContent = formatPercent(analysis.overall);
-    dom.passStatus.textContent = `${passed ? "PASS" : "FAIL"} · NEED ${threshold.toFixed(1)}%`;
+    dom.passStatus.textContent = `${passed ? "PASS" : "FAIL"} · NEED ${threshold.toFixed(1)}% · SEAMS ${seamMinimum.toFixed(0)}% · STRUCT ${structural.pass ? "OK" : "FAIL"}`;
     dom.spectrumScore.textContent = formatPercent(analysis.spectrum);
     dom.envelopeScore.textContent = formatPercent(analysis.envelope);
     dom.waveScore.textContent = formatPercent(analysis.wave);
     dom.loudnessScore.textContent = formatPercent(analysis.loudness);
     dom.durationScore.textContent = formatPercent(analysis.duration);
+    dom.seamScore.textContent = formatPercent(analysis.seam);
     dom.alignmentReadout.textContent = `${analysis.alignmentSeconds >= 0 ? "+" : ""}${(analysis.alignmentSeconds * 1000).toFixed(1)} ms · ΔRMS ${analysis.rmsDbDifference.toFixed(2)} dB`;
     dom.overallScoreBox.classList.toggle("is-fail", !passed);
     if (state.test.mode === "design") {
-      dom.testDesignStatus.value = `${passed ? "PASS" : "NOT YET"}: ${analysis.overall.toFixed(2)}% / ${threshold.toFixed(1)}%\nSpectrum ${analysis.spectrum.toFixed(1)} · envelope ${analysis.envelope.toFixed(1)} · wave ${analysis.wave.toFixed(1)}\nLoudness difference ${analysis.rmsDbDifference.toFixed(2)} dB · alignment ${(analysis.alignmentSeconds * 1000).toFixed(1)} ms`;
+      const failedChecks = Object.entries(structural.checks || {}).filter(([, ok]) => !ok).map(([name]) => name).join(", ") || "none";
+      dom.testDesignStatus.value = `${passed ? "PASS" : "NOT YET"}: ${analysis.overall.toFixed(2)}% / ${threshold.toFixed(1)}%\nSeams ${analysis.seam.toFixed(2)}% / ${seamMinimum.toFixed(1)}% · structure ${structural.pass ? "PASS" : "FAIL"}\nSpectrum ${analysis.spectrum.toFixed(1)} · envelope ${analysis.envelope.toFixed(1)} · wave ${analysis.wave.toFixed(1)}\nFailed structural checks: ${failedChecks}`;
     }
+    analysis.passed = passed;
     return passed;
   }
 
@@ -3181,18 +3694,22 @@ body.test-mode .test-deck { display: block; }
     inputGain.gain.value = getVolumeGain();
     createFxChain(offline, inputGain, offline.destination, readFxSettings(), duration);
     const stepDuration = (60 / getTargetBpm()) * (4 / stepsPerBar);
-    const sourceSettings = {
-      rate: getPlaybackRate(),
-      attackSeconds: getAttackSeconds(),
-      releaseSeconds: getReleaseSeconds(),
-      buffer: state.buffer,
-    };
-    for (let step = 0; step < state.pattern.length; step += 1) {
-      const when = step * stepDuration + swingDelayForStep(step);
-      if (when >= duration) continue;
-      for (const [sliceIndex, velocity] of state.pattern[step]) {
-        const slice = getSlices()[sliceIndex];
-        if (slice) createScheduledSource(offline, inputGain, slice, velocity, when, sourceSettings);
+    const sourceSettings = { rate: getPlaybackRate(), attackSeconds: getAttackSeconds(), releaseSeconds: getReleaseSeconds(), buffer: state.buffer };
+    for (let bar = 0; bar < bars; bar += 1) {
+      const chain = getSeamlessBarChain(bar);
+      if (chain) {
+        createScheduledSource(offline, inputGain, chain.region, chain.velocity, bar * 4 * 60 / getTargetBpm(), sourceSettings);
+        continue;
+      }
+      const startStep = bar * stepsPerBar;
+      const endStep = Math.min(state.pattern.length, startStep + stepsPerBar);
+      for (let step = startStep; step < endStep; step += 1) {
+        const when = step * stepDuration + swingDelayForStep(step);
+        if (when >= duration) continue;
+        for (const [sliceIndex, velocity] of state.pattern[step]) {
+          const slice = getSlices()[sliceIndex];
+          if (slice) createScheduledSource(offline, inputGain, slice, velocity, when, sourceSettings);
+        }
       }
     }
     return offline.startRendering();
@@ -3215,11 +3732,12 @@ body.test-mode .test-deck { display: block; }
       drawTestBuffers();
       dom.runTestButton.textContent = "MEASURING…";
       const analysis = await analyzeSimilarity(rendered, state.test.referenceBuffer);
+      analysis.structural = lockedStructureChecks();
       state.test.analysis = analysis;
       const passed = displayAnalysis(analysis);
       if (state.test.selectedId) state.test.results.set(state.test.selectedId, { score: analysis.overall, passed, threshold: testThreshold() });
       renderTestList();
-      if (!options.silent) showToast(`${passed ? "Test passed" : "Test below threshold"} · ${analysis.overall.toFixed(2)}% similarity.`, 3600);
+      if (!options.silent) showToast(`${passed ? "Test passed" : "Test below requirements"} · ${analysis.overall.toFixed(2)}% · seams ${analysis.seam.toFixed(2)}%.`, 4300);
       return analysis;
     } catch (error) {
       console.error(error);
@@ -3295,20 +3813,10 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function loadStoredTests() {
-    try {
-      state.test.db = await openTestDatabase();
-      if (!state.test.db) return;
-      const records = await new Promise((resolve, reject) => {
-        const request = state.test.db.transaction("tests", "readonly").objectStore("tests").getAll();
-        request.onsuccess = () => resolve(request.result || []);
-        request.onerror = () => reject(request.error);
-      });
-      state.test.tests = records.sort((a, b) => String(a.manifest?.name || a.id).localeCompare(String(b.manifest?.name || b.id)));
-      renderTestList();
-    } catch (error) {
-      console.warn("Test database unavailable", error);
-      dom.testSuiteStatus.textContent = "TESTS WILL LAST FOR THIS PAGE ONLY";
-    }
+    state.test.tests = [];
+    state.test.db = null;
+    renderTestList();
+    dom.testSuiteStatus.textContent = "LOAD AUDIO FILES, THEN IMPORT TEST JSON";
   }
 
   async function saveTestRecord(record) {
@@ -3317,19 +3825,13 @@ body.test-mode .test-deck { display: block; }
     else state.test.tests.push(record);
     state.test.tests.sort((a, b) => String(a.manifest?.name || a.id).localeCompare(String(b.manifest?.name || b.id)));
     renderTestList();
-    if (state.test.db) await dbTransaction("readwrite", (store) => store.put(record));
   }
 
   async function deleteTestRecord(id) {
     state.test.tests = state.test.tests.filter((test) => test.id !== id);
     state.test.results.delete(id);
-    if (state.test.selectedId === id) {
-      state.test.selectedId = null;
-      state.test.selectedBundle = null;
-      dom.resetTestSolutionButton.disabled = true;
-    }
+    if (state.test.selectedId === id) { state.test.selectedId = null; state.test.selectedBundle = null; dom.resetTestSolutionButton.disabled = true; }
     renderTestList();
-    if (state.test.db) await dbTransaction("readwrite", (store) => store.delete(id));
   }
 
   function renderTestList() {
@@ -3337,7 +3839,7 @@ body.test-mode .test-deck { display: block; }
     if (!state.test.tests.length) {
       const empty = document.createElement("div");
       empty.className = "test-list-empty";
-      empty.textContent = "No tests imported yet. Import a test ZIP, or switch to DESIGN and export one.";
+      empty.textContent = "No tests imported yet. Load audio dependencies, then import a test JSON—or switch to DESIGN and export one.";
       dom.testList.appendChild(empty);
       return;
     }
@@ -3370,31 +3872,12 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function parseTestBundle(bytes) {
-    const files = await parseZip(bytes);
-    const manifestBytes = files.get("test.json");
-    if (!manifestBytes) throw new Error("test.json is missing from the ZIP.");
-    const manifest = JSON.parse(TEXT_DECODER.decode(manifestBytes));
-    if (manifest.schema !== TEST_SCHEMA || manifest.version !== FORMAT_VERSION) throw new Error("Unsupported Clip Sesh test bundle.");
+    const text = TEXT_DECODER.decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
+    const manifest = JSON.parse(text);
+    if (manifest.schema !== TEST_SCHEMA || Number(manifest.version) !== FORMAT_VERSION) throw new Error("Unsupported Clip Sesh test JSON.");
     if (manifest.metric !== METRIC_VERSION) throw new Error(`This test uses unsupported metric ${manifest.metric}.`);
-    const solutionBytes = files.get(manifest.solution?.path || "solution.json");
-    const sourceBytes = files.get(manifest.source?.path);
-    const referenceBytes = files.get(manifest.reference?.path);
-    if (!solutionBytes || !sourceBytes || !referenceBytes) throw new Error("The test ZIP is missing its solution, source, or reference audio.");
-    if (manifest.source?.fileMd5 && md5Bytes(sourceBytes) !== manifest.source.fileMd5) {
-      throw new Error("The test source file failed its MD5 integrity check.");
-    }
-    if (manifest.reference?.fileMd5 && md5Bytes(referenceBytes) !== manifest.reference.fileMd5) {
-      throw new Error("The test reference file failed its MD5 integrity check.");
-    }
-    const solution = JSON.parse(TEXT_DECODER.decode(solutionBytes));
-    if (solution.schema && solution.schema !== RECIPE_SCHEMA) throw new Error("The test solution recipe is incompatible.");
-    return {
-      id: manifest.id || safeBaseName(manifest.name || "imported-test").toLowerCase(),
-      manifest,
-      solution,
-      sourceBytes: sourceBytes.buffer.slice(sourceBytes.byteOffset, sourceBytes.byteOffset + sourceBytes.byteLength),
-      referenceBytes: referenceBytes.buffer.slice(referenceBytes.byteOffset, referenceBytes.byteOffset + referenceBytes.byteLength),
-    };
+    if (!manifest.session || manifest.session.schema !== SESSION_SCHEMA) throw new Error("The test JSON does not contain a compatible session JSON.");
+    return { id: manifest.id || safeBaseName(manifest.name || "imported-test").toLowerCase(), manifest, document: manifest };
   }
 
   async function importTestFiles(files) {
@@ -3403,49 +3886,46 @@ body.test-mode .test-deck { display: block; }
     for (const file of files) {
       try {
         const record = await parseTestBundle(new Uint8Array(await file.arrayBuffer()));
-        await saveTestRecord(record);
-        imported += 1;
+        await saveTestRecord(record); imported += 1;
       } catch (error) {
-        console.error(error);
-        showToast(`${file.name}: ${error.message || "invalid test ZIP"}`, 5200);
+        console.error(error); showToast(`${file.name}: ${error.message || "invalid test JSON"}`, 5500);
       }
     }
     dom.testBundleInput.value = "";
     dom.testSuiteStatus.textContent = `${state.test.tests.length} TEST${state.test.tests.length === 1 ? "" : "S"} AVAILABLE`;
-    if (imported) showToast(`Imported ${imported} test${imported === 1 ? "" : "s"}.`);
+    if (imported) showToast(`Imported ${imported} test JSON file${imported === 1 ? "" : "s"}.`);
   }
+
+
+  async function loadTestDocument(document, options = {}) {
+    const record = state.test.tests.find((test) => test.id === (document.id || state.test.selectedId)) || { id: document.id, manifest: document, document };
+    state.test.selectedId = record.id;
+    state.test.selectedBundle = record;
+    renderTestList();
+    setTestMode(true);
+    switchTestWorkspace("run");
+    dom.testDeckTitle.textContent = `TEST · ${document.name}`;
+    dom.testSuiteStatus.textContent = `LOADING ${String(document.name || "TEST").toUpperCase()}…`;
+    dom.testThresholdInput.value = String(document.threshold || 95);
+    const loaded = await loadSessionDocument(document.session, { restoreWorkspace: false, pendingKind: "test", pendingDocument: document });
+    if (!loaded) return null;
+    state.test.selectedId = record.id;
+    state.test.selectedBundle = record;
+    dom.resetTestSolutionButton.disabled = false;
+    dom.testSuiteStatus.textContent = `READY · NEED ${Number(document.threshold || 95).toFixed(1)}% · SEAMS ${Number(document.checks?.minimumSeamScore || 95).toFixed(1)}%`;
+    if (options.analyze !== false) return runSimilarityTest({ silent: Boolean(options.silent) });
+    return null;
+  }
+
 
   async function selectTest(id, options = {}) {
     const record = state.test.tests.find((test) => test.id === id);
     if (!record) return null;
-    state.test.selectedId = id;
-    state.test.selectedBundle = record;
-    state.test.suppressAutoScore = true;
-    renderTestList();
-    setTestMode(true);
-    switchTestWorkspace("run");
-    dom.testDeckTitle.textContent = `TEST · ${record.manifest.name}`;
-    dom.testSuiteStatus.textContent = `LOADING ${record.manifest.name.toUpperCase()}…`;
-    dom.testThresholdInput.value = String(record.manifest.threshold || 95);
     try {
-      await loadAudioBytes(new Uint8Array(record.sourceBytes), { name: record.manifest.source.name, type: "audio/wav" }, { detectBpm: false, toast: false });
-      if (record.manifest.source.waveformMd5 && state.waveformMd5 !== record.manifest.source.waveformMd5) {
-        throw new Error("The decoded source waveform failed its MD5 integrity check.");
-      }
-      applyRecipe(record.solution);
-      await loadReferenceBytes(new Uint8Array(record.referenceBytes), { name: record.manifest.reference.name, type: "audio/wav" }, { toast: false });
-      if (record.manifest.reference.waveformMd5 && state.test.referenceWaveformMd5 !== record.manifest.reference.waveformMd5) {
-        throw new Error("The decoded reference waveform failed its MD5 integrity check.");
-      }
-      state.test.suppressAutoScore = false;
-      dom.resetTestSolutionButton.disabled = false;
-      dom.testSuiteStatus.textContent = `READY · NEED ${Number(record.manifest.threshold || 95).toFixed(1)}%`;
-      if (options.analyze !== false) return runSimilarityTest({ silent: Boolean(options.silent) });
-      return null;
+      return await loadTestDocument(record.document || record.manifest, options);
     } catch (error) {
-      state.test.suppressAutoScore = false;
       console.error(error);
-      showToast(`Could not load test: ${error.message || "invalid bundle"}`, 5500);
+      showToast(`Could not load test: ${error.message || "invalid test JSON"}`, 6000);
       dom.testSuiteStatus.textContent = "TEST LOAD FAILED";
       return null;
     }
@@ -3453,17 +3933,11 @@ body.test-mode .test-deck { display: block; }
 
   async function resetSelectedTestSolution() {
     if (!state.test.selectedBundle) return;
-    state.test.suppressAutoScore = true;
-    applyRecipe(state.test.selectedBundle.solution);
-    state.test.suppressAutoScore = false;
-    await runSimilarityTest();
+    await loadTestDocument(state.test.selectedBundle.document || state.test.selectedBundle.manifest, { analyze: true });
   }
 
   async function runAllTests() {
-    if (!state.test.tests.length) {
-      showToast("Import at least one test ZIP first.");
-      return;
-    }
+    if (!state.test.tests.length) { showToast("Import at least one test JSON first."); return; }
     dom.runAllTestsButton.disabled = true;
     const originalText = dom.runAllTestsButton.textContent;
     let passed = 0;
@@ -3471,108 +3945,54 @@ body.test-mode .test-deck { display: block; }
       for (let index = 0; index < state.test.tests.length; index += 1) {
         const test = state.test.tests[index];
         dom.runAllTestsButton.textContent = `${index + 1}/${state.test.tests.length}`;
-        dom.testSuiteStatus.textContent = `RUNNING ${index + 1}/${state.test.tests.length} · ${test.manifest.name}`;
-        await selectTest(test.id, { analyze: false, silent: true });
-        const analysis = await runSimilarityTest({ silent: true });
-        if (analysis && analysis.overall >= testThreshold()) passed += 1;
+        const analysis = await selectTest(test.id, { analyze: true, silent: true });
+        if (analysis?.passed) passed += 1;
       }
       dom.testSuiteStatus.textContent = `${passed}/${state.test.tests.length} TESTS PASSED`;
       showToast(`${passed}/${state.test.tests.length} sampler tests passed.`, 4200);
-    } finally {
-      dom.runAllTestsButton.disabled = false;
-      dom.runAllTestsButton.textContent = originalText;
-    }
+    } finally { dom.runAllTestsButton.disabled = false; dom.runAllTestsButton.textContent = originalText; }
   }
 
   async function exportCurrentTest() {
-    if (!state.buffer || !state.loadedFileBytes) {
-      showToast("Load the sampler source first.");
-      return;
-    }
-    if (!state.test.referenceBuffer) {
-      showToast("Load a reference file for the test.");
-      return;
-    }
+    if (!state.buffer) { showToast("Load the sampler source first."); return; }
+    if (!state.test.referenceBuffer) { showToast("Load a reference file for the test."); return; }
     const oldText = dom.exportTestButton.textContent;
     dom.exportTestButton.disabled = true;
     dom.exportTestButton.textContent = "BUILDING…";
     try {
       const analysis = await runSimilarityTest({ silent: true });
       if (!analysis) throw new Error("The current sequence could not be rendered.");
-      const sourceAsset = await canonicalWav(state.buffer);
-      const referenceAsset = await canonicalWav(state.test.referenceBuffer);
-      const sourceWav = sourceAsset.bytes;
-      const referenceWav = referenceAsset.bytes;
       const name = dom.testNameInput.value.trim() || "Untitled sampler test";
       const threshold = clamp(numericValue(dom.testThresholdInput, 95), 1, 100);
-      const idBase = safeBaseName(name).toLowerCase();
-      const id = `${idBase}-${sourceAsset.waveformMd5.slice(0, 8)}-${referenceAsset.waveformMd5.slice(0, 8)}`;
-      const sourceName = `${safeBaseName(state.loadedFileName)}-source.wav`;
-      const referenceName = `${safeBaseName(state.test.referenceName)}-reference.wav`;
-      const sourcePath = `audio/${sourceName}`;
-      const referencePath = `audio/${referenceName}`;
-      const solutionPath = "solution.json";
-      const manifest = {
+      const session = buildSessionDocument();
+      const id = `${safeBaseName(name).toLowerCase()}-${session.audioDependencies.source.fileMd5.slice(0, 8)}-${session.audioDependencies.reference.fileMd5.slice(0, 8)}`;
+      const document = {
         schema: TEST_SCHEMA,
         version: FORMAT_VERSION,
         id,
         name,
-        description: "Clip Sesh sampler regression test",
+        description: "Regression test for one globally tape-warped measure split into grid-addressable slices and rendered without internal retriggers.",
         createdAt: new Date().toISOString(),
         threshold,
         metric: METRIC_VERSION,
         scoreAtExport: analysis.overall,
-        source: {
-          path: sourcePath,
-          name: sourceName,
-          originalName: state.loadedFileName,
-          fileMd5: sourceAsset.fileMd5,
-          waveformMd5: sourceAsset.waveformMd5,
-          waveformHashFormat: WAVEFORM_HASH_FORMAT,
-          sampleRate: sourceAsset.buffer.sampleRate,
-          channels: sourceAsset.buffer.numberOfChannels,
-          frames: sourceAsset.buffer.length,
+        checks: {
+          minimumSeamScore: 95,
+          requireBpmMode: true,
+          requireLockedOneBar: true,
+          requireGlobalRateOnly: true,
+          requireSequentialChain: true,
         },
-        reference: {
-          path: referencePath,
-          name: referenceName,
-          originalName: state.test.referenceName,
-          fileMd5: referenceAsset.fileMd5,
-          waveformMd5: referenceAsset.waveformMd5,
-          waveformHashFormat: WAVEFORM_HASH_FORMAT,
-          sampleRate: referenceAsset.buffer.sampleRate,
-          channels: referenceAsset.buffer.numberOfChannels,
-          frames: referenceAsset.buffer.length,
-        },
-        solution: { path: solutionPath },
+        session,
       };
-      const solution = captureRecipe();
-      const readme = `CLIP SESH TEST BUNDLE\n\n${name}\nPass threshold: ${threshold.toFixed(1)}%\nMetric: ${METRIC_VERSION}\nExpected score at export: ${analysis.overall.toFixed(2)}%\n\nImport this ZIP with the T test sidebar. The bundle contains canonical PCM WAV source/reference files and the full sampler solution recipe.\n`;
-      const zip = createZip([
-        { name: "test.json", data: TEXT_ENCODER.encode(JSON.stringify(manifest, null, 2)) },
-        { name: solutionPath, data: TEXT_ENCODER.encode(JSON.stringify(solution, null, 2)) },
-        { name: sourcePath, data: sourceWav },
-        { name: referencePath, data: referenceWav },
-        { name: "README.txt", data: TEXT_ENCODER.encode(readme) },
-      ]);
-      downloadBytes(zip, `${safeBaseName(name)}.clip-sesh-test.zip`, "application/zip");
-      await saveTestRecord({
-        id,
-        manifest,
-        solution,
-        sourceBytes: sourceWav.buffer.slice(sourceWav.byteOffset, sourceWav.byteOffset + sourceWav.byteLength),
-        referenceBytes: referenceWav.buffer.slice(referenceWav.byteOffset, referenceWav.byteOffset + referenceWav.byteLength),
-      });
-      state.test.results.set(id, { score: analysis.overall, passed: analysis.overall >= threshold, threshold });
+      downloadBytes(TEXT_ENCODER.encode(JSON.stringify(document, null, 2)), `${safeBaseName(name)}.clip-sesh-test.json`, "application/json");
+      await saveTestRecord({ id, manifest: document, document });
+      state.test.results.set(id, { score: analysis.overall, passed: Boolean(analysis.passed), threshold });
       renderTestList();
-      showToast(`Exported ${name} · ${analysis.overall.toFixed(2)}% at design time.`, 4200);
+      showToast(`Exported one test JSON · ${analysis.overall.toFixed(2)}% · seams ${analysis.seam.toFixed(2)}%.`, 4500);
     } catch (error) {
-      console.error(error);
-      showToast(`Test export failed: ${error.message || "unknown error"}`, 5500);
-    } finally {
-      dom.exportTestButton.disabled = false;
-      dom.exportTestButton.textContent = oldText;
-    }
+      console.error(error); showToast(`Test export failed: ${error.message || "unknown error"}`, 5500);
+    } finally { dom.exportTestButton.disabled = false; dom.exportTestButton.textContent = oldText; }
   }
 
   function updateStepVelocityEditor() {
@@ -3606,11 +4026,17 @@ body.test-mode .test-deck { display: block; }
   }
 
   function getTargetBpm() {
-    return clamp(numericValue(dom.targetBpm, 120), 20, 400);
+    const value = dom.projectBpm ? numericValue(dom.projectBpm, numericValue(dom.targetBpm, 120)) : numericValue(dom.targetBpm, 120);
+    return clamp(value, 20, 400);
   }
 
   function getPlaybackRate() {
-    const tempoRatio = getTargetBpm() / getSourceBpm();
+    let tempoRatio = getTargetBpm() / getSourceBpm();
+    if (state.sliceDisplayMode === "bpm" && state.loopLock.locked) {
+      const sourceDuration = Math.max(0.001, state.loopLock.end - state.loopLock.start);
+      const targetDuration = Math.max(0.001, state.loopLock.beats * 60 / getTargetBpm());
+      tempoRatio = sourceDuration / targetDuration;
+    }
     const pitch = numericValue(dom.pitchSemitones, 0);
     const fine = numericValue(dom.fineTune, 0) / 100;
     return clamp(tempoRatio * Math.pow(2, (pitch + fine) / 12), 1 / 32, 32);
@@ -3636,15 +4062,17 @@ body.test-mode .test-deck { display: block; }
     const rate = getPlaybackRate();
     const effectivePitch = 12 * Math.log2(rate);
 
+    if (dom.projectBpm && document.activeElement !== dom.projectBpm) dom.projectBpm.value = String(clamp(numericValue(dom.targetBpm, 120), 20, 400));
     dom.fineTuneOutput.textContent = `${fine > 0 ? "+" : ""}${fine.toFixed(0)} ¢`;
     dom.pitchOutput.textContent = `${pitch > 0 ? "+" : ""}${pitch.toFixed(0)} ST`;
     dom.volumeOutput.textContent = volume.toFixed(0);
-    dom.rateDisplay.textContent = `${rate.toFixed(3)}×`;
+    dom.rateDisplay.textContent = `${rate.toFixed(6)}×`;
     dom.effectivePitchDisplay.textContent = `${effectivePitch >= 0 ? "+" : ""}${effectivePitch.toFixed(2)} ST`;
 
     if (state.masterGain && state.audioContext) {
       state.masterGain.gain.setTargetAtTime(getVolumeGain(), state.audioContext.currentTime, 0.01);
     }
+    updateLoopUi();
   }
 
   async function ensureAudioContext() {
@@ -3684,14 +4112,26 @@ body.test-mode .test-deck { display: block; }
   }
 
   function getSlices() {
-    if (!state.buffer || state.boundaries.length < 2) return [];
+    if (!state.buffer) return [];
+    if (state.sliceDisplayMode === "bpm" && state.loopLock.locked) {
+      const beats = Math.max(0.25, Number(state.loopLock.beats) || 4);
+      const division = clamp(Number(state.loopLock.divisionBeats) || 1, 0.25, 4);
+      const count = clamp(Math.round(beats / division), 1, 32);
+      const start = clamp(Number(state.loopLock.start) || 0, 0, state.buffer.duration);
+      const end = clamp(Number(state.loopLock.end) || start, start, state.buffer.duration);
+      const span = Math.max(0.001, end - start);
+      return Array.from({ length: count }, (_, index) => ({
+        index,
+        start: start + span * index / count,
+        end: start + span * (index + 1) / count,
+        beats: division,
+        locked: true,
+      }));
+    }
+    if (state.boundaries.length < 2) return [];
     const slices = [];
     for (let index = 0; index < state.boundaries.length - 1; index += 1) {
-      slices.push({
-        index,
-        start: state.boundaries[index],
-        end: state.boundaries[index + 1],
-      });
+      slices.push({ index, start: state.boundaries[index], end: state.boundaries[index + 1], locked: false });
     }
     return slices;
   }
@@ -3708,9 +4148,13 @@ body.test-mode .test-deck { display: block; }
     const selection = normalizeSelection();
     if (!selection || selection.end - selection.start < 0.0005) {
       dom.selectionInfo.textContent = "SELECT: —";
+      updateLoopUi();
       return;
     }
-    dom.selectionInfo.textContent = `SELECT: ${formatTime(selection.start)} → ${formatTime(selection.end)} · ${(selection.end - selection.start).toFixed(3)} S`;
+    const duration = selection.end - selection.start;
+    const sourceBeats = duration * getSourceBpm() / 60;
+    dom.selectionInfo.textContent = `SELECT: ${formatTime(selection.start)} → ${formatTime(selection.end)} · ${duration.toFixed(6)} S · ${sourceBeats.toFixed(3)} SOURCE BEATS${state.loopLock.locked ? " · LOCKED" : ""}`;
+    updateLoopUi();
   }
 
   function setBoundaries(boundaries, { resetPattern = false } = {}) {
@@ -3930,7 +4374,7 @@ body.test-mode .test-deck { display: block; }
     context.fillStyle = "#030303";
     context.fillRect(0, 0, width, height);
 
-    context.strokeStyle = "rgba(255, 45, 37, 0.28)";
+    context.strokeStyle = "rgba(255, 45, 37, 0.20)";
     context.lineWidth = 1;
     for (let index = 0; index <= 16; index += 1) {
       const x = (index / 16) * width;
@@ -3944,7 +4388,6 @@ body.test-mode .test-deck { display: block; }
     context.moveTo(0, height / 2 + 0.5);
     context.lineTo(width, height / 2 + 0.5);
     context.stroke();
-
     if (!state.buffer) return;
 
     const viewEnd = state.viewStart + state.viewDuration;
@@ -3958,37 +4401,56 @@ body.test-mode .test-deck { display: block; }
     }
 
     const selection = normalizeSelection();
+    const loopWindow = activeLoopWindow();
     if (selection) {
       const x0 = timeToWaveX(selection.start, width);
       const x1 = timeToWaveX(selection.end, width);
-      context.fillStyle = "rgba(255, 224, 124, 0.14)";
+      context.fillStyle = state.loopLock.locked ? "rgba(104,255,71,.11)" : "rgba(255, 224, 124, 0.14)";
       context.fillRect(x0, 0, x1 - x0, height);
     }
 
     drawPeakWaveform(context, width, height, state.viewStart, viewEnd, "#68ff47", 0.92);
 
-    for (let index = 1; index < state.boundaries.length - 1; index += 1) {
-      const boundary = state.boundaries[index];
-      if (boundary < state.viewStart || boundary > viewEnd) continue;
-      const x = timeToWaveX(boundary, width);
-      context.strokeStyle = "#ff2d25";
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(x + 0.5, 0);
-      context.lineTo(x + 0.5, height);
-      context.stroke();
-      if (state.viewDuration < state.buffer.duration * 0.7 || getSlices().length <= 16) {
-        context.fillStyle = "#f4eadb";
-        context.font = "bold 11px Courier New";
-        context.fillText(String(index + 1).padStart(2, "0"), x + 4, 14);
+    if (state.sliceDisplayMode === "bpm" && loopWindow) {
+      const span = loopWindow.end - loopWindow.start;
+      const divisions = state.loopLock.locked ? getSlices().length : 4;
+      for (let index = 0; index <= divisions; index += 1) {
+        const t = loopWindow.start + span * index / divisions;
+        if (t < state.viewStart || t > viewEnd) continue;
+        const x = timeToWaveX(t, width);
+        const beatPosition = index * 4 / divisions;
+        const quarter = Math.abs(beatPosition - Math.round(beatPosition)) < 1e-7;
+        context.strokeStyle = quarter ? "#ffe07c" : "#ff2d25";
+        context.lineWidth = quarter ? 2 : 1;
+        context.beginPath();
+        context.moveTo(x + 0.5, 0);
+        context.lineTo(x + 0.5, height);
+        context.stroke();
+      }
+    } else {
+      for (let index = 1; index < state.boundaries.length - 1; index += 1) {
+        const boundary = state.boundaries[index];
+        if (boundary < state.viewStart || boundary > viewEnd) continue;
+        const x = timeToWaveX(boundary, width);
+        context.strokeStyle = "#ff2d25";
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(x + 0.5, 0);
+        context.lineTo(x + 0.5, height);
+        context.stroke();
+        if (state.viewDuration < state.buffer.duration * 0.7 || getSlices().length <= 16) {
+          context.fillStyle = "#f4eadb";
+          context.font = "bold 11px Courier New";
+          context.fillText(String(index + 1).padStart(2, "0"), x + 4, 14);
+        }
       }
     }
 
     if (selection) {
       const x0 = timeToWaveX(selection.start, width);
       const x1 = timeToWaveX(selection.end, width);
-      context.strokeStyle = "#ffe07c";
-      context.lineWidth = 2;
+      context.strokeStyle = state.loopLock.locked ? "#68ff47" : "#ffe07c";
+      context.lineWidth = state.loopLock.locked ? 3 : 2;
       context.strokeRect(x0 + 0.5, 1.5, x1 - x0, height - 3);
     }
 
@@ -4008,29 +4470,32 @@ body.test-mode .test-deck { display: block; }
       }
     }
 
-    const labelCount = 6;
-    context.font = "bold 10px Courier New";
-    context.fillStyle = "rgba(244, 234, 219, 0.75)";
+    context.font = "bold 11px Courier New";
     context.textBaseline = "bottom";
-    for (let index = 0; index <= labelCount; index += 1) {
-      const x = (index / labelCount) * width;
-      const time = state.viewStart + (index / labelCount) * state.viewDuration;
-      context.fillText(formatTime(time), Math.min(width - 52, x + 3), height - 3);
+    if (state.sliceDisplayMode === "bpm" && loopWindow) {
+      const span = loopWindow.end - loopWindow.start;
+      context.fillStyle = "rgba(255,224,124,.95)";
+      context.fillText(`QUARTER-NOTE RULER · SOURCE BAR → ${getTargetBpm().toFixed(2)} BPM · GLOBAL ${getPlaybackRate().toFixed(6)}×`, 7, height - 20);
+      for (let beat = 0; beat <= 4; beat += 1) {
+        const t = loopWindow.start + span * beat / 4;
+        if (t < state.viewStart || t > viewEnd) continue;
+        const x = timeToWaveX(t, width);
+        context.fillStyle = beat === 4 ? "#68ff47" : "#ffe07c";
+        context.fillText(beat === 4 ? "BAR END" : `♩ ${beat + 1}`, Math.min(width - 54, x + 4), height - 3);
+      }
+    } else {
+      context.fillStyle = "rgba(244, 234, 219, 0.75)";
+      const labelCount = 6;
+      for (let index = 0; index <= labelCount; index += 1) {
+        const x = (index / labelCount) * width;
+        const time = state.viewStart + (index / labelCount) * state.viewDuration;
+        context.fillText(formatTime(time), Math.min(width - 52, x + 3), height - 3);
+      }
     }
 
     context.fillStyle = "#ffad15";
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(18, 0);
-    context.lineTo(0, 18);
-    context.closePath();
-    context.fill();
-    context.beginPath();
-    context.moveTo(width, 0);
-    context.lineTo(width - 18, 0);
-    context.lineTo(width, 18);
-    context.closePath();
-    context.fill();
+    context.beginPath(); context.moveTo(0, 0); context.lineTo(18, 0); context.lineTo(0, 18); context.closePath(); context.fill();
+    context.beginPath(); context.moveTo(width, 0); context.lineTo(width - 18, 0); context.lineTo(width, 18); context.closePath(); context.fill();
   }
 
   function drawOverview() {
@@ -4151,11 +4616,19 @@ body.test-mode .test-deck { display: block; }
   }
 
   function stopVoice(voice, when = null) {
-    if (!voice || voice.stopping) return;
-    voice.stopping = true;
+    if (!voice) return;
     const context = state.audioContext;
     if (!context) return;
     const stopTime = Math.max(context.currentTime, when == null ? context.currentTime : when);
+
+    // The sequencer schedules ahead. A mono-choke requested for a future hit must
+    // remain anchored to that hit's audio timestamp—not to the JavaScript time at
+    // which the scheduler happened to queue it. A later emergency STOP may still
+    // replace that future stop with an earlier one.
+    if (Number.isFinite(voice.stopAt) && voice.stopAt <= stopTime + 0.000001) return;
+    voice.stopAt = stopTime;
+    voice.stopping = true;
+
     const release = Math.max(0.004, getReleaseSeconds());
     const gainParam = voice.gain.gain;
     try {
@@ -4172,8 +4645,8 @@ body.test-mode .test-deck { display: block; }
     }
   }
 
-  function stopAllVoices({ clearPressedKeys = true } = {}) {
-    for (const voice of [...state.voices]) stopVoice(voice);
+  function stopAllVoices({ clearPressedKeys = true, when = null } = {}) {
+    for (const voice of [...state.voices]) stopVoice(voice, when);
     state.activeNotes.clear();
     if (clearPressedKeys) state.pressedKeys.clear();
   }
@@ -4200,7 +4673,11 @@ body.test-mode .test-deck { display: block; }
     const context = await ensureAudioContext();
     const scheduledTime = Math.max(context.currentTime + 0.002, when == null ? context.currentTime + 0.006 : when);
 
-    if (dom.chokeToggle.checked) stopAllVoices({ clearPressedKeys: false });
+    if (dom.chokeToggle.checked) {
+      // Choke at the note's scheduled Web Audio time. Calling stop immediately
+      // here truncates the previous note by the scheduler look-ahead (about 120 ms).
+      stopAllVoices({ clearPressedKeys: false, when: scheduledTime });
+    }
     if (noteId && state.activeNotes.has(noteId)) stopVoice(state.activeNotes.get(noteId));
 
     const voice = createScheduledSource(context, state.masterGain, region, velocity, scheduledTime);
@@ -4434,9 +4911,19 @@ body.test-mode .test-deck { display: block; }
 
   function scheduleSequencerStep(step, baseTime, generation) {
     const eventTime = baseTime + swingDelayForStep(step);
-    const events = state.pattern[step] || new Map();
-    for (const [sliceIndex, velocity] of events.entries()) {
-      playSlice(sliceIndex, velocity, eventTime, null);
+    const stepsPerBar = Number(dom.stepsPerBarSelect.value);
+    const barIndex = Math.floor(step / stepsPerBar);
+    const withinBar = step % stepsPerBar;
+    const chain = getSeamlessBarChain(barIndex);
+    if (chain) {
+      if (withinBar === 0) {
+        playRegion(chain.region, chain.velocity, eventTime, null, null);
+        const divisionDuration = state.loopLock.divisionBeats * 60 / getTargetBpm();
+        chain.slices.forEach((slice, index) => flashPad(slice.index, eventTime + index * divisionDuration, divisionDuration));
+      }
+    } else {
+      const events = state.pattern[step] || new Map();
+      for (const [sliceIndex, velocity] of events.entries()) playSlice(sliceIndex, velocity, eventTime, null);
     }
     const delay = state.audioContext ? Math.max(0, (eventTime - state.audioContext.currentTime) * 1000) : 0;
     window.setTimeout(() => {
@@ -4523,13 +5010,11 @@ body.test-mode .test-deck { display: block; }
     dom.fileName.textContent = `DECODING ${name.toUpperCase()}…`;
     dom.fileMeta.textContent = "PLEASE WAIT";
     await sleepFrame();
-
     try {
       const context = await ensureAudioContext();
       const copy = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
       const decoded = await context.decodeAudioData(copy);
       if (!decoded.length || !decoded.duration) throw new Error("The decoded audio buffer was empty.");
-
       state.buffer = decoded;
       state.loadedFileName = name;
       state.loadedFileType = type;
@@ -4537,6 +5022,8 @@ body.test-mode .test-deck { display: block; }
       state.loadedFileMd5 = md5Bytes(bytes);
       state.peaks = buildPeakPyramid(decoded);
       state.selection = null;
+      state.loopLock = { locked: false, start: 0, end: 0, beats: 4, divisionBeats: Number(dom.bpmDivision?.value) || 1 };
+      state.sliceDisplayMode = "bpm";
       state.selectedSlice = 0;
       state.selectedSequencerCell = null;
       state.viewStart = 0;
@@ -4548,23 +5035,26 @@ body.test-mode .test-deck { display: block; }
       await sleepFrame();
       state.waveformMd5 = await waveformMd5ForAudioBytes(bytes, decoded);
       dom.sampleHashReadout.textContent = `WAVEFORM MD5: ${state.waveformMd5} · FILE MD5: ${state.loadedFileMd5}`;
-
+      addAudioLibraryRecord({ name, type, bytes, buffer: decoded, fileMd5: state.loadedFileMd5, waveformMd5: state.waveformMd5 });
       const detectedBpm = options.detectBpm === false ? null : detectBpmFromFilename(name);
-      if (detectedBpm) {
-        dom.sourceBpm.value = String(detectedBpm);
-        dom.targetBpm.value = String(detectedBpm);
-      }
+      if (detectedBpm) dom.sourceBpm.value = String(detectedBpm);
+      state.boundaries = [0, decoded.duration];
+      state.pattern = Array.from({ length: totalSteps() }, () => new Map());
+      const barDuration = Math.min(decoded.duration, sourceBarDurationSeconds());
+      state.selection = { start: 0, end: barDuration };
       updatePlaybackReadouts();
       updateSelectionReadout();
-      makeEqualSlices(Number(dom.equalSliceCount.value), false);
+      updateLoopUi();
       updateSliceStatus();
       updateStepVelocityEditor();
+      renderPads();
+      renderSequencer();
       state.test.renderedBuffer = null;
       dom.renderedMeta.textContent = "SOURCE CHANGED · RENDER AGAIN";
       clearSimilarityReadout();
       drawTestBuffers();
       requestWaveDraw();
-      if (options.toast !== false) showToast(`Loaded ${name}${detectedBpm ? ` · detected ${detectedBpm} BPM from the filename` : ""} · MD5 ${state.waveformMd5.slice(0, 8)}…`, 3800);
+      if (options.toast !== false) showToast(`Loaded ${name}${detectedBpm ? ` · source ${detectedBpm} BPM` : ""} · project BPM unchanged · MD5 ${state.loadedFileMd5.slice(0, 8)}…`, 4200);
       scheduleAutoScore();
       return decoded;
     } catch (error) {
@@ -4607,35 +5097,19 @@ body.test-mode .test-deck { display: block; }
 
   function clearSample() {
     stopSequencer();
-    state.buffer = null;
-    state.peaks = [];
-    state.boundaries = [];
-    state.selection = null;
-    state.selectedSlice = 0;
-    state.viewStart = 0;
-    state.viewDuration = 1;
-    state.loadedFileName = "";
-    state.loadedFileType = "";
-    state.loadedFileBytes = null;
-    state.loadedFileMd5 = "";
-    state.waveformMd5 = "";
+    state.buffer = null; state.peaks = []; state.boundaries = []; state.selection = null;
+    state.loopLock = { locked: false, start: 0, end: 0, beats: 4, divisionBeats: Number(dom.bpmDivision?.value) || 1 };
+    state.selectedSlice = 0; state.viewStart = 0; state.viewDuration = 1;
+    state.loadedFileName = ""; state.loadedFileType = ""; state.loadedFileBytes = null; state.loadedFileMd5 = ""; state.waveformMd5 = "";
     state.selectedSequencerCell = null;
     dom.sampleHashReadout.textContent = "WAVEFORM MD5: —";
     dom.fileInput.value = "";
     dom.fileName.textContent = "DROP A WAV / AIFF / MP3 / FLAC / OGG / M4A";
     dom.fileName.title = "No sample loaded";
     dom.dropHint.classList.remove("hidden");
-    updateSelectionReadout();
-    updateSliceStatus();
-    clearPattern(false);
-    renderPads();
-    updateStepVelocityEditor();
-    state.test.renderedBuffer = null;
-    dom.renderedMeta.textContent = "NO RENDER YET";
-    clearSimilarityReadout();
-    drawTestBuffers();
-    requestWaveDraw();
-    showToast("Sample cleared.");
+    updateSelectionReadout(); updateLoopUi(); updateSliceStatus(); clearPattern(false); renderPads(); updateStepVelocityEditor();
+    state.test.renderedBuffer = null; dom.renderedMeta.textContent = "NO RENDER YET"; clearSimilarityReadout(); drawTestBuffers(); requestWaveDraw();
+    showToast("Sample cleared. The separately loaded MD5 audio library remains available.");
   }
 
   function detectTransients() {
@@ -4959,41 +5433,37 @@ body.test-mode .test-deck { display: block; }
 
   function handleWavePointerDown(event) {
     if (!state.buffer || event.button !== 0) return;
-    const boundaryIndex = findBoundaryNearEvent(event);
+    const boundaryIndex = state.sliceDisplayMode === "time" ? findBoundaryNearEvent(event) : -1;
     if (boundaryIndex >= 0 && event.shiftKey) {
       event.preventDefault();
       removeBoundary(boundaryIndex);
       return;
     }
-
     dom.waveformCanvas.setPointerCapture(event.pointerId);
     const rect = dom.waveformCanvas.getBoundingClientRect();
     const time = waveEventTime(event);
-    if (boundaryIndex >= 0) {
+    const selection = normalizeSelection();
+    const canSlide = state.sliceDisplayMode === "bpm" && selection && time >= selection.start && time <= selection.end && !event.shiftKey;
+    if (canSlide) {
       state.pointer = {
-        mode: "marker",
+        mode: "slide-selection",
         pointerId: event.pointerId,
-        boundaryIndex,
-        startX: event.clientX,
+        startTime: time,
+        originalStart: selection.start,
+        originalEnd: selection.end,
+        locked: state.loopLock.locked,
       };
+      dom.dropZone.classList.add("is-loop-sliding");
+      dom.dropZone.style.cursor = "grabbing";
+    } else if (boundaryIndex >= 0) {
+      state.pointer = { mode: "marker", pointerId: event.pointerId, boundaryIndex, startX: event.clientX };
       dom.dropZone.style.cursor = "ew-resize";
     } else if (event.shiftKey) {
-      state.pointer = {
-        mode: "pan",
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        originalViewStart: state.viewStart,
-        width: rect.width,
-      };
+      state.pointer = { mode: "pan", pointerId: event.pointerId, startX: event.clientX, originalViewStart: state.viewStart, width: rect.width };
       dom.dropZone.style.cursor = "grabbing";
     } else {
-      state.pointer = {
-        mode: "select",
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startTime: time,
-        moved: false,
-      };
+      if (state.loopLock.locked) state.loopLock.locked = false;
+      state.pointer = { mode: "select", pointerId: event.pointerId, startX: event.clientX, startTime: time, moved: false };
       state.selection = { start: time, end: time };
       updateSelectionReadout();
       requestWaveDraw();
@@ -5014,6 +5484,20 @@ body.test-mode .test-deck { display: block; }
       const minimumGap = Math.min(0.005, state.buffer.duration / 1000);
       state.boundaries[index] = clamp(waveEventTime(event), previous + minimumGap, next - minimumGap);
       requestWaveDraw();
+    } else if (state.pointer.mode === "slide-selection") {
+      const delta = waveEventTime(event) - state.pointer.startTime;
+      const span = state.pointer.originalEnd - state.pointer.originalStart;
+      const start = clamp(state.pointer.originalStart + delta, 0, Math.max(0, state.buffer.duration - span));
+      const end = start + span;
+      state.selection = { start, end };
+      if (state.pointer.locked) {
+        state.loopLock.locked = true;
+        state.loopLock.start = start;
+        state.loopLock.end = end;
+      }
+      updateSelectionReadout();
+      renderPads();
+      requestWaveDraw();
     } else if (state.pointer.mode === "select") {
       if (Math.abs(event.clientX - state.pointer.startX) > 2) state.pointer.moved = true;
       state.selection.end = waveEventTime(event);
@@ -5026,19 +5510,16 @@ body.test-mode .test-deck { display: block; }
     if (!state.pointer || state.pointer.pointerId !== event.pointerId) return;
     const pointer = state.pointer;
     state.pointer = null;
+    dom.dropZone.classList.remove("is-loop-sliding");
     dom.dropZone.style.cursor = "crosshair";
-    try {
-      dom.waveformCanvas.releasePointerCapture(event.pointerId);
-    } catch {
-      // Pointer capture can already be released by the browser.
-    }
+    try { dom.waveformCanvas.releasePointerCapture(event.pointerId); } catch { /* already released */ }
 
     if (pointer.mode === "marker") {
       state.boundaries.sort((a, b) => a - b);
       state.selectedSlice = clamp(pointer.boundaryIndex, 0, getSlices().length - 1);
-      renderPads();
-      renderSequencer();
-      updateSliceStatus();
+      renderPads(); renderSequencer(); updateSliceStatus();
+    } else if (pointer.mode === "slide-selection") {
+      updateSelectionReadout(); updateLoopUi(); renderPads(); renderSequencer(); updateSliceStatus(); requestWaveDraw(); scheduleAutoScore();
     } else if (pointer.mode === "select") {
       const selection = normalizeSelection();
       if (!pointer.moved || !selection || selection.end - selection.start < 0.003) {
@@ -5051,10 +5532,8 @@ body.test-mode .test-deck { display: block; }
         state.selectedSlice = findSliceIndexAtTime(selection.start);
         renderPadSelection();
       }
-      updateSelectionReadout();
-      requestWaveDraw();
+      updateSelectionReadout(); updateLoopUi(); requestWaveDraw();
     }
-    scheduleAutoScore();
   }
 
   function handleOverviewPointerDown(event) {
@@ -5092,46 +5571,41 @@ body.test-mode .test-deck { display: block; }
   }
 
   function wireEvents() {
-    for (const input of [dom.fineTune, dom.pitchSemitones, dom.volume, dom.sourceBpm, dom.targetBpm]) {
-      input.addEventListener("input", () => {
-        updatePlaybackReadouts();
-        if (input === dom.targetBpm) renderSequencer();
-        scheduleAutoScore();
-      });
+    for (const input of [dom.fineTune, dom.pitchSemitones, dom.volume]) {
+      input.addEventListener("input", () => { updatePlaybackReadouts(); scheduleAutoScore(); });
     }
-    for (const input of [dom.attack, dom.release]) {
-      input.addEventListener("input", () => {
-        updatePlaybackReadouts();
-        scheduleAutoScore();
-      });
-      input.addEventListener("change", updatePlaybackReadouts);
-    }
-    dom.matchTempoButton.addEventListener("click", () => {
-      dom.targetBpm.value = dom.sourceBpm.value || "120";
+    dom.sourceBpm.addEventListener("input", () => {
       updatePlaybackReadouts();
-      renderSequencer();
+      if (state.sliceDisplayMode === "bpm" && !state.loopLock.locked && state.buffer) fitSelectionToSourceBar();
+      requestWaveDraw();
       scheduleAutoScore();
     });
+    dom.targetBpm.addEventListener("input", () => syncProjectBpm(dom.targetBpm.value, dom.targetBpm));
+    dom.projectBpm.addEventListener("input", () => syncProjectBpm(dom.projectBpm.value, dom.projectBpm));
+    for (const input of [dom.attack, dom.release]) {
+      input.addEventListener("input", () => { updatePlaybackReadouts(); scheduleAutoScore(); });
+      input.addEventListener("change", updatePlaybackReadouts);
+    }
+    dom.matchTempoButton.addEventListener("click", () => syncProjectBpm(dom.sourceBpm.value || "120"));
 
     dom.loadButton.addEventListener("click", () => dom.fileInput.click());
     dom.fileInput.addEventListener("change", () => loadAudioFile(dom.fileInput.files?.[0]));
+    dom.loadAudioLibraryButton.addEventListener("click", () => dom.audioLibraryInput.click());
+    dom.testLoadAudioLibraryButton.addEventListener("click", () => dom.audioLibraryInput.click());
+    dom.audioLibraryInput.addEventListener("change", () => loadAudioLibraryFiles(dom.audioLibraryInput.files));
     dom.clearButton.addEventListener("click", clearSample);
     dom.saveSessionButton.addEventListener("click", saveFullSession);
     dom.loadSessionButton.addEventListener("click", () => dom.sessionInput.click());
     dom.sessionInput.addEventListener("change", () => loadFullSession(dom.sessionInput.files?.[0]));
+
     const activateFileMenu = (event) => {
       if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
-      event.preventDefault();
-      toggleFxDrawer();
+      event.preventDefault(); toggleFxDrawer();
     };
     dom.fileName.addEventListener("click", activateFileMenu);
     dom.fileName.addEventListener("keydown", activateFileMenu);
     dom.closeFxButton.addEventListener("click", () => toggleFxDrawer(false));
-    dom.resetFxButton.addEventListener("click", () => {
-      setFxSettings(FX_DEFAULTS);
-      scheduleAutoScore();
-      showToast("FX chain reset to neutral bypassed devices.");
-    });
+    dom.resetFxButton.addEventListener("click", () => { setFxSettings(FX_DEFAULTS); scheduleAutoScore(); showToast("FX chain reset to neutral bypassed devices."); });
 
     const fxControls = [
       dom.compressorEnabled, dom.compressorThreshold, dom.compressorRatio, dom.compressorAttack,
@@ -5153,16 +5627,10 @@ body.test-mode .test-deck { display: block; }
     }
 
     for (const eventName of ["dragenter", "dragover"]) {
-      dom.dropZone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dom.dropZone.classList.add("is-dragover");
-      });
+      dom.dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dom.dropZone.classList.add("is-dragover"); });
     }
     for (const eventName of ["dragleave", "drop"]) {
-      dom.dropZone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dom.dropZone.classList.remove("is-dragover");
-      });
+      dom.dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dom.dropZone.classList.remove("is-dragover"); });
     }
     dom.dropZone.addEventListener("drop", (event) => loadAudioFile(event.dataTransfer?.files?.[0]));
 
@@ -5171,20 +5639,16 @@ body.test-mode .test-deck { display: block; }
     dom.waveformCanvas.addEventListener("pointerup", handleWavePointerUp);
     dom.waveformCanvas.addEventListener("pointercancel", handleWavePointerUp);
     dom.waveformCanvas.addEventListener("dblclick", (event) => {
-      if (!state.buffer) return;
-      event.preventDefault();
-      if (addBoundary(waveEventTime(event))) showToast("Slice marker added.");
+      if (!state.buffer || state.sliceDisplayMode !== "time") return;
+      event.preventDefault(); if (addBoundary(waveEventTime(event))) showToast("Slice marker added.");
     });
     dom.waveformCanvas.addEventListener("wheel", (event) => {
       if (!state.buffer) return;
       event.preventDefault();
-      if (event.ctrlKey || event.metaKey || event.altKey) {
-        zoomAt(Math.exp(event.deltaY * 0.0024), waveEventTime(event));
-      } else {
+      if (event.ctrlKey || event.metaKey || event.altKey) zoomAt(Math.exp(event.deltaY * 0.0024), waveEventTime(event));
+      else {
         const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-        state.viewStart += (delta / 850) * state.viewDuration;
-        clampView();
-        requestWaveDraw();
+        state.viewStart += (delta / 850) * state.viewDuration; clampView(); requestWaveDraw();
       }
     }, { passive: false });
 
@@ -5192,142 +5656,105 @@ body.test-mode .test-deck { display: block; }
     dom.overviewCanvas.addEventListener("pointermove", handleOverviewPointerMove);
     dom.overviewCanvas.addEventListener("pointerup", handleOverviewPointerUp);
     dom.overviewCanvas.addEventListener("pointercancel", handleOverviewPointerUp);
-
     dom.zoomInButton.addEventListener("click", () => zoomAt(0.5));
     dom.zoomOutButton.addEventListener("click", () => zoomAt(2));
     dom.zoomFullButton.addEventListener("click", showAllWaveform);
     dom.zoomSelectionButton.addEventListener("click", () => {
       const selection = normalizeSelection();
-      if (!state.buffer || !selection || selection.end - selection.start < 0.001) {
-        showToast("Drag a waveform selection first.");
-        return;
-      }
+      if (!state.buffer || !selection || selection.end - selection.start < 0.001) { showToast("Drag a waveform selection first."); return; }
       const padding = Math.max(0.002, (selection.end - selection.start) * 0.06);
-      state.viewStart = selection.start - padding;
-      state.viewDuration = selection.end - selection.start + padding * 2;
-      clampView();
-      requestWaveDraw();
+      state.viewStart = selection.start - padding; state.viewDuration = selection.end - selection.start + padding * 2;
+      clampView(); requestWaveDraw();
     });
     dom.auditionSelectionButton.addEventListener("click", () => {
       const selection = normalizeSelection();
-      if (!selection || selection.end - selection.start < 0.001) {
+      if (selection && selection.end - selection.start >= 0.001) playRegion(selection, state.keyboardVelocity);
+      else {
         const slice = getSlices()[state.selectedSlice];
         if (slice) playRegion(slice, state.keyboardVelocity, null, null, state.selectedSlice);
         else showToast("Select a waveform region first.");
-        return;
       }
-      playRegion(selection, state.keyboardVelocity);
     });
+    dom.fitBarButton.addEventListener("click", fitSelectionToSourceBar);
+    dom.nudgeLoopLeftButton.addEventListener("click", () => moveLoopWindow(-0.001));
+    dom.nudgeLoopRightButton.addEventListener("click", () => moveLoopWindow(0.001));
+    dom.lockBarButton.addEventListener("click", () => lockSelectionToBar());
+    dom.unlockBarButton.addEventListener("click", unlockBar);
     dom.makeSliceButton.addEventListener("click", () => {
+      if (state.sliceDisplayMode === "bpm") { cutLockedBar(); return; }
       const selection = normalizeSelection();
-      if (!selection || selection.end - selection.start < 0.005) {
-        showToast("Drag a selection of at least 5 ms first.");
-        return;
-      }
-      const addedStart = addBoundary(selection.start);
-      const addedEnd = addBoundary(selection.end);
+      if (!selection || selection.end - selection.start < 0.005) { showToast("Drag a selection of at least 5 ms first."); return; }
+      const addedStart = addBoundary(selection.start); const addedEnd = addBoundary(selection.end);
       state.selectedSlice = findSliceIndexAtTime(selection.start + 0.0001);
-      renderPads();
-      renderSequencer();
-      requestWaveDraw();
-      scheduleAutoScore();
-      if (addedStart || addedEnd) showToast("Selection converted to slice boundaries.");
-      else showToast("Those slice boundaries already exist.");
+      renderPads(); renderSequencer(); requestWaveDraw(); scheduleAutoScore();
+      showToast(addedStart || addedEnd ? "Selection converted to time slice boundaries." : "Those slice boundaries already exist.");
     });
     dom.clearSelectionButton.addEventListener("click", () => {
-      state.selection = null;
-      updateSelectionReadout();
-      requestWaveDraw();
+      if (state.loopLock.locked) unlockBar();
+      state.selection = null; updateSelectionReadout(); updateLoopUi(); requestWaveDraw();
     });
 
-    dom.equalSliceButton.addEventListener("click", () => makeEqualSlices(Number(dom.equalSliceCount.value)));
-    dom.transientThreshold.addEventListener("input", () => {
-      dom.thresholdOutput.textContent = dom.transientThreshold.value;
+    dom.sliceModeBpmButton.addEventListener("click", () => setSliceDisplayMode("bpm"));
+    dom.sliceModeTimeButton.addEventListener("click", () => setSliceDisplayMode("time"));
+    dom.bpmDivision.addEventListener("change", () => {
+      state.loopLock.divisionBeats = clamp(Number(dom.bpmDivision.value) || 1, 0.25, 2);
+      if (state.loopLock.locked) cutLockedBar(); else updateLoopUi();
     });
-    dom.transientSliceButton.addEventListener("click", detectTransients);
+    dom.cutBpmButton.addEventListener("click", cutLockedBar);
+    dom.placeBpmButton.addEventListener("click", placeLockedSlicesInOrder);
+    dom.equalSliceButton.addEventListener("click", () => { setSliceDisplayMode("time"); makeEqualSlices(Number(dom.equalSliceCount.value)); });
+    dom.transientThreshold.addEventListener("input", () => { dom.thresholdOutput.textContent = dom.transientThreshold.value; });
+    dom.transientSliceButton.addEventListener("click", () => { setSliceDisplayMode("time"); detectTransients(); });
 
     dom.pads.addEventListener("pointerdown", (event) => {
-      const pad = event.target.closest(".slice-pad");
-      if (!pad) return;
-      event.preventDefault();
-      const sliceIndex = Number(pad.dataset.slice);
-      const noteId = `pad:${event.pointerId}`;
-      pad.setPointerCapture?.(event.pointerId);
-      pad.dataset.noteId = noteId;
+      const pad = event.target.closest(".slice-pad"); if (!pad) return;
+      event.preventDefault(); const sliceIndex = Number(pad.dataset.slice); const noteId = `pad:${event.pointerId}`;
+      pad.setPointerCapture?.(event.pointerId); pad.dataset.noteId = noteId;
       playSlice(sliceIndex, state.keyboardVelocity, null, noteId);
     });
     const releasePadPointer = (event) => {
-      const pad = event.target.closest(".slice-pad");
-      if (!pad) return;
-      const noteId = pad.dataset.noteId;
-      if (noteId) releaseNote(noteId);
-      delete pad.dataset.noteId;
+      const pad = event.target.closest(".slice-pad"); if (!pad) return;
+      const noteId = pad.dataset.noteId; if (noteId) releaseNote(noteId); delete pad.dataset.noteId;
     };
     dom.pads.addEventListener("pointerup", releasePadPointer);
     dom.pads.addEventListener("pointercancel", releasePadPointer);
     dom.pads.addEventListener("click", (event) => {
       if (event.detail !== 0) return;
-      const pad = event.target.closest(".slice-pad");
-      if (pad) playSlice(Number(pad.dataset.slice), state.keyboardVelocity);
+      const pad = event.target.closest(".slice-pad"); if (pad) playSlice(Number(pad.dataset.slice), state.keyboardVelocity);
     });
 
     dom.midiEnableButton.addEventListener("click", enableMidi);
     dom.rootMidiNote.addEventListener("input", () => {
       dom.rootMidiNote.value = String(clamp(Math.round(numericValue(dom.rootMidiNote, 48)), 0, 127));
-      updateMidiUiStatus();
-      renderPads();
-      renderSequencer();
+      updateMidiUiStatus(); renderPads(); renderSequencer();
     });
-    dom.keyboardToggle.addEventListener("change", () => {
-      if (!dom.keyboardToggle.checked) releaseAllComputerKeys();
-      updateMidiUiStatus();
-    });
+    dom.keyboardToggle.addEventListener("change", () => { if (!dom.keyboardToggle.checked) releaseAllComputerKeys(); updateMidiUiStatus(); });
 
     dom.playButton.addEventListener("click", startSequencer);
     dom.stopButton.addEventListener("click", stopSequencer);
     dom.barsSelect.addEventListener("change", () => {
-      stopSequencer();
-      state.selectedSequencerCell = null;
-      resizePattern(totalSteps());
-      renderSequencer();
-      updateStepVelocityEditor();
-      scheduleAutoScore();
+      stopSequencer(); state.selectedSequencerCell = null; resizePattern(totalSteps()); renderSequencer(); updateStepVelocityEditor(); scheduleAutoScore();
     });
     dom.stepsPerBarSelect.addEventListener("change", () => {
-      stopSequencer();
-      state.selectedSequencerCell = null;
-      resizePattern(totalSteps());
-      renderSequencer();
-      updateStepVelocityEditor();
-      scheduleAutoScore();
+      stopSequencer(); state.selectedSequencerCell = null; resizePattern(totalSteps()); renderSequencer(); updateStepVelocityEditor(); scheduleAutoScore();
     });
-    dom.swing.addEventListener("input", () => {
-      dom.swingOutput.textContent = `${dom.swing.value}%`;
-      scheduleAutoScore();
-    });
+    dom.swing.addEventListener("input", () => { dom.swingOutput.textContent = `${dom.swing.value}%`; scheduleAutoScore(); });
     dom.stepVelocity.addEventListener("input", () => {
       const selected = state.selectedSequencerCell;
       if (!selected || !state.pattern[selected.step]) return;
       const velocity = clamp(Math.round(numericValue(dom.stepVelocity, 100)), 1, 127);
-      state.pattern[selected.step].set(selected.slice, velocity);
-      dom.stepVelocityOutput.textContent = String(velocity);
-      updateSequenceCell(selected.slice, selected.step);
-      scheduleAutoScore();
+      state.pattern[selected.step].set(selected.slice, velocity); dom.stepVelocityOutput.textContent = String(velocity);
+      updateSequenceCell(selected.slice, selected.step); scheduleAutoScore();
     });
     dom.clearPatternButton.addEventListener("click", () => clearPattern(true));
     dom.exportWavButton.addEventListener("click", exportLoopToWav);
 
     dom.sequencerGrid.addEventListener("click", (event) => {
       const audition = event.target.closest("[data-audition-slice]");
-      if (audition) {
-        playSlice(Number(audition.dataset.auditionSlice), state.keyboardVelocity);
-        return;
-      }
-      const cell = event.target.closest(".seq-cell");
-      if (!cell) return;
+      if (audition) { playSlice(Number(audition.dataset.auditionSlice), state.keyboardVelocity); return; }
+      const cell = event.target.closest(".seq-cell"); if (!cell) return;
       const previous = state.selectedSequencerCell;
-      const sliceIndex = Number(cell.dataset.slice);
-      const step = Number(cell.dataset.step);
+      const sliceIndex = Number(cell.dataset.slice); const step = Number(cell.dataset.step);
       state.selectedSequencerCell = { slice: sliceIndex, step };
       const current = state.pattern[step].get(sliceIndex) || 0;
       let next;
@@ -5335,27 +5762,18 @@ body.test-mode .test-deck { display: block; }
       else if (current === 0) next = 100;
       else if (current < 120) next = 127;
       else next = 0;
-      if (next) state.pattern[step].set(sliceIndex, next);
-      else state.pattern[step].delete(sliceIndex);
+      if (next) state.pattern[step].set(sliceIndex, next); else state.pattern[step].delete(sliceIndex);
       if (previous) updateSequenceCell(previous.slice, previous.step);
-      updateSequenceCell(sliceIndex, step);
-      updateStepVelocityEditor();
-      playSlice(sliceIndex, next || state.keyboardVelocity);
-      scheduleAutoScore();
+      updateSequenceCell(sliceIndex, step); updateStepVelocityEditor();
+      playSlice(sliceIndex, next || state.keyboardVelocity); scheduleAutoScore();
     });
     dom.sequencerGrid.addEventListener("contextmenu", (event) => {
-      const cell = event.target.closest(".seq-cell");
-      if (!cell) return;
-      event.preventDefault();
-      const previous = state.selectedSequencerCell;
-      const sliceIndex = Number(cell.dataset.slice);
-      const step = Number(cell.dataset.step);
-      state.selectedSequencerCell = { slice: sliceIndex, step };
-      state.pattern[step].delete(sliceIndex);
+      const cell = event.target.closest(".seq-cell"); if (!cell) return;
+      event.preventDefault(); const previous = state.selectedSequencerCell;
+      const sliceIndex = Number(cell.dataset.slice); const step = Number(cell.dataset.step);
+      state.selectedSequencerCell = { slice: sliceIndex, step }; state.pattern[step].delete(sliceIndex);
       if (previous) updateSequenceCell(previous.slice, previous.step);
-      updateSequenceCell(sliceIndex, step);
-      updateStepVelocityEditor();
-      scheduleAutoScore();
+      updateSequenceCell(sliceIndex, step); updateStepVelocityEditor(); scheduleAutoScore();
     });
 
     dom.testModeButton.addEventListener("click", () => setTestMode(!state.test.open));
@@ -5367,13 +5785,8 @@ body.test-mode .test-deck { display: block; }
     dom.runAllTestsButton.addEventListener("click", runAllTests);
     dom.testList.addEventListener("click", async (event) => {
       const deleteButton = event.target.closest("[data-delete-test]");
-      if (deleteButton) {
-        event.stopPropagation();
-        await deleteTestRecord(deleteButton.dataset.deleteTest);
-        return;
-      }
-      const row = event.target.closest("[data-test-id]");
-      if (row) await selectTest(row.dataset.testId);
+      if (deleteButton) { event.stopPropagation(); await deleteTestRecord(deleteButton.dataset.deleteTest); return; }
+      const row = event.target.closest("[data-test-id]"); if (row) await selectTest(row.dataset.testId);
     });
     dom.loadReferenceButton.addEventListener("click", () => dom.referenceInput.click());
     dom.referenceInput.addEventListener("change", () => loadReferenceFile(dom.referenceInput.files?.[0]));
@@ -5382,31 +5795,29 @@ body.test-mode .test-deck { display: block; }
     dom.playReferenceButton.addEventListener("click", () => playPreviewBuffer(state.test.referenceBuffer));
     dom.playRenderedButton.addEventListener("click", () => playPreviewBuffer(state.test.renderedBuffer));
     dom.autoScoreToggle.addEventListener("change", scheduleAutoScore);
-    dom.testThresholdInput.addEventListener("input", () => {
-      if (state.test.analysis) displayAnalysis(state.test.analysis);
-      scheduleAutoScore();
-    });
+    dom.testThresholdInput.addEventListener("input", () => { if (state.test.analysis) displayAnalysis(state.test.analysis); scheduleAutoScore(); });
     dom.resetTestSolutionButton.addEventListener("click", resetSelectedTestSolution);
 
     dom.helpButton.addEventListener("click", () => dom.helpDialog.showModal());
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", releaseAllComputerKeys);
-    window.addEventListener("resize", () => {
-      requestWaveDraw();
-      drawTestBuffers();
-    });
+    window.addEventListener("resize", () => { requestWaveDraw(); drawTestBuffers(); });
     window.addEventListener("beforeunload", () => {
       try { state.test.previewSource?.stop(); } catch { /* ignore */ }
       try { state.fxNodes?.lfo?.stop(); } catch { /* ignore */ }
-      state.test.db?.close?.();
       for (const url of state.objectUrls) URL.revokeObjectURL(url);
     });
   }
 
   function initialize() {
+    if (dom.projectBpm) dom.projectBpm.value = dom.targetBpm.value || "120";
+    state.sliceDisplayMode = "bpm";
+    state.loopLock.divisionBeats = Number(dom.bpmDivision.value) || 1;
     updatePlaybackReadouts();
     updateSelectionReadout();
+    updateLoopUi();
+    updateAudioLibraryStatus();
     updateSliceStatus();
     updateMidiUiStatus();
     updateFxReadouts();
@@ -5416,18 +5827,9 @@ body.test-mode .test-deck { display: block; }
     dom.swingOutput.textContent = `${dom.swing.value}%`;
     dom.testModeButton.setAttribute("aria-pressed", "false");
     resizePattern(totalSteps());
-    renderPads();
-    renderSequencer();
-    renderTestList();
-    requestWaveDraw();
-    drawTestBuffers();
-    wireEvents();
-    loadStoredTests();
-
+    renderPads(); renderSequencer(); renderTestList(); requestWaveDraw(); drawTestBuffers(); wireEvents(); loadStoredTests();
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("./sw.js").catch(() => {
-        // Offline support is optional; failure should not affect the sampler.
-      });
+      navigator.serviceWorker.register("./sw.js").catch(() => { /* optional */ });
     }
   }
 
@@ -5471,6 +5873,24 @@ body.test-mode .test-deck { display: block; }
       clearReference,
       setTestMode,
       switchTestWorkspace,
+      syncProjectBpm,
+      setSliceDisplayMode,
+      fitSelectionToSourceBar,
+      moveLoopWindow,
+      lockSelectionToBar,
+      cutLockedBar,
+      placeLockedSlicesInOrder,
+      getSeamlessBarChain,
+      lockedStructureChecks,
+      renderLockedContinuousReference,
+      registerAudioDependency,
+      loadAudioLibraryFiles,
+      buildSessionDocument,
+      loadSessionDocument,
+      loadTestDocument,
+      seamSimilarity,
+      getPlaybackRate,
+      getSlices,
     },
   });
 
