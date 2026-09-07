@@ -1,0 +1,32 @@
+{
+  "format": "clip-sesh-dj-test-catalog",
+  "version": 1,
+  "title": "Clip Sesh DJ · Performance tests",
+  "defaults": {
+    "mode": "fast",
+    "spotlight": true
+  },
+  "tests": [
+    {
+      "id": "dj-carlo",
+      "title": "One More Time × Losing It",
+      "description": "Approved 30-second reconstruction: Yeah loop, filter entrance, loop shortening, rhythmic cuts, brakes and backspin.",
+      "durationSeconds": 30,
+      "tags": [
+        "loop",
+        "filter",
+        "echo",
+        "transport"
+      ],
+      "session": {
+        "url": "./dj-carlo.sesh.json",
+        "md5": "8e237405c88b7b7a6554617e56c7defd"
+      },
+      "assets": {
+        "daft": "./daft-one-more-time-source-30s.wav",
+        "fisher": "./fisher-losing-it-source-30s.wav",
+        "reference": "./test1_reconstruction.wav"
+      }
+    }
+  ]
+}
