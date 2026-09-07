@@ -1,0 +1,471 @@
+{
+  "format": "clip-sesh-dj-test",
+  "version": 3,
+  "id": "dj-carlo-approved-reconstruction-r3",
+  "title": "One More Time × Losing It · approved reconstruction",
+  "durationSeconds": 30,
+  "sampleRate": 44100,
+  "unitIndexBase": 0,
+  "description": "Fixed-reference regression for the reconstruction approved by the user. Same source clips and performance recipe as R2; the approved uploaded reconstruction.wav is the golden reference. This is not a claim of exact fidelity to the original tutorial.",
+  "referenceProvenance": {
+    "kind": "user-approved-reconstruction",
+    "file": "reconstruction.wav",
+    "md5": "c2c07b7b1e6c63f327728cd90af6a0b5",
+    "description": "Your uploaded reconstruction.wav, retained byte-for-byte as the approved golden reference. Only the Daft Punk and FISHER clips feed the renderer. The original DJ Carlo tutorial is no longer the pass/fail target for this case."
+  },
+  "assets": [
+    {
+      "id": "daft",
+      "role": "track",
+      "title": "One More Time · Yeah loop",
+      "artist": "Daft Punk",
+      "md5": "d2a5c54c49a57970eaea09bf29efd5f0",
+      "file": "audio/daft-one-more-time-source-30s.wav",
+      "deck": 1,
+      "analysis": {
+        "bpm": 123.0,
+        "beatOffset": 0.11890243902439046,
+        "barOrigin": 1
+      },
+      "initialPosition": 9.98888617886179,
+      "previewPosition": 8.4,
+      "hotCues": [
+        9.875,
+        8.4
+      ],
+      "source": {
+        "originalMd5": "c3cfa2218e5b3e1d87ec84ea2781ef7a",
+        "startSeconds": 82,
+        "endSeconds": 112,
+        "processing": "PCM excerpt; no time stretching, gain normalization, or tutorial audio added"
+      },
+      "loopCue": {
+        "start": 9.875,
+        "end": 10.850609756097562,
+        "sourceStartSeconds": 91.875,
+        "note": "Yeah syllable around source 01:31.875. Boundary is an inferred musical grid; source identity is supported by short-window waveform matching."
+      }
+    },
+    {
+      "id": "fisher",
+      "role": "track",
+      "title": "Losing It · buildup & groove",
+      "artist": "FISHER",
+      "md5": "819db2fbc1607eb8e34d69d4631cc94d",
+      "file": "audio/fisher-losing-it-source-30s.wav",
+      "deck": 2,
+      "analysis": {
+        "bpm": 125.0,
+        "beatOffset": 0.11704,
+        "barOrigin": 1
+      },
+      "initialPosition": 0.142000000000003,
+      "previewPosition": 0.142000000000003,
+      "hotCues": [
+        11.55704
+      ],
+      "source": {
+        "originalMd5": "21d2b152aca6c7330944da73a2971b14",
+        "startSeconds": 50,
+        "endSeconds": 80,
+        "processing": "PCM excerpt; no time stretching, gain normalization, or tutorial audio added"
+      }
+    },
+    {
+      "id": "reference",
+      "role": "reference",
+      "title": "Your approved reconstruction",
+      "md5": "c2c07b7b1e6c63f327728cd90af6a0b5",
+      "file": "audio/reconstruction.wav"
+    }
+  ],
+  "loopSettings": {
+    "mode": "bar",
+    "tolerance": 0.25
+  },
+  "practice": {
+    "1": {
+      "loopBeats": 2
+    },
+    "2": {
+      "loopBeats": 4
+    }
+  },
+  "initialState": {
+    "masterVolume": 0.86,
+    "crossfader": 0,
+    "crossfaderCurve": "equalPower",
+    "masterDeck": 2,
+    "decks": {
+      "1": {
+        "tempoRatio": 1.008130081300813,
+        "pitchLock": true,
+        "channelGain": 0.95,
+        "trim": 1.45,
+        "filter": 0,
+        "loopBeats": 2,
+        "cuePoint": 9.875,
+        "loop": {
+          "start": 9.875,
+          "end": 10.850609756097562,
+          "active": true
+        }
+      },
+      "2": {
+        "tempoRatio": 0.992,
+        "pitchLock": false,
+        "channelGain": 0.65,
+        "trim": 1,
+        "filter": 0.55
+      }
+    },
+    "fx": [
+      {
+        "target": "1",
+        "effectId": "echo",
+        "beatDivision": 0.5,
+        "parameter": 0.15,
+        "mix": 0.16,
+        "enabled": false
+      },
+      {
+        "target": "2",
+        "effectId": "filter",
+        "beatDivision": 1,
+        "parameter": 0.5,
+        "mix": 0,
+        "enabled": false
+      }
+    ]
+  },
+  "events": [
+    {
+      "t": 0,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 0,
+      "type": "deck.play",
+      "deck": 2
+    },
+    {
+      "t": 3.757999999999999,
+      "type": "deck.loopHalf",
+      "deck": 1
+    },
+    {
+      "t": 3.757999999999999,
+      "type": "fx.set",
+      "unit": 0,
+      "patch": {
+        "enabled": true
+      }
+    },
+    {
+      "t": 3.757999999999999,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.55
+    },
+    {
+      "t": 4.241870967741935,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.515625
+    },
+    {
+      "t": 4.72574193548387,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.48125000000000007
+    },
+    {
+      "t": 5.209612903225805,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.446875
+    },
+    {
+      "t": 5.693483870967741,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.41250000000000003
+    },
+    {
+      "t": 6.177354838709677,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.37812500000000004
+    },
+    {
+      "t": 6.661225806451612,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.34375
+    },
+    {
+      "t": 7.145096774193547,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.309375
+    },
+    {
+      "t": 7.628967741935483,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.275
+    },
+    {
+      "t": 8.112838709677419,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.24062500000000003
+    },
+    {
+      "t": 8.596709677419355,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.20625000000000002
+    },
+    {
+      "t": 9.08058064516129,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.171875
+    },
+    {
+      "t": 9.564451612903225,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.1375
+    },
+    {
+      "t": 10.048322580645161,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.10312500000000001
+    },
+    {
+      "t": 10.532193548387095,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.06875
+    },
+    {
+      "t": 11.016064516129031,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.034375
+    },
+    {
+      "t": 11.499935483870967,
+      "type": "deck.loopHalf",
+      "deck": 1
+    },
+    {
+      "t": 11.499935483870967,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0
+    },
+    {
+      "t": 11.499935483870967,
+      "type": "mixer.filter",
+      "deck": 2,
+      "value": 0.0
+    },
+    {
+      "t": 15.854774193548387,
+      "type": "deck.loopHalf",
+      "deck": 1
+    },
+    {
+      "t": 18.33,
+      "type": "fx.set",
+      "unit": 0,
+      "patch": {
+        "enabled": false
+      }
+    },
+    {
+      "t": 19.09,
+      "type": "deck.cutPattern",
+      "deck": 1,
+      "period": 0.24193548387096775,
+      "count": 7,
+      "duty": 0.5,
+      "baseGain": 0.95
+    },
+    {
+      "t": 22.38,
+      "type": "deck.seek",
+      "deck": 1,
+      "position": 9.875
+    },
+    {
+      "t": 22.38,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 22.58,
+      "type": "deck.brake",
+      "deck": 1,
+      "duration": 0.19,
+      "restart": false
+    },
+    {
+      "t": 22.86,
+      "type": "deck.seek",
+      "deck": 1,
+      "position": 9.875
+    },
+    {
+      "t": 22.86,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 23.06,
+      "type": "deck.brake",
+      "deck": 1,
+      "duration": 0.19,
+      "restart": false
+    },
+    {
+      "t": 23.57,
+      "type": "deck.seek",
+      "deck": 1,
+      "position": 9.875
+    },
+    {
+      "t": 23.57,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 23.77,
+      "type": "deck.brake",
+      "deck": 1,
+      "duration": 0.19,
+      "restart": false
+    },
+    {
+      "t": 24.05,
+      "type": "deck.seek",
+      "deck": 1,
+      "position": 9.875
+    },
+    {
+      "t": 24.05,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 24.25,
+      "type": "deck.brake",
+      "deck": 1,
+      "duration": 0.19,
+      "restart": false
+    },
+    {
+      "t": 24.57,
+      "type": "deck.seek",
+      "deck": 1,
+      "position": 9.875
+    },
+    {
+      "t": 24.57,
+      "type": "deck.play",
+      "deck": 1
+    },
+    {
+      "t": 24.77,
+      "type": "deck.brake",
+      "deck": 1,
+      "duration": 0.19,
+      "restart": false
+    },
+    {
+      "t": 25.0,
+      "type": "fx.set",
+      "unit": 0,
+      "patch": {
+        "enabled": false
+      }
+    },
+    {
+      "t": 25.05,
+      "type": "deck.backspin",
+      "deck": 1,
+      "duration": 0.68,
+      "rate": 2.2
+    },
+    {
+      "t": 25.74,
+      "type": "deck.pause",
+      "deck": 1
+    }
+  ],
+  "comparison": {
+    "referenceAsset": "reference",
+    "mode": "golden-stereo",
+    "goldenGates": {
+      "correlationMin": 0.998,
+      "relativeRmsErrorMax": 0.05,
+      "signalToResidualDbMin": 26,
+      "gainErrorDbMax": 0.05,
+      "durationErrorSamplesMax": 0,
+      "requireExactPCM": false
+    },
+    "method": "Every sample in both channels, after the same 16-bit WAV quantization used by the reference. No shift, gain normalization, head trim or ignored windows. Small numerical/resampler differences are permitted; repeated renders are checked separately for PCM identity."
+  },
+  "chapters": [
+    {
+      "t": 0,
+      "title": "Two decks. One “yeah”.",
+      "description": "The two-beat vocal loop rides over the filtered FISHER track."
+    },
+    {
+      "t": 3.757999999999999,
+      "title": "Shorten the loop. Open the filter.",
+      "description": "One beat on Deck 1. Echo on. Bring back the body of Deck 2."
+    },
+    {
+      "t": 11.499935483870967,
+      "title": "Half a beat. Full FISHER.",
+      "description": "The vocal tightens again as the filter reaches neutral."
+    },
+    {
+      "t": 15.854774193548387,
+      "title": "The quarter-beat build.",
+      "description": "Watch the loop length change while the source stays locked."
+    },
+    {
+      "t": 18.33,
+      "title": "Echo out. Get ready to cut.",
+      "description": "The echo is disabled before the rhythmic fader cuts."
+    },
+    {
+      "t": 19.09,
+      "title": "Chop the fader.",
+      "description": "Seven timed open/closed fader cycles."
+    },
+    {
+      "t": 22.38,
+      "title": "Cue. Play. Brake. Repeat.",
+      "description": "Five cue-and-brake gestures, each on the recorded audio clock."
+    },
+    {
+      "t": 25.05,
+      "title": "Backspin out.",
+      "description": "Deck 1 spins backward and fades; FISHER takes the room."
+    },
+    {
+      "t": 25.74,
+      "title": "Let FISHER finish.",
+      "description": "No more control changes. The groove continues to the end."
+    }
+  ]
+}
