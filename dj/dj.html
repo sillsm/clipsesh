@@ -644,6 +644,35 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
 @media(prefers-reduced-motion:reduce){#demoHud,.demo-focus{scroll-behavior:auto}#testProgressBar{transition:none}}
 
 </style>
+<style id="catalog-r4-styles">
+/* Test catalog R4: UI and orchestration only; the audio renderer is unchanged. */
+.catalog-tabs{display:flex;gap:5px;border-bottom:1px solid #294052;padding-bottom:9px;margin:0 0 12px}
+.r3-lab .catalog-tabs button{border-color:transparent;background:transparent;color:#90aabf;padding:7px 13px;font-weight:650}
+.r3-lab .catalog-tabs button[aria-selected="true"]{background:#17354e;border-color:#3a779d;color:#dcedff}
+.catalog-toolbar,.catalog-actions,.catalog-summary,.catalog-row-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.catalog-toolbar{margin:10px 0}.catalog-toolbar input{min-width:140px;flex:1;background:#08121b;color:#d8eafa;border:1px solid #2b465d;border-radius:5px;padding:8px 10px;user-select:text}
+.catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.catalog-heading strong{font-size:14px}.catalog-count{color:#73bfff;font-size:11px;white-space:nowrap}
+.r3-lab .catalog-intro{margin:4px 0 10px;font-size:11px!important;color:#8da8bd}.catalog-url-note{display:block;color:#6e8ca5;font:10px ui-monospace,monospace;word-break:break-all;user-select:text}
+.catalog-list{border:1px solid #263e50;border-radius:7px;overflow:hidden;max-height:320px;overflow-y:auto}
+.catalog-row{display:grid;grid-template-columns:22px minmax(0,1fr) 108px auto;gap:10px;align-items:center;padding:13px 11px;background:#0c1721;border-bottom:1px solid #223646}
+.catalog-row:last-child{border:0}.catalog-row.is-active{background:#112638;box-shadow:inset 3px 0 #45acff}.catalog-row.is-disabled{opacity:.55}
+.catalog-row input{width:15px;height:15px;accent-color:#3aaaff}.catalog-row-main{min-width:0}.r3-lab .catalog-case-title{border:0!important;background:none!important;color:#d7edff!important;text-align:left;padding:0;min-height:24px;font-size:12px;font-weight:700;max-width:100%}
+.catalog-row-description{display:block;color:#8da6b9;font-size:10px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere}
+.catalog-row-meta{display:block;color:#6e91ad;font-size:9px;line-height:1.5;margin-top:4px}.catalog-row-actions button{padding:4px 10px}.catalog-badge{justify-self:start;border:1px solid #344d60;border-radius:12px;color:#a0bacd;padding:4px 8px;font-size:9px;font-weight:700;white-space:nowrap}
+.catalog-badge[data-status="PASS"],.catalog-badge[data-status="DEMONSTRATED"]{color:#8ee1b8;border-color:#31644f;background:#102d22}.catalog-badge[data-status="FAIL"],.catalog-badge[data-status="ERROR"]{color:#ffb0a8;border-color:#77443f;background:#351e1d}.catalog-badge[data-status="CANCELLED"],.catalog-badge[data-status="SKIPPED"]{color:#edc88b;border-color:#6e5a39}.catalog-badge[data-status="LOADING"],.catalog-badge[data-status="VALIDATING"],.catalog-badge[data-status="DEMO"]{color:#80caff;border-color:#3379aa;background:#12354e}
+.catalog-actions{padding-top:11px}.r3-lab #catalogRunSelected{background:#126faa;color:white;border-color:#3f9ad0}.catalog-actions .catalog-mode{margin-left:auto;color:#94b5cf;font-size:10px}.catalog-summary{margin:10px 0 0;color:#adc6d8;font-size:10px;line-height:1.5}.catalog-summary .catalog-download{margin-left:auto}
+.catalog-message{font-size:11px;color:#97b9d2;padding:9px 0;white-space:pre-wrap;overflow-wrap:anywhere}.catalog-message.error{color:#ffb09d}.catalog-empty{padding:20px;color:#809db3;font-size:12px;line-height:1.6}
+.catalog-loaded{margin-top:13px;border-top:1px solid #273b4c;padding-top:11px}.catalog-loaded summary{font-size:11px}.catalog-loaded #testSessionSummary{font-size:11px!important}
+#catalogReportPanel{background:#0a141d;border:1px solid #385167;border-radius:6px;margin-top:10px;padding:12px;user-select:text}#catalogReportText{font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;max-height:180px;overflow:auto;color:#bad1e4}
+#catalogQueueBar{position:fixed;right:14px;bottom:14px;z-index:320;width:min(490px,calc(100vw - 28px));padding:13px 15px;background:#102a3e;border:1px solid #4a96c6;border-radius:9px;color:#d5edff;box-shadow:0 10px 38px #0008;display:flex;align-items:center;gap:15px}
+#catalogQueueBar span{flex:1;font-size:12px;line-height:1.6}#catalogQueueBar button{padding:8px 11px;color:#e6f3ff;background:#183d58;border:1px solid #5f95b9;border-radius:5px;cursor:pointer}
+.demo-suite-strip{display:flex;align-items:center;gap:9px;border-bottom:1px solid #315066;padding-bottom:9px;margin-bottom:9px;color:#8dcbf9;font-size:11px}.demo-suite-strip strong{flex:1}.demo-suite-strip button{padding:5px 9px;font-size:10px;color:#d3eaff;background:#16384e;border:1px solid #376984;border-radius:4px;cursor:pointer}
+.r3-lab button:disabled{opacity:.42;cursor:default}
+@media(max-width:650px){.catalog-row{grid-template-columns:20px minmax(0,1fr) auto;gap:8px;padding:11px 8px}.catalog-badge{grid-column:2;grid-row:2}.catalog-row-actions{grid-column:3;grid-row:1 / span 2;flex-direction:column}.catalog-list{max-height:360px}.catalog-actions .catalog-mode{margin-left:0;flex-basis:100%}.catalog-toolbar{gap:5px}.catalog-toolbar input{flex-basis:100%}.catalog-toolbar button{flex:1}.catalog-tabs button{flex:1}.catalog-summary{gap:7px}.catalog-summary .catalog-download{margin-left:0}.catalog-heading{align-items:flex-start}.catalog-row-description{font-size:10px}}
+
+@media(max-width:650px){.r3-lab{height:100dvh;width:100vw;max-width:100vw;max-height:100dvh;margin:0;border-radius:0}.r3-lab .test-window{height:100%;max-height:100%;grid-template-rows:88px minmax(0,1fr) auto}.r3-lab .test-window>footer{flex-wrap:wrap}.r3-lab .test-window>footer .spacer{display:none}.r3-lab #testRun{flex:1 1 200px}.r3-lab #testDownloadAudio,.r3-lab #testDownloadJson{flex:1 1 44%}}
+
+</style>
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -1128,11 +1157,30 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
     <header><div><span class="lab-eyebrow">CLIP SESH / PERFORMANCE LAB</span><strong id="labTitle">Hear it. Test it. Watch it.</strong><span>Fixed reference · content-matched audio · one event sequence, two modes</span></div><button type="button" id="testClose" aria-label="Close performance lab">×</button></header>
     <div class="test-body">
       <section class="test-card lab-case">
-        <div class="lab-section-heading"><h3>01 / LOAD A CASE</h3><button id="testChoose">Choose JSON + audio</button></div>
-        <div id="testDrop" class="test-drop" tabindex="0" role="button" aria-label="Choose session and audio files"><strong>Drop your test, session and audio here</strong><span>The approved case is built in: selecting just its three WAVs also works. Names do not matter; MD5 does.</span></div>
-        <div class="lab-url"><input id="testUrl" type="url" aria-label="Test manifest or session URL" placeholder="Paste a test.json or sesh.json URL"><button id="testFetch">Fetch test</button><button id="testHosted">Load hosted case</button></div>
-        <p id="testSessionSummary">Approved reconstruction · 30 seconds</p>
-        <div class="lab-table-scroll"><table class="test-assets"><thead><tr><th>STATE</th><th>ROLE</th><th>FILE / VERIFIED CONTENT</th></tr></thead><tbody id="testAssetRows"></tbody></table></div>
+        <div class="lab-section-heading"><h3>01 / CHOOSE A TEST</h3><button id="testChoose">Choose JSON + audio</button></div>
+        <div class="catalog-tabs" role="tablist" aria-label="Test sources">
+          <button id="catalogTab" role="tab" aria-selected="true" aria-controls="catalogPane" tabindex="0">Test library <span id="catalogTabCount"></span></button>
+          <button id="catalogLocalTab" role="tab" aria-selected="false" aria-controls="catalogLocalPane" tabindex="-1">Local files / URL</button>
+        </div>
+        <div id="catalogPane" role="tabpanel" aria-labelledby="catalogTab">
+          <div class="catalog-heading"><strong id="catalogTitle">Test library</strong><span id="catalogCount" class="catalog-count">Not loaded</span></div>
+          <p class="catalog-intro">Choose one test, select a group, or run the whole library. The mode in box 02 applies to every Run button. Audio is fetched only when a case is needed.</p>
+          <code id="catalogSource" class="catalog-url-note">./test/test.json</code>
+          <div class="catalog-toolbar"><input id="catalogSearch" type="search" placeholder="Filter by name or tag" aria-label="Filter tests"><button id="catalogSelectAll">Select all</button><button id="catalogSelectNone">None</button><button id="catalogRefresh">Refresh catalog</button></div>
+          <div id="catalogMessage" class="catalog-message" role="status" aria-live="polite">Reading the hosted test catalog…</div>
+          <div id="catalogList" class="catalog-list" aria-label="Available tests"></div>
+          <div class="catalog-actions"><button id="catalogRunSelected" disabled>Run selected</button><button id="catalogRunAll" disabled>Run all</button><button id="catalogCancel" hidden>Cancel suite</button><span id="catalogMode" class="catalog-mode">Mode: fast validation</span></div>
+          <div class="catalog-summary"><span id="catalogSummary">No tests run yet.</span><button id="catalogDownload" class="catalog-download" disabled>Save suite report</button></div>
+          <section id="catalogReportPanel" hidden aria-label="Selected test result"><strong id="catalogReportTitle">Test result</strong><pre id="catalogReportText"></pre><div class="lab-actions"><button id="catalogDownloadCase">Save case result</button><button id="catalogCloseReport">Close result</button></div></section>
+        </div>
+        <div id="catalogLocalPane" role="tabpanel" aria-labelledby="catalogLocalTab" hidden>
+          <div id="testDrop" class="test-drop" tabindex="0" role="button" aria-label="Choose session and audio files"><strong>Drop your test, session and audio here</strong><span>The approved case is built in: selecting just its three WAVs also works. Names do not matter; MD5 does.</span></div>
+          <div class="lab-url"><input id="testUrl" type="url" aria-label="Test catalog, manifest or session URL" placeholder="Paste a catalog, test manifest or sesh.json URL"><button id="testFetch">Fetch URL</button><button id="testHosted">Open test library</button></div>
+        </div>
+        <details id="catalogLoaded" class="catalog-loaded"><summary id="catalogLoadedLabel">Loaded case / verified files</summary>
+          <p id="testSessionSummary">Approved reconstruction · 30 seconds</p>
+          <div class="lab-table-scroll"><table class="test-assets"><thead><tr><th>STATE</th><th>ROLE</th><th>FILE / VERIFIED CONTENT</th></tr></thead><tbody id="testAssetRows"></tbody></table></div>
+        </details>
       </section>
       <section class="test-card">
         <h3>02 / CHOOSE HOW TO RUN</h3>
@@ -1143,29 +1191,32 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
         <div class="lab-options"><label><input id="testShowPerformance" type="checkbox"> Show the performance in DJ mode after validation</label><label><input id="testSpotlight" type="checkbox" checked> Spotlight active controls; dim the rest</label></div>
         <p class="lab-hint">The demo executes the same source-track graph as validation. It does not play the reference WAV. Pause, restart or stop from the floating transport.</p>
       </section>
-      <section class="test-card lab-status"><div class="test-progress"><span id="testProgressBar"></span></div><p id="testRunStatus" role="status" aria-live="polite">Choose the three WAVs, or fetch the hosted test.</p></section>
+      <section class="test-card lab-status"><div class="test-progress"><span id="testProgressBar"></span></div><p id="testRunStatus" role="status" aria-live="polite">Open the test library, or choose local session and audio files.</p></section>
       <section id="testScoreCard" class="test-card test-score">
         <strong id="testScore">—</strong><div><h3 id="testVerdict">READY WHEN YOU ARE</h3><p id="testMetrics">Full-rate stereo comparison. No timing shift, gain fitting or reference substitution.</p><div id="testChecks" class="lab-checks"></div></div>
       </section>
       <section class="test-card">
         <h3>03 / LISTEN &amp; INSPECT</h3><p id="testSourceNote">The approved reconstruction is a fixed golden reference, not an input track.</p>
-        <div class="test-listen-grid"><div><p>YOUR APPROVED REFERENCE</p><audio id="testReferenceAudio" controls preload="metadata"></audio></div><div><p>NEW RENDER FROM THE TWO SAMPLES</p><audio id="testRenderAudio" controls preload="metadata"></audio></div></div>
+        <div class="test-listen-grid"><div><p>YOUR APPROVED REFERENCE</p><audio id="testReferenceAudio" controls preload="metadata"></audio></div><div><p>NEW RENDER FROM THE SOURCE TRACKS</p><audio id="testRenderAudio" controls preload="metadata"></audio></div></div>
         <div class="lab-actions"><button id="testManual" disabled>Load decks to practice</button><button id="testSelfCheck">Engine regression suite</button><button id="testDownloadChecks" disabled>Save regression report</button></div><p id="testSelfResult"></p>
       </section>
       <details class="test-card"><summary>Session JSON &amp; hosting manifest</summary><p class="lab-hint">Events use audio-clock seconds. Same-time events keep JSON order. A button event with duration expands into press/release. URLs in a test manifest are resolved relative to that manifest, not the page.</p><textarea id="testEditor" spellcheck="false" aria-label="Session JSON"></textarea><div class="lab-actions"><button id="testApplyJson">Validate &amp; apply JSON</button><button id="testSaveSession">Save sesh JSON</button><button id="testSaveManifest">Save test manifest</button></div></details>
-      <details class="test-card"><summary>Event log</summary><pre id="testLog" class="test-log">Performance Lab R3 ready.</pre></details>
+      <details class="test-card"><summary>Event log</summary><pre id="testLog" class="test-log">Performance Lab R4 · catalog ready.</pre></details>
     </div>
     <footer><button id="testRun" class="primary" disabled>Validate audio</button><button id="testStop" disabled>Cancel</button><span class="spacer"></span><button id="testDownloadAudio" disabled>Save rendered WAV</button><button id="testDownloadJson" disabled>Save result JSON</button></footer>
   </section>
 </dialog>
 <div id="demoStage" hidden aria-hidden="true"><svg id="demoShade" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><mask id="demoMask"><rect width="100%" height="100%" fill="white"/><g id="demoHoles"></g></mask></defs><rect width="100%" height="100%" fill="#02050a" fill-opacity=".82" mask="url(#demoMask)"/></svg><div id="demoFocusBoxes"></div></div>
 <section id="demoHud" hidden aria-label="DJ demonstration transport">
+  <div id="demoSuiteStrip" class="demo-suite-strip" hidden><strong id="demoSuiteLabel">Test suite</strong><button id="demoSkipTest">Skip test →</button></div>
   <div class="demo-hud-top"><span class="demo-live-dot"></span><strong id="demoStateLabel">DJ DEMO</strong><span id="demoPassBadge">VALIDATED</span><output id="demoClock">00:00.00 / 00:30.00</output></div>
   <div class="demo-hud-heading"><strong id="demoChapter">Ready</strong><span id="demoNow">Preparing the source-track performance</span></div>
   <div class="demo-progress"><span id="demoProgressFill"></span></div>
   <div class="demo-controls"><button id="demoPause">Pause</button><button id="demoRestart">Restart</button><button id="demoSpotlight" aria-pressed="true">Spotlight on</button><button id="demoStop">Stop demo</button></div>
   <div class="demo-next"><span id="demoNext">Next event</span><span>SPACE pause · ESC stop</span></div>
 </section>
+
+<aside id="catalogQueueBar" hidden aria-label="Test suite progress"><span id="catalogQueueText"></span><button id="catalogQueueCancel">Cancel suite</button></aside>
 
   <input id="testBundleInput" type="file" accept="application/json,.json,audio/*,.wav,.mp3,.aif,.aiff,.flac,.m4a,.aac,.ogg" multiple hidden>
 
@@ -7055,7 +7106,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const clone=x=>JSON.parse(JSON.stringify(x));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const tick=()=>new Promise(r=>setTimeout(r,0));
-const state={session:null,sessionText:'',sessionMd5:null,manifest:null,manifestUrl:null,files:new Map(),assets:new Map(),tracks:new Map(),buffers:new Map(),referenceBuffer:null,prepared:false,busy:false,cancelled:false,controller:null,generation:0,result:null,rendered:null,renderBuffer:null,compiled:null,demo:null,regressions:null,loadAudit:[]};
+const state={session:null,sessionText:'',sessionMd5:null,manifest:null,manifestUrl:null,sessionUrl:null,files:new Map(),assets:new Map(),tracks:new Map(),buffers:new Map(),referenceBuffer:null,prepared:false,busy:false,cancelled:false,controller:null,generation:0,result:null,rendered:null,renderBuffer:null,compiled:null,demo:null,regressions:null,loadAudit:[]};
 const timeLabel=t=>`${String(Math.floor(Math.max(0,t)/60)).padStart(2,'0')}:${Math.max(0,t%60).toFixed(2).padStart(5,'0')}`;
 const progress=v=>{$('#testProgressBar').style.width=`${clamp(v,0,1)*100}%`;};
 const status=text=>{$('#testRunStatus').textContent=text;};
@@ -7066,7 +7117,7 @@ function clearResult(){state.result=null;state.rendered=null;state.renderBuffer=
 function clearAudio(el){el.pause();el.removeAttribute('src');el.load();if(el._objectUrl)URL.revokeObjectURL(el._objectUrl);el._objectUrl=null;}
 function setAudio(el,blob){clearAudio(el);el._objectUrl=URL.createObjectURL(blob);el.src=el._objectUrl;}
 function missingAssets(){return (state.session?.assets||[]).filter(a=>!state.assets.get(a.id)?.file);}
-function busy(value){state.busy=value;const ready=!!state.session&&!missingAssets().length;for(const id of ['testRun','testManual'])$('#'+id).disabled=value||!ready;for(const id of ['testChoose','testFetch','testHosted','testApplyJson','testSelfCheck'])$('#'+id).disabled=value;$('#testStop').disabled=!value;$('#testBundleInput').disabled=value;}
+function busy(value){state.busy=value;const ready=!!state.session&&!missingAssets().length;for(const id of ['testRun','testManual'])$('#'+id).disabled=value||!ready;for(const id of ['testChoose','testFetch','testHosted','testApplyJson','testSelfCheck'])$('#'+id).disabled=value;$('#testStop').disabled=!value;$('#testBundleInput').disabled=value;window.dispatchEvent(new CustomEvent('clip-sesh-lab-state',{detail:{busy:value,demo:!!state.demo}}));}
 function drawAssets(){
   const body=$('#testAssetRows');body.replaceChildren();
   for(const a of state.session?.assets||[]){
@@ -7080,7 +7131,7 @@ function drawAssets(){
   busy(state.busy);
 }
 function attachSession(session,text=null,manifest=null){
-  state.session=clone(K.validateSession(session));state.sessionText=text??JSON.stringify(session,null,2);
+  state.sessionUrl=null;state.session=clone(K.validateSession(session));state.sessionText=text??JSON.stringify(session,null,2);
   state.sessionMd5=K.md5ArrayBuffer(new TextEncoder().encode(state.sessionText).buffer);state.manifest=manifest;
   state.prepared=false;state.buffers.clear();state.tracks.clear();state.referenceBuffer=null;state.assets.clear();
   for(const a of state.session.assets)state.assets.set(a.id,{asset:a,file:state.files.get(a.md5.toLowerCase())||null});
@@ -7089,6 +7140,7 @@ function attachSession(session,text=null,manifest=null){
   $('#testSessionSummary').textContent=`${session.title||session.id} · ${session.durationSeconds.toFixed(2)} s · ${session.events.length} recorded events`;
   $('#testSourceNote').textContent=session.referenceProvenance?.description||'This fixed reference is compared independently. It is never used as a deck input.';
   drawAssets();const missing=missingAssets();status(missing.length?`Waiting for ${missing.length} audio file${missing.length===1?'':'s'}. Match is by MD5, not title.`:'All audio hashes verified. Ready for validation or DJ demo.');
+  window.dispatchEvent(new CustomEvent('clip-sesh-case-loaded',{detail:{id:session.id,sessionMd5:state.sessionMd5}}));
 }
 function assertIdle(){if(state.busy||state.demo)throw new Error('Stop the current run or demo before loading another test.');}
 function validateManifest(m){
@@ -7152,30 +7204,52 @@ async function fetchBytes(url,signal,limit=200*1024*1024){
 async function loadUrl(value,options={}){
   assertIdle();busy(true);clearResult();state.cancelled=false;const generation=++state.generation;
   const controller=new AbortController();state.controller=controller;const timeout=setTimeout(()=>controller.abort(),90000);
+  const externalAbort=()=>controller.abort();options.signal?.addEventListener('abort',externalAbort,{once:true});if(options.signal?.aborted)controller.abort();
   try{
     const url=resourceUrl(value,options.baseUrl||document.baseURI);$('#testUrl').value=url;status('Fetching test description…');
     const first=await fetchBytes(url,controller.signal,2*1024*1024),raw=new TextDecoder().decode(first.data),payload=JSON.parse(raw);
-    let manifest=null,session,text,base;
+    let manifest=null,session,text,base,sessionUrl;
     if(payload.format==='clip-sesh-dj-test-manifest'){
       manifest=validateManifest(payload);base=first.url;status('Fetching and verifying the session JSON…');
-      const sf=await fetchBytes(resourceUrl(manifest.session.url,base),controller.signal,2*1024*1024);text=new TextDecoder().decode(sf.data);session=K.validateSession(JSON.parse(text));verifyManifestSession(manifest,session,text);
-    }else{session=K.validateSession(payload);text=raw;base=first.url;}
+      const sf=await fetchBytes(resourceUrl(manifest.session.url,base),controller.signal,2*1024*1024);text=new TextDecoder().decode(sf.data);session=K.validateSession(JSON.parse(text));verifyManifestSession(manifest,session,text);sessionUrl=sf.url;
+    }else{session=K.validateSession(payload);text=raw;base=first.url;sessionUrl=first.url;}
+    if(options.sessionMd5){
+      const actual=K.md5ArrayBuffer(new TextEncoder().encode(text).buffer);
+      if(!/^[a-f0-9]{32}$/i.test(options.sessionMd5)||actual!==options.sessionMd5.toLowerCase())throw new Error(`Session JSON MD5 mismatch. Expected ${options.sessionMd5}; received ${actual}. Update the catalog pin only for an intentional session change.`);
+    }
+    if(options.assetUrls){
+      for(const [id,url]of Object.entries(options.assetUrls)){
+        if(!session.assets.some(a=>a.id===id))throw new Error(`Catalog asset override "${id}" is not declared in the session.`);
+        if(typeof url!=='string'||!url)throw new Error(`Catalog asset ${id} needs a URL.`);
+      }
+    }
     const staged=new Map(state.files),audit=[];
     for(const [i,a]of session.assets.entries()){
       const link=manifest?manifest.assets.find(l=>l.id===a.id):a;
-      const target=resourceUrl(link.url||a.file,base);
-      status(`Fetching ${a.title||a.id} (${i+1}/${session.assets.length})…`);
-      const asset=await fetchBytes(target,controller.signal),hash=K.md5ArrayBuffer(asset.data);
-      if(hash!==a.md5.toLowerCase())throw new Error(`MD5 mismatch for ${a.id}. Expected ${a.md5}; received ${hash}. Nothing was substituted.`);
-      const filename=decodeURIComponent(new URL(target).pathname.split('/').pop()||`${a.id}.wav`);
-      const file=new File([asset.data],filename,{type:asset.type||'audio/wav'});staged.set(hash,file);
-      audit.push({id:a.id,url:target,md5:hash,bytes:file.size});log(`Fetched + verified ${a.id} · ${hash}`);progress(.1+.65*(i+1)/session.assets.length);await tick();
+      const override=options.assetUrls&&Object.hasOwn(options.assetUrls,a.id)?options.assetUrls[a.id]:null;
+      const target=resourceUrl(override||link.url||a.file,override?(options.resourceBaseUrl||base):base);
+      if(controller.signal.aborted)throw new DOMException('Cancelled','AbortError');
+      const expected=a.md5.toLowerCase();let file=options.useCache?staged.get(expected):null;const cached=!!file;
+      if(!file){
+        status(`Fetching ${a.title||a.id} (${i+1}/${session.assets.length})…`);
+        const asset=await fetchBytes(target,controller.signal),hash=K.md5ArrayBuffer(asset.data);
+        if(hash!==expected)throw new Error(`MD5 mismatch for ${a.id}. Expected ${a.md5}; received ${hash}. Nothing was substituted.`);
+        const filename=decodeURIComponent(new URL(target).pathname.split('/').pop()||`${a.id}.wav`);
+        file=new File([asset.data],filename,{type:asset.type||'audio/wav'});
+      }else status(`Reusing verified content for ${a.title||a.id}…`);
+      staged.delete(expected);staged.set(expected,file); // Most recently used at the end.
+      audit.push({id:a.id,url:target,md5:expected,bytes:file.size,cache:cached?'verified-md5':'network'});
+      log(`${cached?'Reused verified':'Fetched + verified'} ${a.id} · ${expected}`);progress(.1+.65*(i+1)/session.assets.length);await tick();
     }
     if(controller.signal.aborted||state.cancelled||generation!==state.generation)throw new DOMException('Cancelled','AbortError');
-    state.files=staged;state.manifestUrl=manifest?first.url:null;state.loadAudit=audit;attachSession(session,text,manifest);if(manifest)applyDefaults(manifest.defaults);
-    if(options.mode)setMode(options.mode);status('Hosted case loaded. Session and all three audio files verified. Click Run to start.');progress(1);
+    state.files=staged;state.manifestUrl=manifest?first.url:null;state.loadAudit=audit;attachSession(session,text,manifest);state.sessionUrl=sessionUrl;if(manifest)applyDefaults(manifest.defaults);
+    // Bound cross-case raw-file caching. Active files are retained in state.assets, not
+    // dependent on this cache. Decoded audio is replaced when the next session loads.
+    let cachedBytes=[...state.files.values()].reduce((n,f)=>n+f.size,0);
+    for(const [hash,file]of state.files){if(cachedBytes<=96*1024*1024)break;state.files.delete(hash);cachedBytes-=file.size;}
+    if(options.mode)setMode(options.mode);status(`Hosted case loaded. Session and all ${session.assets.length} audio files verified. Click Run to start.`);progress(1);
     return {session:state.session,manifest,assets:audit};
-  }catch(error){showError(error);throw error;}finally{clearTimeout(timeout);if(state.controller===controller)state.controller=null;busy(false);}
+  }catch(error){showError(error);throw error;}finally{clearTimeout(timeout);options.signal?.removeEventListener('abort',externalAbort);if(state.controller===controller)state.controller=null;busy(false);}
 }
 async function prepare(){
   if(state.prepared)return;
@@ -7218,7 +7292,8 @@ async function run(options={}){
     const verdict=K.compareGolden(r.buffer,state.referenceBuffer,state.session.comparison?.goldenGates||{});
     const blob=ClipSeshWav.encodeWav([r.buffer.getChannelData(0)],[r.buffer.getChannelData(1)],r.sampleRate);
     const renderHash=K.md5ArrayBuffer(await blob.arrayBuffer());
-    const result={format:'clip-sesh-dj-test-result',version:3,testId:state.session.id,build:'performance-lab-r3',createdAt:new Date().toISOString(),
+    if(generation!==state.generation||state.cancelled||state.controller?.signal.aborted)throw new DOMException('Cancelled','AbortError');
+    const result={format:'clip-sesh-dj-test-result',version:3,testId:state.session.id,build:'performance-lab-r4-catalog',createdAt:new Date().toISOString(),
       ...verdict,referenceKind:state.session.referenceProvenance?.kind||'user-supplied',referenceAssetMd5:state.session.assets.find(a=>a.role==='reference').md5,
       sessionMd5:state.sessionMd5,renderedWavMd5:renderHash,renderMode:'OfflineAudioContext / shared scheduled DeckEngine + mixer + FX',
       requestedMode:mode,validationSeconds:(performance.now()-started)/1000,browser:navigator.userAgent,referenceNeverUsedAsRendererInput:true,
@@ -7236,7 +7311,7 @@ function download(name,blob){clipSeshDJ.downloadBlob(name,blob);}
 function makeManifest(){
   if(state.manifest)return clone(state.manifest);
   return {format:'clip-sesh-dj-test-manifest',version:1,id:state.session.id,title:state.session.title,
-    session:{url:'./dj-carlo.sesh.json',md5:state.sessionMd5},assets:state.session.assets.map(a=>({id:a.id,url:a.url||'./'+(a.file||`${a.id}.wav`).replace(/^\.\//,''),md5:a.md5})),defaults:{mode:'fast',spotlight:true}};
+    session:{url:state.sessionUrl||'./dj-carlo.sesh.json',md5:state.sessionMd5},assets:state.session.assets.map(a=>({id:a.id,url:state.loadAudit.find(x=>x.id===a.id)?.url||a.url||'./'+(a.file||`${a.id}.wav`).replace(/^\.\//,''),md5:a.md5})),defaults:{mode:'fast',spotlight:true}};
 }
 function stop(){state.cancelled=true;state.generation++;state.controller?.abort();if(state.demo)return stopDemo('Stopped');status('Cancelling. The current audio render may finish before its result is discarded.');}
 function registerTracks(app){
@@ -7433,6 +7508,7 @@ async function stopDemo(reason='Stopped'){
     sampleRate:d.real.sampleRate,referenceUsedAsPlayback:false,restoredDjControls:true,checkpoints:d.checkpoints};
   if(state.result){state.result.demo=audit;log(`Demo ${reason.toLowerCase()} at ${elapsed.toFixed(3)} s; normal DJ controls restored.`);}
   if(reason!=='Restarting'){app.toast(reason==='Complete'?'Performance complete':'DJ demo stopped','Both decks are paused and the controls are yours again.','success');$('#testModeButton').focus();}
+  window.dispatchEvent(new CustomEvent('clip-sesh-demo-ended',{detail:audit}));
   return audit;
 }
 async function runRegressions(){
@@ -7463,19 +7539,307 @@ function wire(){
   // Do not let physical MIDI controls mutate a read-only projected performance.
   const midi=clipSeshDJ.handleMidiControl.bind(clipSeshDJ);clipSeshDJ.handleMidiControl=(...args)=>{if(!state.demo)return midi(...args);};
   const baseline=JSON.parse($('#approvedSession').textContent);attachSession(baseline,$('#approvedSession').textContent);
-  autoLoad().catch(error=>{status('Hosted case not loaded. Choose local files or paste a test URL.');log('Autoload: '+errorMessage(error));});
+  // Catalog module starts hosted discovery after it has registered its public API.
 }
 async function autoLoad(pageUrl=location.href){
   const page=new URL(pageUrl);if(!['http:','https:'].includes(page.protocol))return null;
-  const test=page.searchParams.get('test'),mode=page.searchParams.get('mode');
-  if(test&&!$('#testDialog').open)$('#testDialog').showModal();
-  return loadUrl(test||'./dj-carlo.test.json',{baseUrl:page.href,mode:['fast','demo'].includes(mode)?mode:null});
+  const test=page.searchParams.get('test'),suite=page.searchParams.get('suite'),mode=page.searchParams.get('mode');
+  if((test||suite)&&!$('#testDialog').open)$('#testDialog').showModal();
+  const options={baseUrl:page.href,mode:['fast','demo'].includes(mode)?mode:null,caseId:page.searchParams.get('case')};
+  if(test)return window.ClipSeshCatalog.openUrl(test,options);
+  return window.ClipSeshCatalog.load(suite||'./test/test.json',options);
 }
 window.ClipSeshTest=Object.freeze({loadBundle,loadUrl,autoLoad,prepare,run,stop,loadManual,startDemo,pauseDemo,restartDemo,stopDemo,toggleSpotlight,runRegressions,resourceUrl,validateManifest,verifyManifestSession,makeManifest,
+  fetchBytes,setMode,selectedMode,refreshControls:()=>busy(state.busy),
   renderSession:(s=state.session,tr=state.tracks,o)=>K.renderSession(s,tr,o),applyInitial:K.applyInitial,applyEvent:K.applyEvent,expandedEvents:K.expandedEvents,contextFacade:K.contextFacade,
   validateSession:K.validateSession,compareAudio:K.compareAudio,compareGolden:K.compareGolden,md5File:K.md5File,md5ArrayBuffer:K.md5ArrayBuffer,
   getStatus:()=>({session:state.session,prepared:state.prepared,running:state.busy,cancelled:state.cancelled,result:state.result,manifest:state.manifest,sessionMd5:state.sessionMd5,missing:missingAssets().map(a=>a.id),demo:state.demo?{mode:state.demo.mode,time:state.demo.real.currentTime-state.demo.origin,eventCount:state.demo.compiled.events.length,appliedEventCount:state.demo.appliedEventCount,spotlight:state.demo.spotlight,usesReference:false}:null}),
   getTracks:()=>state.tracks,getBuffers:()=>state.buffers,getRendered:()=>state.renderBuffer,getTimeline:()=>state.compiled?.timeline||[],describeEvent});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+})();
+
+</script>
+<!-- MODULE: static test catalog + serial suite orchestration; no DSP changes -->
+<script type="module" id="module-test-catalog-r4">
+/* PERFORMANCE LAB R4 / CATALOG
+ * A static, ordered index; no GitHub API, directory scraping, or new runtime dependency.
+ * This module orchestrates the existing validated source-graph runner. It never changes
+ * a session, a reference, comparison gates, or the audio DSP to obtain a pass.
+ */
+(function () {
+'use strict';
+const T = window.ClipSeshTest;
+const $ = s => document.querySelector(s);
+const copy = x => JSON.parse(JSON.stringify(x));
+const abortError = () => new DOMException('Cancelled', 'AbortError');
+const FMT = 'clip-sesh-dj-test-catalog';
+const DEFAULT_URL = './test/test.json';
+const S = {catalog:null, url:null, selected:new Set(), rows:new Map(), activeId:null,
+  loading:false, inspecting:false, running:false, controller:null, cancelled:false,
+  queue:null, stopPromise:null, lastReport:null, reportId:null, query:'', tab:'library', lastRowsKey:''};
+const BUSY_IDS = ['testChoose','testFetch','testHosted','testApplyJson','testSelfCheck','testManual','testRun','testBundleInput'];
+const text = (tag, value, cls) => {const el=document.createElement(tag);el.textContent=value;if(cls)el.className=cls;return el;};
+function message(value, error=false) {$('#catalogMessage').textContent=value;$('#catalogMessage').classList.toggle('error',error);}
+function owned() {return S.loading||S.inspecting||S.running;}
+function mode() {return T.selectedMode();}
+function enabled() {return (S.catalog?.tests||[]).filter(e=>!e.disabled);}
+function rowFor(id) {return S.rows.get(id);}
+function errorText(e) {return e?.name==='AbortError'?'Cancelled.':e?.message||String(e);}
+function sourceUrl(value, base) {return T.resourceUrl(value, base||document.baseURI);}
+function validateCatalog(value) {
+  if (!value||value.format!==FMT||value.version!==1||!Array.isArray(value.tests))
+    throw new Error('Expected {format:"clip-sesh-dj-test-catalog", version:1, tests:[…]}.');
+  if (value.tests.length>500) throw new Error('A catalog may contain at most 500 tests.');
+  const out=copy(value), ids=new Set();
+  if(out.title!=null&&typeof out.title!=='string')throw new Error('Catalog title must be text.');
+  if(out.defaults?.mode!=null&&!['fast','demo'].includes(out.defaults.mode))throw new Error('Catalog defaults.mode must be fast or demo.');
+  out.tests=out.tests.map((entry,i)=>{
+    if(!entry||typeof entry!=='object'||!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(entry.id||''))throw new Error(`tests[${i}] needs a stable id (letters, digits, ., _, -).`);
+    if(ids.has(entry.id))throw new Error(`Duplicate test id: ${entry.id}`);ids.add(entry.id);
+    if(entry.title!=null&&typeof entry.title!=='string')throw new Error(`${entry.id}: title must be text.`);
+    if(entry.description!=null&&typeof entry.description!=='string')throw new Error(`${entry.id}: description must be text.`);
+    if(entry.disabled!=null&&typeof entry.disabled!=='boolean')throw new Error(`${entry.id}: disabled must be a boolean.`);
+    if(entry.tags!=null&&(!Array.isArray(entry.tags)||entry.tags.some(t=>typeof t!=='string')))throw new Error(`${entry.id}: tags must be an array of strings.`);
+    if(entry.durationSeconds!=null&&(!Number.isFinite(entry.durationSeconds)||entry.durationSeconds<=0))throw new Error(`${entry.id}: invalid durationSeconds.`);
+    if(Boolean(entry.session)===Boolean(entry.manifest))throw new Error(`${entry.id}: provide either session or manifest, not both.`);
+    if(entry.session){
+      if(typeof entry.session==='string')entry.session={url:entry.session};
+      if(typeof entry.session!=='object'||typeof entry.session.url!=='string'||!entry.session.url.trim())throw new Error(`${entry.id}: session needs a URL.`);
+      if(entry.session.md5!=null&&!/^[a-f0-9]{32}$/i.test(entry.session.md5))throw new Error(`${entry.id}: session.md5 must contain 32 hex characters.`);
+    }
+    if(entry.manifest&&(typeof entry.manifest!=='string'||!entry.manifest.trim()))throw new Error(`${entry.id}: manifest must be a URL string.`);
+    if(entry.assets!=null){
+      if(entry.manifest)throw new Error(`${entry.id}: asset overrides belong to the external manifest, not this entry.`);
+      if(typeof entry.assets!=='object'||Array.isArray(entry.assets)||!entry.assets)throw new Error(`${entry.id}: assets must map session asset ids to URLs.`);
+      for(const [id,url]of Object.entries(entry.assets))if(!id||typeof url!=='string'||!url.trim())throw new Error(`${entry.id}: every asset override needs a URL string.`);
+    }
+    entry.title=entry.title||entry.id;entry.tags=entry.tags||[];return entry;
+  });
+  return out;
+}
+function selectTab(tab) {
+  S.tab=tab==='local'?'local':'library';const library=S.tab==='library';
+  $('#catalogPane').hidden=!library;$('#catalogLocalPane').hidden=library;
+  for(const [id,on]of [['catalogTab',library],['catalogLocalTab',!library]]){$('#'+id).setAttribute('aria-selected',String(on));$('#'+id).tabIndex=on?0:-1;}
+  if(!library)$('#catalogLoaded').open=true;
+}
+function makeButton(label, op, id, disabled=false) {
+  const b=text('button',label);b.type='button';b.dataset.op=op;b.dataset.id=id;b.dataset.catalogFocus=`${op}:${id}`;b.disabled=disabled;return b;
+}
+function paint() {
+  if(!$('#catalogList'))return;
+  const locked=owned()||T.getStatus().running||!!T.getStatus().demo;
+  const cases=S.catalog?.tests||[],usable=enabled(),count=[...S.selected].filter(id=>usable.some(e=>e.id===id)).length;
+  $('#catalogTabCount').textContent=S.catalog?`(${cases.length})`:'';
+  $('#catalogTitle').textContent=S.catalog?.title||'Test library';
+  $('#catalogCount').textContent=S.catalog?`${cases.length} test${cases.length===1?'':'s'} · ${count} selected`:'Not loaded';
+  $('#catalogSource').textContent=S.url||DEFAULT_URL;
+  $('#catalogMode').textContent=`Mode: ${mode()==='demo'?'DJ demo · sequential performances':'fast validation · silent renders'}`;
+  const focused=document.activeElement?.dataset.catalogFocus;
+  const key=JSON.stringify([S.catalog, S.activeId, [...S.selected], S.query, locked,
+    [...S.rows].map(([id,r])=>[id,r.status,r.error,r.result?.passed,r.demo?.reason,r.meta])]);
+  if(key!==S.lastRowsKey){
+    S.lastRowsKey=key;const list=$('#catalogList');list.replaceChildren();const q=S.query.trim().toLowerCase();
+    const shown=cases.filter(e=>!q||[e.id,e.title,e.description,...e.tags].join(' ').toLowerCase().includes(q));
+    if(!shown.length)list.append(text('div',!S.catalog?'No catalog loaded. Refresh, or open a catalog URL under Local files / URL.':cases.length?'No tests match this filter. Run all still includes the whole catalog.':'The catalog is empty. Add an entry to its tests array.','catalog-empty'));
+    for(const e of shown){
+      const r=rowFor(e.id)||{},row=document.createElement('div');row.className='catalog-row'+(e.id===S.activeId?' is-active':'')+(e.disabled?' is-disabled':'');row.dataset.id=e.id;
+      const check=document.createElement('input');check.type='checkbox';check.checked=S.selected.has(e.id);check.disabled=locked||!!e.disabled;check.dataset.id=e.id;check.dataset.catalogFocus=`select:${e.id}`;check.setAttribute('aria-label',`Select ${e.title}`);
+      const main=document.createElement('div');main.className='catalog-row-main';const title=makeButton(e.title,'inspect',e.id,locked||!!e.disabled);title.className='catalog-case-title';title.title='Load this case and inspect its session and source files';main.append(title);
+      const desc=r.error||e.description;if(desc)main.append(text('span',desc,'catalog-row-description'));
+      const d=r.meta?.durationSeconds??e.durationSeconds;const meta=[d?`${Number(d).toFixed(1)} s`:'',...(e.tags||[])].filter(Boolean).join(' · ');if(meta)main.append(text('span',meta,'catalog-row-meta'));
+      const status=e.disabled?'DISABLED':r.status||'NOT RUN';const badge=text('span',status,'catalog-badge');badge.dataset.status=status;
+      const actions=document.createElement('div');actions.className='catalog-row-actions';actions.append(makeButton('Run','run',e.id,locked||!!e.disabled));if(r.result||r.error||r.demo)actions.append(makeButton('Result','result',e.id,locked));
+      row.append(check,main,badge,actions);list.append(row);
+    }
+    if(focused){const el=[...list.querySelectorAll('[data-catalog-focus]')].find(e=>e.dataset.catalogFocus===focused);if(el&&!el.disabled)el.focus({preventScroll:true});}
+  }
+  $('#catalogRunSelected').textContent=`Run selected (${count})`;$('#catalogRunAll').textContent=`Run all (${usable.length})`;
+  $('#catalogRunSelected').disabled=locked||!count;$('#catalogRunAll').disabled=locked||!usable.length;
+  for(const id of ['catalogRefresh','catalogSelectAll','catalogSelectNone'])$('#'+id).disabled=locked;
+  $('#catalogCancel').hidden=!owned();$('#catalogCancel').disabled=S.cancelled;
+  $('#catalogDownload').disabled=!S.lastReport;
+  if(owned()){
+    for(const id of BUSY_IDS)$('#'+id).disabled=true;
+    $('#testStop').disabled=S.cancelled;
+    for(const id of ['testModeFast','testModeDemo','testShowPerformance'])$('#'+id).disabled=true;
+  }else{
+    for(const id of ['testModeFast','testModeDemo','testShowPerformance'])$('#'+id).disabled=false;
+  }
+  $('#catalogLoadedLabel').textContent='Loaded case: '+(T.getStatus().session?.title||'none');
+  if(S.lastReport&&!S.running){const r=S.lastReport;$('#catalogSummary').textContent=`${r.cancelled?'Cancelled':'Finished'} · ${r.counts.passed} passed · ${r.counts.failed} failed · ${r.counts.errors} errors · ${r.counts.skipped} skipped · ${r.counts.cancelled} cancelled`;}else if(!S.running)$('#catalogSummary').textContent='No tests run yet.';
+  $('#catalogQueueBar').hidden=!S.running||!!T.getStatus().demo||$('#testDialog').open;
+  if(S.queue){const q=S.queue;$('#catalogQueueText').textContent=`${q.index+1} / ${q.ids.length} · ${q.title||'Test suite'} — ${q.phase||'Preparing'}`;$('#demoSuiteLabel').textContent=`Test ${q.index+1} of ${q.ids.length} · ${q.title}`;}
+  $('#demoSuiteStrip').hidden=!S.running||!T.getStatus().demo;
+  $('#demoStop').textContent=S.running?'Stop suite':'Stop demo';
+}
+function unlockControls() {T.refreshControls();paint();}
+async function fetchJson(url, signal) {
+  const r=await T.fetchBytes(url,signal,2*1024*1024);let payload;try{payload=JSON.parse(new TextDecoder().decode(r.data));}catch(_){throw new Error(`Invalid JSON: ${url}`);}return {payload,url:r.url};
+}
+async function load(value=DEFAULT_URL, options={}) {
+  if(owned()||T.getStatus().running||T.getStatus().demo)throw new Error('Stop the active test or suite before refreshing the catalog.');
+  const requested=sourceUrl(value,options.baseUrl);
+  S.loading=true;S.cancelled=false;S.controller=new AbortController();const controller=S.controller;
+  const timeout=setTimeout(()=>controller.abort(),20000);message('Reading the test catalog…');paint();
+  try{
+    const response=options.prefetched||await fetchJson(requested,controller.signal);
+    if(controller.signal.aborted)throw abortError();
+    const catalog=validateCatalog(response.payload),base=response.url;
+    // Validate every resource scheme now. No audio is downloaded just to list tests.
+    for(const e of catalog.tests){sourceUrl(e.manifest||e.session.url,base);for(const url of Object.values(e.assets||{}))sourceUrl(url,base);}
+    const old=S.catalog,oldUrl=S.url,oldRows=S.rows,oldSelection=S.selected,rows=new Map(),selected=new Set();
+    for(const e of catalog.tests){
+      const prior=old?.tests.find(x=>x.id===e.id),same=prior&&JSON.stringify(prior)===JSON.stringify(e)&&S.url===base;
+      rows.set(e.id,same?oldRows.get(e.id)||{status:'NOT RUN'}:{status:'NOT RUN',result:null,error:null,demo:null});
+      if(!e.disabled&&(same?oldSelection.has(e.id):true))selected.add(e.id);
+    }
+    S.catalog=catalog;S.url=base;S.rows=rows;S.selected=selected;
+    const newActive=catalog.tests.find(e=>e.id===S.activeId),oldActive=old?.tests.find(e=>e.id===S.activeId);
+    if(!newActive||oldUrl!==base||JSON.stringify(oldActive)!==JSON.stringify(newActive))S.activeId=null;
+    if(JSON.stringify(old)!==JSON.stringify(catalog)||oldUrl!==base){S.lastReport=null;S.reportId=null;$('#catalogReportPanel').hidden=true;}
+    if(options.caseId){const e=catalog.tests.find(e=>e.id===options.caseId&&!e.disabled);if(!e)throw new Error(`Catalog loaded, but case "${options.caseId}" does not exist or is disabled.`);S.selected=new Set([e.id]);}
+    if(options.mode)T.setMode(options.mode);else if(catalog.defaults?.mode)T.setMode(catalog.defaults.mode);
+    if(typeof catalog.defaults?.spotlight==='boolean')$('#testSpotlight').checked=catalog.defaults.spotlight;
+    selectTab('library');message(`${catalog.tests.length} test${catalog.tests.length===1?'':'s'} discovered. Audio will be fetched and MD5-checked when you inspect or run a case.`);
+    return copy(catalog);
+  }catch(e){message(errorText(e),e.name!=='AbortError');throw e;}finally{clearTimeout(timeout);if(S.controller===controller)S.controller=null;S.loading=false;unlockControls();}
+}
+async function openUrl(value, options={}) {
+  if(owned()||T.getStatus().running||T.getStatus().demo)throw new Error('Stop the active operation first.');
+  const url=sourceUrl(value,options.baseUrl);S.loading=true;S.cancelled=false;const controller=new AbortController();S.controller=controller;const timer=setTimeout(()=>controller.abort(),20000);paint();
+  let f;
+  try{f=await fetchJson(url,controller.signal);if(controller.signal.aborted)throw abortError();}
+  catch(e){message(errorText(e),true);throw e;}
+  finally{clearTimeout(timer);S.loading=false;if(S.controller===controller)S.controller=null;unlockControls();}
+  if(f.payload.format===FMT)return load(url,{...options,prefetched:f});
+  selectTab('local');return T.loadUrl(url,options);
+}
+async function loadEntry(entry, runMode, signal) {
+  const result=entry.manifest?await T.loadUrl(sourceUrl(entry.manifest,S.url),{mode:runMode,signal,useCache:true}):
+    await T.loadUrl(sourceUrl(entry.session.url,S.url),{mode:runMode,signal,useCache:true,sessionMd5:entry.session.md5,assetUrls:entry.assets,resourceBaseUrl:S.url});
+  if(signal?.aborted)throw abortError();
+  S.activeId=entry.id;const r=rowFor(entry.id);r.meta={durationSeconds:result.session.durationSeconds,sessionId:result.session.id,events:result.session.events.length};
+  return result;
+}
+async function inspect(id) {
+  if(owned()||T.getStatus().running||T.getStatus().demo)throw new Error('Stop the current operation first.');
+  const entry=enabled().find(e=>e.id===id);if(!entry)throw new Error('Test not found or disabled.');
+  const r=rowFor(id),previous=r.status;S.inspecting=true;S.cancelled=false;S.controller=new AbortController();r.status='LOADING';r.error=null;paint();
+  try{await loadEntry(entry,mode(),S.controller.signal);r.status=r.result?previous:'READY';$('#catalogLoaded').open=true;message(`Loaded ${entry.title}. Its hashes and session are ready; this has not rerun validation.`);return T.getStatus();}
+  catch(e){r.status=e.name==='AbortError'?'CANCELLED':'ERROR';r.error=errorText(e);message(r.error,true);throw e;}
+  finally{S.inspecting=false;S.controller=null;unlockControls();}
+}
+function demoWaiter() {
+  let resolve;const promise=new Promise(r=>{resolve=r;});
+  const handler=e=>{if(e.detail.reason!=='Restarting'){cleanup();resolve(e.detail);}};
+  const cleanup=()=>window.removeEventListener('clip-sesh-demo-ended',handler);
+  window.addEventListener('clip-sesh-demo-ended',handler);return {promise,dispose:cleanup};
+}
+function makeReport(queue, started) {
+  const tests=queue.ids.map(id=>{const e=S.catalog.tests.find(e=>e.id===id),r=rowFor(id);return {id,title:e.title,status:r.status,passed:(r.status==='PASS'||r.status==='DEMONSTRATED'),audioPassed:r.result?.passed??null,error:r.error||null,result:r.result||null,demo:r.demo||null};});
+  const counts={passed:0,failed:0,errors:0,skipped:0,cancelled:0};
+  for(const r of tests){if(r.passed)counts.passed++;else if(r.status==='FAIL')counts.failed++;else if(r.status==='ERROR')counts.errors++;else if(r.status==='SKIPPED')counts.skipped++;else counts.cancelled++;}
+  return {format:'clip-sesh-dj-suite-result',version:1,build:'performance-lab-r4-catalog',catalogUrl:S.url,title:S.catalog.title||'Test suite',mode:queue.mode,
+    createdAt:new Date().toISOString(),durationSeconds:(performance.now()-started)/1000,cancelled:S.cancelled,passed:tests.length>0&&!S.cancelled&&tests.every(r=>r.passed),counts,tests};
+}
+async function run(ids, options={}) {
+  if(owned()||T.getStatus().running||T.getStatus().demo)throw new Error('A test or suite is already running.');
+  if(!S.catalog)throw new Error('Load a test catalog first.');
+  if(!Array.isArray(ids)||!ids.length)throw new Error('Select at least one test.');
+  if(new Set(ids).size!==ids.length)throw new Error('A queue cannot contain duplicate test ids.');
+  const available=enabled();for(const id of ids)if(!available.some(e=>e.id===id))throw new Error(`Unknown or disabled test: ${id}`);
+  const runMode=options.mode||mode();if(!['fast','demo'].includes(runMode))throw new Error('Mode must be fast or demo.');T.setMode(runMode);
+  // Freeze both queue order and mode, so UI edits cannot redirect a running suite.
+  const queue={ids:[...ids],mode:runMode,index:0,title:'',phase:'Preparing'};S.queue=queue;S.running=true;S.stopPromise=null;S.cancelled=false;S.controller=new AbortController();const controller=S.controller,started=performance.now();
+  for(const id of ids)S.rows.set(id,{status:'QUEUED',result:null,error:null,demo:null});
+  S.lastReport=null;$('#catalogReportPanel').hidden=true;message(`${ids.length} test${ids.length===1?'':'s'} queued in ${runMode==='demo'?'DJ demo':'fast validation'} mode.`);paint();
+  try{
+    for(let index=0;index<ids.length;index++){
+      if(S.cancelled||controller.signal.aborted)break;
+      const id=ids[index],entry=available.find(e=>e.id===id),r=rowFor(id);queue.index=index;queue.title=entry.title;queue.phase='Loading verified resources';r.status='LOADING';S.activeId=id;paint();
+      let waiter=null;
+      try{
+        await loadEntry(entry,runMode,controller.signal);if(S.cancelled)throw abortError();
+        r.status='VALIDATING';queue.phase='Validating audio';$('#catalogSummary').textContent=`${index+1} / ${ids.length} · ${entry.title}`;paint();
+        if(runMode==='demo')waiter=demoWaiter();
+        const result=await T.run({mode:runMode});r.result=result;
+        if(S.cancelled)throw abortError();
+        if(!result.passed){r.status='FAIL';queue.phase='Comparison failed';paint();continue;}
+        if(runMode==='demo'){
+          if(!T.getStatus().demo){S.cancelled=true;r.status='CANCELLED';r.error='The demonstration was not started.';break;}
+          r.status='DEMO';queue.phase='DJ demonstration';paint();
+          const audit=await waiter.promise;r.demo=audit;
+          if(S.cancelled||!['Complete','Skipped'].includes(audit.reason)){S.cancelled=true;r.status='CANCELLED';controller.abort();}
+          else r.status=audit.reason==='Skipped'?'SKIPPED':'DEMONSTRATED';
+        }else r.status='PASS';
+        r.result=copy(result);paint();
+      }catch(e){
+        if(S.cancelled||e.name==='AbortError'||controller.signal.aborted){S.cancelled=true;r.status='CANCELLED';r.error='Cancelled; no passing suite result was published.';}
+        else{r.status='ERROR';r.error=errorText(e);}
+        paint();
+      }finally{waiter?.dispose();}
+    }
+  }finally{
+    if(S.cancelled&&T.getStatus().demo)await T.stopDemo('Stopped');
+    if(S.stopPromise)await S.stopPromise;
+    for(const id of ids)if(rowFor(id).status==='QUEUED'){rowFor(id).status='CANCELLED';rowFor(id).error='Not started because the queue was cancelled.';}
+    S.lastReport=makeReport(queue,started);S.running=false;S.queue=null;if(S.controller===controller)S.controller=null;
+    if(!T.getStatus().demo&&!$('#testDialog').open)$('#testDialog').showModal();selectTab('library');unlockControls();
+    const n=S.lastReport.counts;message(`${S.cancelled?'Suite cancelled':'Suite complete'}: ${n.passed} passed, ${n.failed} failed, ${n.errors} errors${n.skipped?', '+n.skipped+' skipped':''}. ${S.cancelled?'Remaining tests were not run.':'Results are kept per case below.'}`,n.failed+n.errors>0);
+  }
+  return copy(S.lastReport);
+}
+async function cancel() {
+  if(!owned())return false;S.cancelled=true;S.controller?.abort();paint();S.stopPromise=Promise.resolve(T.stop());await S.stopPromise;return true;
+}
+async function skip() {if(S.running&&T.getStatus().demo)return T.stopDemo('Skipped');return false;}
+function select(ids) {
+  if(owned())throw new Error('Selection is locked during a suite.');
+  const allowed=new Set(enabled().map(e=>e.id));for(const id of ids)if(!allowed.has(id))throw new Error(`Unknown or disabled test: ${id}`);
+  S.selected=new Set(ids);paint();
+}
+function save(value,name) {clipSeshDJ.downloadBlob(name,new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));}
+function showCaseResult(id) {
+  const r=rowFor(id),e=S.catalog.tests.find(e=>e.id===id);if(!r)throw new Error('No result for this test.');
+  S.reportId=id;$('#catalogReportPanel').hidden=false;$('#catalogReportTitle').textContent=`${e.title} · ${r.status}`;
+  const m=r.result?.metrics;$('#catalogReportText').textContent=[r.error||'',m?`Stereo correlation: ${(m.correlation*100).toFixed(6)}%\nRelative RMS residual: ${(m.relativeRmsError*100).toFixed(4)}%\nLength error: ${m.durationErrorSamples} samples\nAudio validation: ${r.result.passed?'PASS':'FAIL'}\nReference: ${r.result.referenceAssetMd5}\nSession: ${r.result.sessionMd5}`:'No completed audio validation.',r.demo?`Demo: ${r.demo.reason} · ${r.demo.elapsedSeconds.toFixed(2)} s\nReference used as playback: ${r.demo.referenceUsedAsPlayback}`:''].filter(Boolean).join('\n\n');
+}
+const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>message(errorText(e),true));
+function wire() {
+  $('#catalogTab').onclick=()=>selectTab('library');$('#catalogLocalTab').onclick=()=>selectTab('local');
+  $('.catalog-tabs').addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const tab=e.key==='Home'?'library':e.key==='End'?'local':S.tab==='local'?'library':'local';selectTab(tab);$(tab==='library'?'#catalogTab':'#catalogLocalTab').focus();}});
+  $('#testChoose').addEventListener('click',()=>selectTab('local'));
+  $('#catalogSearch').oninput=e=>{S.query=e.target.value;paint();};
+  $('#catalogSelectAll').onclick=()=>select(enabled().map(e=>e.id));$('#catalogSelectNone').onclick=()=>select([]);
+  $('#catalogRefresh').onclick=safe(()=>load(S.url||DEFAULT_URL,{mode:mode()}));
+  $('#testHosted').onclick=safe(async()=>{selectTab('library');if(!S.catalog)await load(S.url||DEFAULT_URL,{mode:mode()});});
+  $('#testFetch').onclick=safe(()=>openUrl($('#testUrl').value,{mode:mode()}));
+  $('#catalogRunAll').onclick=safe(()=>run(enabled().map(e=>e.id)));
+  $('#catalogRunSelected').onclick=safe(()=>run(enabled().filter(e=>S.selected.has(e.id)).map(e=>e.id)));
+  $('#catalogCancel').onclick=safe(cancel);$('#catalogQueueCancel').onclick=safe(cancel);
+  $('#testStop').onclick=safe(()=>owned()?cancel():T.stop());$('#demoSkipTest').onclick=safe(skip);
+  $('#catalogDownload').onclick=()=>S.lastReport&&save(S.lastReport,'clipsesh-suite-result.json');
+  $('#catalogDownloadCase').onclick=()=>S.reportId&&save({catalogCaseId:S.reportId,...rowFor(S.reportId)},`${S.reportId}-result.json`);
+  $('#catalogCloseReport').onclick=()=>{$('#catalogReportPanel').hidden=true;};
+  $('#catalogList').addEventListener('change',e=>{if(e.target.matches('input[type="checkbox"]')&&!owned()){if(e.target.checked)S.selected.add(e.target.dataset.id);else S.selected.delete(e.target.dataset.id);paint();}});
+  $('#catalogList').addEventListener('click',safe(e=>{const b=e.target.closest('button[data-op]');if(!b||b.disabled)return;const {op,id}=b.dataset;return op==='run'?run([id]):op==='inspect'?inspect(id):showCaseResult(id);}));
+  for(const id of ['testModeFast','testModeDemo','testShowPerformance'])$('#'+id).addEventListener('change',paint);
+  window.addEventListener('clip-sesh-lab-state',paint);
+  window.addEventListener('clip-sesh-case-loaded',()=>{if(!owned())S.activeId=null;paint();});
+  window.addEventListener('clip-sesh-demo-ready',paint);
+  window.addEventListener('clip-sesh-demo-ended',paint);
+  $('#testDialog').addEventListener('close',paint);
+  $('#testModeButton').addEventListener('click',()=>{paint();if(!S.catalog&&!owned()&&['https:','http:'].includes(location.protocol))safe(()=>load(S.url||DEFAULT_URL))();});
+  const oldRun=$('#testRun').onclick;$('#testRun').onclick=e=>{if(S.tab==='library'&&S.activeId&&enabled().some(x=>x.id===S.activeId))return safe(()=>run([S.activeId]))();return oldRun(e);};
+  paint();
+  if(location.protocol==='file:'){selectTab('local');message('The hosted catalog needs HTTP(S). Local JSON + audio loading is still available.');}
+  else T.autoLoad().catch(e=>message(`Catalog not loaded: ${errorText(e)}\nPublish /dj/test/test.json, then click Refresh catalog.`,true));
+}
+window.ClipSeshCatalog=Object.freeze({load,openUrl,inspect,run,cancel,skip,select,selectTab,validateCatalog,
+  runAll:o=>run(enabled().map(e=>e.id),o),runSelected:o=>run(enabled().filter(e=>S.selected.has(e.id)).map(e=>e.id),o),
+  getStatus:()=>({catalog:S.catalog?copy(S.catalog):null,url:S.url,selected:[...S.selected],activeId:S.activeId,busy:owned(),loading:S.loading,running:S.running,cancelled:S.cancelled,queue:S.queue?copy(S.queue):null,
+    rows:[...S.rows].map(([id,r])=>({id,...copy(r)})),lastReport:S.lastReport?copy(S.lastReport):null})});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
 })();
 
