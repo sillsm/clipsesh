@@ -7964,5 +7964,1446 @@ window.ClipSeshRegression=Object.freeze({run});
 })();
 
 </script>
+
+<!-- Clip Sesh Ableton Bridge START -->
+<script type="module" id="clipsesh-ableton-bridge-v1">
+/* Clip Sesh Ableton Bridge v1 — append-only adapter, no changes to existing DSP. */
+(function(){
+'use strict';
+if(window.ClipSeshAbletonBridge)return;
+const SCHEMA={
+  "format": "clip-sesh-ableton-schema",
+  "version": 1,
+  "parameters": [
+    {
+      "id": "mixer.crossfader",
+      "label": "Mixer Crossfader",
+      "short": "Xfade",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "group": "Mix",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "master.volume",
+      "label": "Master Level",
+      "short": "Master",
+      "min": 0,
+      "max": 1.2,
+      "default": 0.86,
+      "group": "Mix",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "mixer.curve",
+      "label": "Crossfader Curve",
+      "short": "Curve",
+      "min": 0,
+      "max": 2,
+      "default": 0,
+      "group": "Mix",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Equal power",
+        "Linear",
+        "Sharp"
+      ]
+    },
+    {
+      "id": "master.deck",
+      "label": "Tempo Master Deck",
+      "short": "Master D",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Mix",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Deck A",
+        "Deck B"
+      ]
+    },
+    {
+      "id": "deck1.bpm",
+      "label": "A BPM",
+      "short": "A BPM",
+      "min": 30,
+      "max": 300,
+      "default": 124,
+      "group": "Deck A",
+      "unit": "BPM",
+      "order": 1
+    },
+    {
+      "id": "deck1.fader",
+      "label": "A Channel Level",
+      "short": "A Level",
+      "min": 0,
+      "max": 1,
+      "default": 0.88,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck1.trim",
+      "label": "A Trim",
+      "short": "A Trim",
+      "min": 0,
+      "max": 1.5,
+      "default": 1,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck1.eqLow",
+      "label": "A EQ Low",
+      "short": "A Low",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck1.eqMid",
+      "label": "A EQ Mid",
+      "short": "A Mid",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck1.eqHigh",
+      "label": "A EQ High",
+      "short": "A High",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck1.filter",
+      "label": "A Bipolar Filter",
+      "short": "A Filter",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck1.loopLength",
+      "label": "A Loop Length",
+      "short": "A Loop",
+      "min": 0,
+      "max": 9,
+      "default": 6,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "1/16",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "16",
+        "32"
+      ]
+    },
+    {
+      "id": "deck1.playing",
+      "label": "A Playing (absolute)",
+      "short": "A Play",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 9,
+      "enum": [
+        "Stopped",
+        "Playing"
+      ]
+    },
+    {
+      "id": "deck1.loopActive",
+      "label": "A Loop Active (absolute)",
+      "short": "A LoopOn",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 8,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck1.quantize",
+      "label": "A Quantize",
+      "short": "A Q",
+      "min": 0,
+      "max": 1,
+      "default": 1,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck1.pitchLock",
+      "label": "A Pitch Lock",
+      "short": "A MT",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck1.slip",
+      "label": "A Slip",
+      "short": "A Slip",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck1.sync",
+      "label": "A Beat Sync",
+      "short": "A Sync",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck1.cuePosition",
+      "label": "A Cue Position (seconds)",
+      "short": "A Cue s",
+      "min": 0,
+      "max": 7200,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "s",
+      "order": 0
+    },
+    {
+      "id": "deck1.seekPosition",
+      "label": "A Seek Position (seconds)",
+      "short": "A Seek s",
+      "min": 0,
+      "max": 7200,
+      "default": 0,
+      "group": "Deck A",
+      "unit": "s",
+      "order": 7
+    },
+    {
+      "id": "deck2.bpm",
+      "label": "B BPM",
+      "short": "B BPM",
+      "min": 30,
+      "max": 300,
+      "default": 124,
+      "group": "Deck B",
+      "unit": "BPM",
+      "order": 1
+    },
+    {
+      "id": "deck2.fader",
+      "label": "B Channel Level",
+      "short": "B Level",
+      "min": 0,
+      "max": 1,
+      "default": 0.88,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck2.trim",
+      "label": "B Trim",
+      "short": "B Trim",
+      "min": 0,
+      "max": 1.5,
+      "default": 1,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck2.eqLow",
+      "label": "B EQ Low",
+      "short": "B Low",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck2.eqMid",
+      "label": "B EQ Mid",
+      "short": "B Mid",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck2.eqHigh",
+      "label": "B EQ High",
+      "short": "B High",
+      "min": -24,
+      "max": 6,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "dB",
+      "order": 1
+    },
+    {
+      "id": "deck2.filter",
+      "label": "B Bipolar Filter",
+      "short": "B Filter",
+      "min": -1,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "deck2.loopLength",
+      "label": "B Loop Length",
+      "short": "B Loop",
+      "min": 0,
+      "max": 9,
+      "default": 6,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "1/16",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "16",
+        "32"
+      ]
+    },
+    {
+      "id": "deck2.playing",
+      "label": "B Playing (absolute)",
+      "short": "B Play",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 9,
+      "enum": [
+        "Stopped",
+        "Playing"
+      ]
+    },
+    {
+      "id": "deck2.loopActive",
+      "label": "B Loop Active (absolute)",
+      "short": "B LoopOn",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 8,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck2.quantize",
+      "label": "B Quantize",
+      "short": "B Q",
+      "min": 0,
+      "max": 1,
+      "default": 1,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck2.pitchLock",
+      "label": "B Pitch Lock",
+      "short": "B MT",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck2.slip",
+      "label": "B Slip",
+      "short": "B Slip",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck2.sync",
+      "label": "B Beat Sync",
+      "short": "B Sync",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "deck2.cuePosition",
+      "label": "B Cue Position (seconds)",
+      "short": "B Cue s",
+      "min": 0,
+      "max": 7200,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "s",
+      "order": 0
+    },
+    {
+      "id": "deck2.seekPosition",
+      "label": "B Seek Position (seconds)",
+      "short": "B Seek s",
+      "min": 0,
+      "max": 7200,
+      "default": 0,
+      "group": "Deck B",
+      "unit": "s",
+      "order": 7
+    },
+    {
+      "id": "fx1.enabled",
+      "label": "FX1 Enabled",
+      "short": "FX1 On",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "fx1.effect",
+      "label": "FX1 Effect Type",
+      "short": "FX1 Type",
+      "min": 0,
+      "max": 13,
+      "default": 1,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Delay",
+        "Echo",
+        "Dub Echo",
+        "Reverb",
+        "Filter",
+        "Flanger",
+        "Phaser",
+        "Spiral",
+        "Gate",
+        "Roll",
+        "Distortion",
+        "Bitcrush",
+        "Noise",
+        "Brake filter"
+      ]
+    },
+    {
+      "id": "fx1.target",
+      "label": "FX1 Assignment",
+      "short": "FX1 Target",
+      "min": 0,
+      "max": 2,
+      "default": 0,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Deck A",
+        "Deck B",
+        "Master"
+      ]
+    },
+    {
+      "id": "fx1.beat",
+      "label": "FX1 Beat Division",
+      "short": "FX1 Beat",
+      "min": 0,
+      "max": 8,
+      "default": 3,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "1/16",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "16"
+      ]
+    },
+    {
+      "id": "fx1.mix",
+      "label": "FX1 Wet Mix",
+      "short": "FX1 Mix",
+      "min": 0,
+      "max": 1,
+      "default": 0.35,
+      "group": "FX",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "fx1.parameter",
+      "label": "FX1 Parameter",
+      "short": "FX1 Param",
+      "min": 0,
+      "max": 1,
+      "default": 0.5,
+      "group": "FX",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "fx2.enabled",
+      "label": "FX2 Enabled",
+      "short": "FX2 On",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "id": "fx2.effect",
+      "label": "FX2 Effect Type",
+      "short": "FX2 Type",
+      "min": 0,
+      "max": 13,
+      "default": 3,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Delay",
+        "Echo",
+        "Dub Echo",
+        "Reverb",
+        "Filter",
+        "Flanger",
+        "Phaser",
+        "Spiral",
+        "Gate",
+        "Roll",
+        "Distortion",
+        "Bitcrush",
+        "Noise",
+        "Brake filter"
+      ]
+    },
+    {
+      "id": "fx2.target",
+      "label": "FX2 Assignment",
+      "short": "FX2 Target",
+      "min": 0,
+      "max": 2,
+      "default": 1,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "Deck A",
+        "Deck B",
+        "Master"
+      ]
+    },
+    {
+      "id": "fx2.beat",
+      "label": "FX2 Beat Division",
+      "short": "FX2 Beat",
+      "min": 0,
+      "max": 8,
+      "default": 3,
+      "group": "FX",
+      "unit": "",
+      "order": 1,
+      "enum": [
+        "1/16",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "16"
+      ]
+    },
+    {
+      "id": "fx2.mix",
+      "label": "FX2 Wet Mix",
+      "short": "FX2 Mix",
+      "min": 0,
+      "max": 1,
+      "default": 0.35,
+      "group": "FX",
+      "unit": "",
+      "order": 1
+    },
+    {
+      "id": "fx2.parameter",
+      "label": "FX2 Parameter",
+      "short": "FX2 Param",
+      "min": 0,
+      "max": 1,
+      "default": 0.5,
+      "group": "FX",
+      "unit": "",
+      "order": 1
+    }
+  ],
+  "notes": [
+    {
+      "note": 36,
+      "id": "deck1.play",
+      "label": "A Play",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 37,
+      "id": "deck1.stop",
+      "label": "A Stop",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 38,
+      "id": "deck1.cue",
+      "label": "A Jump to cue",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 39,
+      "id": "deck1.stutter",
+      "label": "A Play from cue",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 40,
+      "id": "deck1.hotCue1",
+      "label": "A Hot cue A",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 41,
+      "id": "deck1.hotCue2",
+      "label": "A Hot cue B",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 42,
+      "id": "deck1.hotCue3",
+      "label": "A Hot cue C",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 43,
+      "id": "deck1.hotCue4",
+      "label": "A Hot cue D",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 44,
+      "id": "deck1.hotCue5",
+      "label": "A Hot cue E",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 45,
+      "id": "deck1.hotCue6",
+      "label": "A Hot cue F",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 46,
+      "id": "deck1.hotCue7",
+      "label": "A Hot cue G",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 47,
+      "id": "deck1.hotCue8",
+      "label": "A Hot cue H",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 48,
+      "id": "deck1.loopOn",
+      "label": "A Loop on",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 49,
+      "id": "deck1.loopOff",
+      "label": "A Loop off",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 50,
+      "id": "deck1.loopHalf",
+      "label": "A Loop halve",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 51,
+      "id": "deck1.loopDouble",
+      "label": "A Loop double",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 52,
+      "id": "deck1.reloop",
+      "label": "A Reloop",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 53,
+      "id": "deck1.nudgeDown",
+      "label": "A Bend down (hold)",
+      "mode": "hold",
+      "deck": 1
+    },
+    {
+      "note": 54,
+      "id": "deck1.nudgeUp",
+      "label": "A Bend up (hold)",
+      "mode": "hold",
+      "deck": 1
+    },
+    {
+      "note": 55,
+      "id": "deck1.gate",
+      "label": "A Play while held",
+      "mode": "hold",
+      "deck": 1
+    },
+    {
+      "note": 56,
+      "id": "deck1.start",
+      "label": "A Return to start",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 57,
+      "id": "deck1.loopIn",
+      "label": "A Manual loop in",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 58,
+      "id": "deck1.loopOut",
+      "label": "A Manual loop out",
+      "mode": "trigger",
+      "deck": 1
+    },
+    {
+      "note": 59,
+      "id": "deck1.cueSet",
+      "label": "A Set cue here",
+      "mode": "setup",
+      "deck": 1
+    },
+    {
+      "note": 60,
+      "id": "deck2.play",
+      "label": "B Play",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 61,
+      "id": "deck2.stop",
+      "label": "B Stop",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 62,
+      "id": "deck2.cue",
+      "label": "B Jump to cue",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 63,
+      "id": "deck2.stutter",
+      "label": "B Play from cue",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 64,
+      "id": "deck2.hotCue1",
+      "label": "B Hot cue A",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 65,
+      "id": "deck2.hotCue2",
+      "label": "B Hot cue B",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 66,
+      "id": "deck2.hotCue3",
+      "label": "B Hot cue C",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 67,
+      "id": "deck2.hotCue4",
+      "label": "B Hot cue D",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 68,
+      "id": "deck2.hotCue5",
+      "label": "B Hot cue E",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 69,
+      "id": "deck2.hotCue6",
+      "label": "B Hot cue F",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 70,
+      "id": "deck2.hotCue7",
+      "label": "B Hot cue G",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 71,
+      "id": "deck2.hotCue8",
+      "label": "B Hot cue H",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 72,
+      "id": "deck2.loopOn",
+      "label": "B Loop on",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 73,
+      "id": "deck2.loopOff",
+      "label": "B Loop off",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 74,
+      "id": "deck2.loopHalf",
+      "label": "B Loop halve",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 75,
+      "id": "deck2.loopDouble",
+      "label": "B Loop double",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 76,
+      "id": "deck2.reloop",
+      "label": "B Reloop",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 77,
+      "id": "deck2.nudgeDown",
+      "label": "B Bend down (hold)",
+      "mode": "hold",
+      "deck": 2
+    },
+    {
+      "note": 78,
+      "id": "deck2.nudgeUp",
+      "label": "B Bend up (hold)",
+      "mode": "hold",
+      "deck": 2
+    },
+    {
+      "note": 79,
+      "id": "deck2.gate",
+      "label": "B Play while held",
+      "mode": "hold",
+      "deck": 2
+    },
+    {
+      "note": 80,
+      "id": "deck2.start",
+      "label": "B Return to start",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 81,
+      "id": "deck2.loopIn",
+      "label": "B Manual loop in",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 82,
+      "id": "deck2.loopOut",
+      "label": "B Manual loop out",
+      "mode": "trigger",
+      "deck": 2
+    },
+    {
+      "note": 83,
+      "id": "deck2.cueSet",
+      "label": "B Set cue here",
+      "mode": "setup",
+      "deck": 2
+    },
+    {
+      "note": 84,
+      "id": "fx1.on",
+      "label": "FX1 on",
+      "mode": "trigger"
+    },
+    {
+      "note": 85,
+      "id": "fx1.off",
+      "label": "FX1 off",
+      "mode": "trigger"
+    },
+    {
+      "note": 86,
+      "id": "fx2.on",
+      "label": "FX2 on",
+      "mode": "trigger"
+    },
+    {
+      "note": 87,
+      "id": "fx2.off",
+      "label": "FX2 off",
+      "mode": "trigger"
+    },
+    {
+      "note": 88,
+      "id": "all.stop",
+      "label": "Stop both / release holds",
+      "mode": "trigger"
+    },
+    {
+      "note": 89,
+      "id": "all.start",
+      "label": "Stop both / reset start",
+      "mode": "trigger"
+    }
+  ],
+  "cc": [
+    {
+      "cc": 7,
+      "id": "master.volume"
+    },
+    {
+      "cc": 10,
+      "id": "mixer.crossfader"
+    },
+    {
+      "cc": 16,
+      "id": "deck1.fader"
+    },
+    {
+      "cc": 17,
+      "id": "deck1.filter"
+    },
+    {
+      "cc": 18,
+      "id": "deck1.trim"
+    },
+    {
+      "cc": 19,
+      "id": "deck1.eqLow"
+    },
+    {
+      "cc": 20,
+      "id": "deck1.eqMid"
+    },
+    {
+      "cc": 21,
+      "id": "deck1.eqHigh"
+    },
+    {
+      "cc": 22,
+      "id": "deck1.bpm"
+    },
+    {
+      "cc": 23,
+      "id": "deck1.loopLength"
+    },
+    {
+      "cc": 24,
+      "id": "deck1.playing"
+    },
+    {
+      "cc": 25,
+      "id": "deck1.loopActive"
+    },
+    {
+      "cc": 26,
+      "id": "deck1.quantize"
+    },
+    {
+      "cc": 27,
+      "id": "deck1.pitchLock"
+    },
+    {
+      "cc": 28,
+      "id": "deck1.slip"
+    },
+    {
+      "cc": 29,
+      "id": "deck1.sync"
+    },
+    {
+      "cc": 32,
+      "id": "deck2.fader"
+    },
+    {
+      "cc": 33,
+      "id": "deck2.filter"
+    },
+    {
+      "cc": 34,
+      "id": "deck2.trim"
+    },
+    {
+      "cc": 35,
+      "id": "deck2.eqLow"
+    },
+    {
+      "cc": 36,
+      "id": "deck2.eqMid"
+    },
+    {
+      "cc": 37,
+      "id": "deck2.eqHigh"
+    },
+    {
+      "cc": 38,
+      "id": "deck2.bpm"
+    },
+    {
+      "cc": 39,
+      "id": "deck2.loopLength"
+    },
+    {
+      "cc": 40,
+      "id": "deck2.playing"
+    },
+    {
+      "cc": 41,
+      "id": "deck2.loopActive"
+    },
+    {
+      "cc": 42,
+      "id": "deck2.quantize"
+    },
+    {
+      "cc": 43,
+      "id": "deck2.pitchLock"
+    },
+    {
+      "cc": 44,
+      "id": "deck2.slip"
+    },
+    {
+      "cc": 45,
+      "id": "deck2.sync"
+    },
+    {
+      "cc": 64,
+      "id": "fx1.mix"
+    },
+    {
+      "cc": 65,
+      "id": "fx1.parameter"
+    },
+    {
+      "cc": 66,
+      "id": "fx1.enabled"
+    },
+    {
+      "cc": 67,
+      "id": "fx1.effect"
+    },
+    {
+      "cc": 68,
+      "id": "fx1.target"
+    },
+    {
+      "cc": 69,
+      "id": "fx1.beat"
+    },
+    {
+      "cc": 72,
+      "id": "fx2.mix"
+    },
+    {
+      "cc": 73,
+      "id": "fx2.parameter"
+    },
+    {
+      "cc": 74,
+      "id": "fx2.enabled"
+    },
+    {
+      "cc": 75,
+      "id": "fx2.effect"
+    },
+    {
+      "cc": 76,
+      "id": "fx2.target"
+    },
+    {
+      "cc": 77,
+      "id": "fx2.beat"
+    }
+  ],
+  "buses": [
+    {
+      "id": "master_wet",
+      "label": "Master \u00b7 all FX",
+      "description": "Exact final master output after deck FX, channel faders, crossfader, master FX and limiter."
+    },
+    {
+      "id": "master_dry",
+      "label": "Master \u00b7 no FX",
+      "description": "Parallel dry mix: transport, trim, channel faders, crossfader and master level; bypasses EQ, filters, deck/master FX and limiter."
+    },
+    {
+      "id": "a_wet",
+      "label": "Deck A \u00b7 deck FX",
+      "description": "Deck A after its EQ/filter/FX and channel fader, before crossfader and shared master FX/limiter."
+    },
+    {
+      "id": "a_dry",
+      "label": "Deck A \u00b7 no FX",
+      "description": "Deck A transport plus trim/channel fader; bypasses EQ, filter and FX. Pre-crossfader, no master FX."
+    },
+    {
+      "id": "b_wet",
+      "label": "Deck B \u00b7 deck FX",
+      "description": "Deck B after its EQ/filter/FX and channel fader, before crossfader and shared master FX/limiter."
+    },
+    {
+      "id": "b_dry",
+      "label": "Deck B \u00b7 no FX",
+      "description": "Deck B transport plus trim/channel fader; bypasses EQ, filter and FX. Pre-crossfader, no master FX."
+    }
+  ],
+  "loopValues": [
+    0.0625,
+    0.125,
+    0.25,
+    0.5,
+    1,
+    2,
+    4,
+    8,
+    16,
+    32
+  ],
+  "beatValues": [
+    0.0625,
+    0.125,
+    0.25,
+    0.5,
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "effectIds": [
+    "delay",
+    "echo",
+    "dubEcho",
+    "reverb",
+    "filter",
+    "flanger",
+    "phaser",
+    "spiral",
+    "trans",
+    "roll",
+    "distortion",
+    "bitcrush",
+    "noise",
+    "brake"
+  ]
+}
+;
+const WORKER="'use strict';\nconst routes=['master_wet','master_dry','a_wet','a_dry','b_wet','b_dry'];\nclass Resampler{\n constructor(inputRate,outputRate){this.step=inputRate/outputRate;this.cut=Math.min(1,outputRate/inputRate)*.94;this.R=16;this.buffer=new Float32Array(this.R*2);this.pos=this.R;}\n run(data){const b=new Float32Array(this.buffer.length+data.length);b.set(this.buffer);b.set(data,this.buffer.length);const out=[],frames=b.length/2;\n  while(this.pos<frames-this.R){let l=0,r=0,sum=0;const center=Math.floor(this.pos);for(let k=-this.R+1;k<=this.R;k++){const i=center+k;if(i<0||i>=frames)continue;const x=i-this.pos,u=x/this.R;if(Math.abs(u)>=1)continue;const z=Math.PI*x*this.cut,weight=(Math.abs(z)<1e-10?1:Math.sin(z)/z)*(.5+.5*Math.cos(Math.PI*u))*this.cut;l+=b[i*2]*weight;r+=b[i*2+1]*weight;sum+=weight;}out.push(l/(sum||1),r/(sum||1));this.pos+=this.step;}\n  const drop=Math.max(0,Math.floor(this.pos)-this.R);this.buffer=b.slice(drop*2);this.pos-=drop;return new Float32Array(out);\n }\n}\nconst clients=new Map();let audioPort=null;\nconst notify=m=>postMessage(m);\nfunction updateMask(){let mask=0;for(const c of clients.values())if(c.auth&&c.config?.role==='return'&&c.config.dsp&&c.config.nativeFormat)mask|=1<<routes.indexOf(c.config.bus);audioPort?.postMessage({type:'mask',value:mask});}\nfunction pcm(samples,rate,seq,probe=0){const b=new ArrayBuffer(32+samples.length*4),v=new DataView(b);new Uint8Array(b).set([67,83,66,49]);v.setUint16(4,1,true);v.setUint16(6,probe?1:0,true);v.setUint32(8,seq>>>0,true);v.setUint32(12,rate,true);v.setUint32(16,samples.length/2,true);v.setUint16(20,2,true);v.setUint32(24,probe>>>0,true);for(let i=0;i<samples.length;i++)v.setFloat32(32+4*i,samples[i],true);return b;}\nfunction sendAudio(c,m,probe=0){if(!c.auth||!c.config?.dsp||!c.config.nativeFormat)return;if(c.ws.bufferedAmount>Math.max(16384,c.config.rate*.05*8)){c.drops++;return;}let data=m.samples;\n if(m.rate!==c.config.rate){if(!c.resampler||c.inputRate!==m.rate||c.outputRate!==c.config.rate){c.resampler=new Resampler(m.rate,c.config.rate);c.inputRate=m.rate;c.outputRate=c.config.rate;}data=c.resampler.run(data);}if(!data.length)return;if(data.length>4096){c.drops++;return;}\n c.ws.send(pcm(data,c.config.rate,c.sequence++,probe));c.sent++;}\nfunction onAudio(m){if(m.type==='audio'){for(const c of clients.values())if(c.config?.role==='return'&&routes.indexOf(c.config.bus)===m.bus&&!c.probe)sendAudio(c,m);}else if(m.type==='probe-audio'){const c=clients.get(m.connection);if(c&&c.probe===m.id)sendAudio(c,m,m.id);}}\nfunction connect(m){if(!Number.isInteger(m.port)||m.port<1024||m.port>65535||!/^[a-f0-9]{32}$/i.test(m.key))throw Error('Pairing code is port:32-hex-key');if(clients.size>=8)throw Error('At most eight device connections at a time.');if(clients.has(m.id))throw Error('Already connected');\n const ws=new WebSocket(`ws://127.0.0.1:${m.port}/bridge`),c={ws,id:m.id,auth:false,sequence:0,drops:0,sent:0,config:null,probe:null};clients.set(m.id,c);\n ws.onopen=()=>ws.send(JSON.stringify({type:'auth',version:1,key:m.key}));ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='config'){c.auth=true;if(c.config?.rate!==d.rate||c.config?.bus!==d.bus)c.resampler=null;c.config=d;updateMask();}if(d.type==='probe-audio-result'){audioPort?.postMessage({type:'probe-stop',connection:c.id});c.probe=null;c.resampler=null;}notify({type:'device',id:c.id,data:d});}catch(error){notify({type:'error',id:c.id,message:error.message});}};\n ws.onerror=()=>notify({type:'error',id:c.id,message:'Loopback connection failed. Verify device is running, code is current, and Chrome local-network access is allowed.'});\n ws.onclose=()=>{clients.delete(c.id);audioPort?.postMessage({type:'probe-stop',connection:c.id});updateMask();notify({type:'closed',id:c.id});};\n}\nonmessage=e=>{const m=e.data;try{\n if(m.type==='connect')connect(m);\n else if(m.type==='link'){audioPort=m.port;audioPort.onmessage=e=>onAudio(e.data);audioPort.start();updateMask();}\n else if(m.type==='unlink'){audioPort?.close();audioPort=null;}\n else if(m.type==='send'){const c=clients.get(m.id);if(c?.auth&&c.ws.readyState===1)c.ws.send(JSON.stringify(m.data));}\n else if(m.type==='probe-start'){const c=clients.get(m.id);if(c?.auth&&audioPort){c.probe=m.probe;c.resampler=null;audioPort.postMessage({type:'probe',connection:m.id,id:m.probe});}}\n else if(m.type==='disconnect')clients.get(m.id)?.ws.close();\n else if(m.type==='disconnect-all')for(const c of clients.values())c.ws.close();\n else if(m.type==='stats')notify({type:'worker-stats',clients:[...clients].map(([id,c])=>({id,sent:c.sent,dropped:c.drops,bufferedBytes:c.ws.bufferedAmount}))});\n }catch(error){notify({type:'error',id:m.id,message:error.message});}};\n";
+const WORKLET="/* Six independent stereo capture taps. Output is silence; this node never alters the DJ mix. */\nclass ClipSeshCapture extends AudioWorkletProcessor{\n constructor(){super();this.link=null;this.mask=0;this.size=256;this.offset=0;this.blocks=Array.from({length:6},()=>new Float32Array(512));this.probes=new Map();this.port.onmessage=e=>{const m=e.data;if(m.type==='link'){this.link=m.port;this.link.onmessage=ev=>this.command(ev.data);this.link.start();}else this.command(m);};}\n command(m){if(m.type==='mask')this.mask=m.value>>>0;if(m.type==='probe'){this.probes.set(m.connection,{id:m.id,blocks:0});}if(m.type==='probe-stop')this.probes.delete(m.connection);if(m.type==='stop'){this.mask=0;this.probes.clear();}}\n process(inputs,outputs){const n=outputs[0]?.[0]?.length||128;for(const channel of outputs[0]||[])channel.fill(0);\n  for(let i=0;i<n;i++){\n   for(let bus=0;bus<6;bus++)if(this.mask&(1<<bus)){const input=inputs[bus]||[];this.blocks[bus][this.offset*2]=input[0]?.[i]||0;this.blocks[bus][this.offset*2+1]=input[1]?.[i]??input[0]?.[i]??0;}\n   this.offset++;if(this.offset===this.size){\n    if(this.link){for(let bus=0;bus<6;bus++)if(this.mask&(1<<bus)){const b=this.blocks[bus];this.link.postMessage({type:'audio',bus,rate:sampleRate,frame:currentFrame+i-this.size+1,samples:b},[b.buffer]);this.blocks[bus]=new Float32Array(this.size*2);}\n     for(const [connection,p]of this.probes){const b=new Float32Array(this.size*2);if(p.blocks===0)for(let j=0;j<96;j++){const v=Math.sin(2*Math.PI*(.017*j+.00034*j*j))*Math.sin(Math.PI*j/95)*.125;b[(j+32)*2]=v;b[(j+32)*2+1]=-v;}this.link.postMessage({type:'probe-audio',connection,id:p.id,rate:sampleRate,samples:b},[b.buffer]);p.blocks++;if(p.blocks*this.size>sampleRate*4)this.probes.delete(connection);}\n    }this.offset=0;\n   }\n  }return true;\n }\n}\nregisterProcessor('clip-sesh-capture-v1',ClipSeshCapture);\n";
+const $=(s,r=document)=>r.querySelector(s),clip=(v,a,b)=>Math.max(a,Math.min(b,v));
+const params=new Map(SCHEMA.parameters.map(p=>[p.id,p])),notes=new Map(SCHEMA.notes.map(n=>[n.note,n])),ccs=new Map(SCHEMA.cc.map(n=>[n.cc,n]));
+const S={app:null,worker:null,connections:new Map(),owner:null,muting:false,audio:null,audioGeneration:0,mask:0,suppressed:0,holds:new Map(),lastSeq:new Map(),pending:new Map(),logs:[],measurements:[],counter:1,channel:1,allowCueEditing:false};
+function log(s){S.logs.push(new Date().toLocaleTimeString()+' · '+s);if(S.logs.length>150)S.logs.shift();const e=$('#abLog');if(e)e.textContent=S.logs.join('\n');}
+function ensureApp(){const a=window.clipSeshDJ;if(!a?.engine?.getDeck||!a.deckUi?.get)throw Error('This page does not expose a compatible Clip Sesh DJ engine.');if(a.dom?.app?.inert||document.body.classList.contains('demo-running'))throw Error('Stop the automated DJ demo before using live Ableton control.');return a;}
+function wrap(fn){S.suppressed++;try{return fn();}finally{S.suppressed--;}}
+function emit(id,data){S.worker?.postMessage({type:'send',id,data});}
+function safeFloat(value){const v=Number(value);if(!Number.isFinite(v))throw Error('Parameter value must be finite');return v;}
+function read(id){const a=S.app,dm=id.match(/^deck([12])\.(.+)$/);if(dm){const d=a.engine.getDeck(+dm[1]),ui=a.deckUi.get(+dm[1]),key=dm[2],strip=$(`.channel-strip[data-channel="${d.id}"]`),range={fader:'.channel-fader',trim:'.trim-knob',eqLow:'.eq-low',eqMid:'.eq-mid',eqHigh:'.eq-high',filter:'.filter-knob'};
+ if(range[key])return Number($(range[key],strip).value);if(key==='bpm')return d.currentBpm||124;if(key==='playing')return d.playing?1:0;if(key==='loopActive')return d.loop.active?1:0;if(key==='loopLength')return Math.max(0,SCHEMA.loopValues.indexOf(ui.loopBeats));if(key==='pitchLock')return d.pitchLock?1:0;if(key==='sync')return d.syncEnabled?1:0;if(key==='cuePosition')return d.cuePoint||0;if(key==='seekPosition')return d.getPosition();if(['quantize','slip'].includes(key))return d[key]?1:0;
+ }if(id==='mixer.crossfader')return a.engine.crossfader;if(id==='master.volume')return Number(a.dom.masterVolume.value);if(id==='mixer.curve')return ['equalPower','linear','sharp'].indexOf(a.engine.crossfaderCurve);if(id==='master.deck')return a.engine.masterDeck-1;
+ const fm=id.match(/^fx([12])\.(.+)$/);if(fm){const f=a.fxStates[+fm[1]-1],k=fm[2];if(k==='effect')return SCHEMA.effectIds.indexOf(f.effectId);if(k==='target')return ['1','2','M'].indexOf(f.target);if(k==='beat')return SCHEMA.beatValues.indexOf(f.beatDivision);if(k==='enabled')return f.enabled?1:0;if(k==='mix')return f.mix;if(k==='parameter')return f.parameter;}return 0;}
+function snapshot(){const o={};for(const p of SCHEMA.parameters){const v=read(p.id);if(Number.isFinite(v))o[p.id]=clip(v,p.min,p.max);}return o;}
+function control(id,value){const a=ensureApp(),p=params.get(id);if(!p)throw Error('Unsupported parameter '+id);let v=clip(safeFloat(value),p.min,p.max);if(p.enum)v=Math.round(v);
+ return wrap(()=>{
+ const dm=id.match(/^deck([12])\.(.+)$/);if(dm){const n=+dm[1],d=a.engine.getDeck(n),ui=a.deckUi.get(n),key=dm[2];const selectors={fader:'.channel-fader',trim:'.trim-knob',eqLow:'.eq-low',eqMid:'.eq-mid',eqHigh:'.eq-high',filter:'.filter-knob'};
+  if(selectors[key]){a.setMixerControl(n,selectors[key],v);return;}
+  if(['quantize','slip'].includes(key)){d[key]=!!v;ui[key]?.classList.toggle('active',!!v);return;}
+  if(!d.hasTrack)throw Error(`Deck ${n} is empty; load the correct session before automation playback.`);
+  if(key==='bpm'){if(!d.analysis?.bpm)throw Error('Deck has no BPM grid');const ratio=v/d.analysis.bpm;if(ratio<.05||ratio>4)throw Error('Requested BPM exceeds this engine’s playback-rate range');d.setTempoRatio(ratio);const pct=(ratio-1)*100;if(pct<Number(ui.tempo.min)||pct>Number(ui.tempo.max)){ui.tempo.min=Math.min(Number(ui.tempo.min),pct);ui.tempo.max=Math.max(Number(ui.tempo.max),pct);ui.tempoRangeValue=Math.max(Math.abs(Number(ui.tempo.min)),Math.abs(Number(ui.tempo.max)));ui.tempoRange.textContent='BRIDGE';}a.updateDeckTempoUi(n);a.refreshFx();}
+  else if(key==='playing'){if(v&&!d.playing)d.play();else if(!v&&d.playing)d.pause();a.updateDeckPlayState(n);}
+  else if(key==='loopLength'){ui.loopBeats=SCHEMA.loopValues[v];ui.loopBeatsLabel.textContent=a.formatBeatValue(ui.loopBeats);if(ui.durationSelect)ui.durationSelect.value=String(ui.loopBeats);if(d.loop.active){const end=d.loop.start+60/d.analysis.bpm*ui.loopBeats;if(end>d.duration)throw Error('Loop exceeds the source');d.setLoop(d.loop.start,end,true);}a.updateLoopUi(n);}
+  else if(key==='loopActive'){if(!v){d.exitLoop();return;}if(d.loop.active)return;let start=d.getPosition(),length=ui.loopBeats;if(window.ClipSeshGrid){const plan=ClipSeshGrid.loopPlan(start,d.analysis,length,{quantize:d.quantize,mode:a.settings.autoLoopSnapMode||'bar',tolerance:a.settings.autoLoopCatchBeats??.25});start=plan.start;}else if(d.quantize)start=ClipSeshAnalysis.snapTime(start,d.analysis,1);const end=start+60/d.analysis.bpm*length;if(end>d.duration)throw Error('Loop exceeds source length');d.setLoop(start,end,true);a.updateLoopUi(n);}
+  else if(key==='pitchLock'){d.setPitchLock(!!v);ui.masterTempo.classList.toggle('active',!!v);}
+  else if(key==='sync'){if(v&&!d.syncEnabled){if(a.engine.masterDeck===n)throw Error('The master deck cannot sync to itself');a.engine.syncDeck(n);}else if(!v)d.syncEnabled=false;a.updateSyncButtons();}
+  else if(key==='cuePosition'){if(v>d.duration)throw Error('Cue is outside this source');d.cuePoint=v;}
+  else if(key==='seekPosition'){if(v>d.duration)throw Error('Seek position is outside this source');d.seek(v);}
+  return;
+ }
+ if(id==='mixer.crossfader'){a.dom.crossfader.value=v;a.engine.setCrossfader(v);a.updateCrossfaderReadout();}
+ else if(id==='master.volume'){a.dom.masterVolume.value=v;a.engine.setMasterVolume(v);}
+ else if(id==='mixer.curve'){a.engine.setCrossfaderCurve(['equalPower','linear','sharp'][v]);}
+ else if(id==='master.deck'){a.engine.setMasterDeck(v+1);a.updateMasterButtons();}
+ else{const fm=id.match(/^fx([12])\.(.+)$/);if(fm){const n=+fm[1]-1,k=fm[2],f=a.fxStates[n],el=$(`.fx-unit[data-fx-unit="${n}"]`);if(k==='effect'){f.effectId=SCHEMA.effectIds[v];$('.fx-select',el).value=f.effectId;}else if(k==='target'){f.target=['1','2','M'][v];el.querySelectorAll('.fx-assign button').forEach(b=>b.classList.toggle('active',b.dataset.target===f.target));}else if(k==='beat'){f.beatDivision=SCHEMA.beatValues[v];$('.fx-beat',el).value=String(f.beatDivision);}else if(k==='enabled')f.enabled=!!v;else{f[k]=v;$(k==='mix'?'.fx-depth':'.fx-secondary',el).value=v;}a.refreshFx(n);}}
+ });
+}
+function held(id,on){const a=ensureApp(),dm=id.match(/^deck([12])\.(gate|nudgeDown|nudgeUp)$/);if(!dm)return;const before=S.holds.get(id)||0,now=clip(before+(on?1:-1),0,16);S.holds.set(id,now);const d=a.engine.getDeck(+dm[1]);if(dm[2]==='gate'){if(now&&!before)d.play();else if(!now&&before)d.pause();}else{const other=`deck${dm[1]}.${dm[2]==='nudgeDown'?'nudgeUp':'nudgeDown'}`;if(now)d.beginNudge(dm[2]==='nudgeDown'?-1:1,.04);else if(S.holds.get(other))d.beginNudge(dm[2]==='nudgeDown'?1:-1,.04);else d.endNudge();}}
+function releaseHolds(){for(const [id,n]of S.holds){if(n){S.holds.set(id,1);try{held(id,false);}catch(_){}}}S.holds.clear();}
+function action(id,value=1){const a=ensureApp(),on=Number(value)>0;if(/\.(gate|nudgeDown|nudgeUp)$/.test(id))return held(id,on);if(!on)return;
+ return wrap(()=>{if(id==='all.stop'||id==='all.start'){releaseHolds();for(const d of a.engine.decks){d.pause();if(id==='all.start')d.seek(0);}return;}
+ if(/^fx[12]\.(on|off)$/.test(id))return control(id.slice(0,3)+'.enabled',id.endsWith('.on')?1:0);
+ const m=id.match(/^deck([12])\.(.+)$/);if(!m)throw Error('Unknown action '+id);const n=+m[1],d=a.engine.getDeck(n),k=m[2];if(!d.hasTrack)throw Error(`Deck ${n} is empty`);
+ if(k==='play')return control(`deck${n}.playing`,1);if(k==='stop')return control(`deck${n}.playing`,0);
+ if(k==='cue'||k==='stutter'){if(k==='cue')d.pause();d.seek(d.cuePoint||0);if(k==='stutter')d.play();}
+ else if(k.startsWith('hotCue')){const index=+k.slice(6)-1,position=d.track.hotCues?.[index];if(position==null)throw Error(`Deck ${n} cue ${index+1} is not set. Playback will not create it.`);d.seek(position);d.play();}
+ else if(k==='loopOn')control(`deck${n}.loopActive`,1);else if(k==='loopOff')control(`deck${n}.loopActive`,0);
+ else if(k==='loopHalf'||k==='loopDouble')control(`deck${n}.loopLength`,clip(read(`deck${n}.loopLength`)+(k==='loopHalf'?-1:1),0,SCHEMA.loopValues.length-1));
+ else if(k==='reloop'){if(!d.loop.active&&d.loop.lastEnd>d.loop.lastStart)d.reloop();}
+ else if(k==='start'){d.pause();d.seek(0);}
+ else if(k==='loopIn')a.setManualLoopIn(n);else if(k==='loopOut')a.setManualLoopOut(n);
+ else if(k==='cueSet'){if(!S.allowCueEditing)throw Error('Cue editing is disabled for safe playback. Enable it deliberately in bridge settings.');d.cuePoint=d.getPosition();}
+ else throw Error('Unsupported action '+id);a.updateDeckPlayState(n);a.updateLoopUi(n);
+ });}
+function midi(bytes){if(!Array.isArray(bytes)||bytes.length!==3||bytes.some(v=>!Number.isInteger(v)||v<0||v>255))throw Error('Invalid MIDI bytes');const [s,n,v]=bytes,c=(s&15)+1;if(c!==S.channel)return;const type=s&240;if(n>127||v>127)throw Error('Invalid MIDI data bytes');if(type===0x90||type===0x80){const map=notes.get(n);if(map)return action(map.id,type===0x90?v:0);}else if(type===0xb0){if(n===123||n===120){releaseHolds();return;}const cc=ccs.get(n);if(cc){const p=params.get(cc.id),value=p.enum?Math.round(v/127*p.max):p.min+(p.max-p.min)*v/127;return control(p.id,value);}}}
+function notifyValues(ids){if(S.suppressed||!S.owner)return;const values={};for(const id of ids){if(params.has(id)){const v=read(id);if(Number.isFinite(v))values[id]=clip(v,params.get(id).min,params.get(id).max);}}if(Object.keys(values).length)emit(S.owner,{type:'feedback',values});}
+function wireFeedback(){const a=S.app;
+ const selectors={'#crossfader':'mixer.crossfader','#masterVolume':'master.volume'};for(let n=1;n<=2;n++){const base=`.channel-strip[data-channel="${n}"] `;for(const [selector,id]of Object.entries({'.channel-fader':'fader','.trim-knob':'trim','.eq-low':'eqLow','.eq-mid':'eqMid','.eq-high':'eqHigh','.filter-knob':'filter'}))selectors[base+selector]=`deck${n}.${id}`;selectors[`.deck[data-deck="${n}"] .tempo-slider`]=`deck${n}.bpm`;selectors[`#autoLoopLength${n}`]=`deck${n}.loopLength`;}
+ document.addEventListener('input',e=>{if(S.suppressed)return;const ids=[];for(const [sel,id]of Object.entries(selectors))if(e.target.matches(sel))ids.push(id);if(ids.length)queueMicrotask(()=>notifyValues(ids));});
+ document.addEventListener('change',e=>{if(S.suppressed)return;const u=e.target.closest('.fx-unit');if(u){const n=+u.dataset.fxUnit+1;queueMicrotask(()=>notifyValues([`fx${n}.effect`,`fx${n}.beat`,`fx${n}.parameter`,`fx${n}.mix`,`fx${n}.target`]));}else for(const [sel,id]of Object.entries(selectors))if(e.target.matches(sel))queueMicrotask(()=>notifyValues([id]));});
+ document.addEventListener('click',e=>{if(S.suppressed)return;const deck=e.target.closest('.deck[data-deck]'),fx=e.target.closest('.fx-unit');if(deck){const n=+deck.dataset.deck;queueMicrotask(()=>notifyValues([`deck${n}.playing`,`deck${n}.loopActive`,`deck${n}.loopLength`,`deck${n}.quantize`,`deck${n}.pitchLock`,`deck${n}.slip`,`deck${n}.sync`,...(e.target.closest('.hotcue-grid,.cue-button')?[`deck${n}.seekPosition`,`deck${n}.cuePosition`]:[])]));}if(fx){const n=+fx.dataset.fxUnit+1;queueMicrotask(()=>notifyValues([`fx${n}.enabled`,`fx${n}.target`]));}});
+ // FX sliders dispatch input rather than change during a drag.
+ document.addEventListener('input',e=>{if(S.suppressed)return;const fx=e.target.closest('.fx-unit');if(fx){const n=+fx.dataset.fxUnit+1;queueMicrotask(()=>notifyValues([`fx${n}.parameter`,`fx${n}.mix`]));}});
+}
+function makeTaps(engine){const c=engine.context,nodes=[],undo=[];const wetA=engine.getDeck(1).channelGain,wetB=engine.getDeck(2).channelGain;
+ if(!wetA?.connect||!engine.getOutputNode)throw Error('This DJ engine lacks required stem hooks');
+ const dryMaster=c.createGain();dryMaster.gain.value=engine.masterGain.gain.value;nodes.push(dryMaster);
+ const taps=[engine.getOutputNode(),dryMaster,wetA,null,wetB,null];
+ function mirror(object,method,param,target,range,smooth){const old=object[method];const wrapped=function(v,...args){const out=old.call(this,v,...args);target[param].setTargetAtTime(clip(Number(v)||0,range[0],range[1]),c.currentTime,smooth);return out;};object[method]=wrapped;undo.push(()=>{if(object[method]===wrapped)object[method]=old;});}
+ for(let id=1;id<=2;id++){const d=engine.getDeck(id),trim=c.createGain(),fader=c.createGain(),cross=c.createGain();trim.gain.value=d.trim.gain.value;fader.gain.value=d.channelGain.gain.value;cross.gain.value=d.crossGain.gain.value;d.input.connect(trim);trim.connect(fader);fader.connect(cross);cross.connect(dryMaster);taps[id===1?3:5]=fader;nodes.push(trim,fader,cross);undo.push(()=>{try{d.input.disconnect(trim);}catch(_){}});mirror(d,'setTrim','gain',trim,[0,2],.012);mirror(d,'setChannelGain','gain',fader,[0,1.25],.012);mirror(d,'setCrossGain','gain',cross,[0,1.2],.008);}
+ mirror(engine,'setMasterVolume','gain',dryMaster,[0,1.5],.012);
+ return {taps,dispose(){for(const fn of undo.reverse())fn();for(const n of nodes)try{n.disconnect();}catch(_){}}};
+}
+async function ensureAudio(){
+ if(S.audio)return S.audio;if(S.audioPromise)return S.audioPromise;
+ const generation=S.audioGeneration;
+ S.audioPromise=(async()=>{
+  const a=ensureApp(),engine=a.engine,c=engine.context;
+  if(!c.audioWorklet)throw Error('AudioWorklet is unavailable. Open this updated page over HTTPS in Chrome.');
+  await c.resume();
+  const url=URL.createObjectURL(new Blob([WORKLET],{type:'text/javascript'}));
+  try{await c.audioWorklet.addModule(url);}finally{URL.revokeObjectURL(url);}
+  if(generation!==S.audioGeneration||a.engine!==engine||![...S.connections.values()].some(x=>x.config?.role==='return'))throw Error('Audio attachment cancelled: the connection or DJ engine changed.');
+  const node=new AudioWorkletNode(c,'clip-sesh-capture-v1',{numberOfInputs:6,numberOfOutputs:1,outputChannelCount:[2],channelCount:2,channelCountMode:'explicit'}),tap=makeTaps(engine);
+  try{
+   tap.taps.forEach((n,i)=>n.connect(node,0,i));node.connect(c.destination);
+   const channel=new MessageChannel();node.port.postMessage({type:'link',port:channel.port1},[channel.port1]);S.worker.postMessage({type:'link',port:channel.port2},[channel.port2]);
+   S.audio={node,tap,engine};log('Audio taps attached. Dry buses are parallel taps; existing DJ effects were not bypassed.');return S.audio;
+  }catch(error){node.disconnect();tap.dispose();throw error;}
+ })();try{return await S.audioPromise;}finally{S.audioPromise=null;}
+}
+function disposeAudio(){S.audioGeneration++;const audio=S.audio;if(!audio)return;S.audio=null;try{audio.node.port.postMessage({type:'stop'});audio.node.disconnect();}catch(_){}for(const tap of audio.tap.taps)try{tap.disconnect(audio.node);}catch(_){}audio.tap.dispose();S.worker?.postMessage({type:'unlink'});}
+function quietRestoreSpeakers(){if(S.muting){releaseHolds();for(const d of S.app?.engine?.decks||[])try{d.pause();}catch(_){}speakerMute(false);}}
+function disconnectAll(){releaseHolds();S.worker?.postMessage({type:'disconnect-all'});quietRestoreSpeakers();disposeAudio();}
+function speakerMute(value){const a=S.app;if(value===S.muting)return;if(value&&(!S.audio||S.audio.engine!==a.engine||![...S.connections.values()].some(c=>c.config?.role==='return'&&c.config?.outputEnabled&&c.config?.nativeFormat&&c.config?.ready&&!c.error))){log('Confirm an enabled, streaming Stem Return before muting the browser speakers.');const cb=$('#abMute');if(cb)cb.checked=false;return;}try{if(value)a.engine.masterAnalyser.disconnect(a.engine.context.destination);else a.engine.masterAnalyser.connect(a.engine.context.destination);S.muting=value;}catch(e){log(e.message);}const cb=$('#abMute');if(cb)cb.checked=S.muting;}
+function startWorker(){if(S.worker)return;const url=URL.createObjectURL(new Blob([WORKER],{type:'text/javascript'}));S.worker=new Worker(url);URL.revokeObjectURL(url);S.worker.onmessage=e=>deviceMessage(e.data);S.worker.onerror=e=>log('Worker: '+e.message);S.monitorTimer=setInterval(()=>{S.worker?.postMessage({type:'stats'});if(S.audio&&S.app.engine!==S.audio.engine){disconnectAll();log('Bridge disconnected because the active DJ engine changed.');}},1000);}
+function deviceMessage(m){const c=S.connections.get(m.id);if(m.type==='error'){if(c)c.error=m.message;log(m.message);paint();return;}if(m.type==='closed'){if(S.owner===m.id){releaseHolds();S.owner=null;}S.connections.delete(m.id);S.lastSeq.delete(m.id);for(const [key,p]of S.pending)if(p.connection===m.id){clearTimeout(p.timer);p.reject(Error('Device disconnected'));S.pending.delete(key);}if(![...S.connections.values()].some(c=>c.config?.role==='return')){quietRestoreSpeakers();disposeAudio();}if(!S.connections.size){clearInterval(S.monitorTimer);S.worker?.terminate();S.worker=null;}paint();return;}if(m.type==='worker-stats'){S.workerStats=m.clients;paint();return;}if(m.type!=='device'||!c)return;const d=m.data;
+ if(d.type==='config'){
+  c.config=d;c.error=null;if(d.role==='performance'){if(S.owner&&S.owner!==m.id){c.error='Only one Performance controller can own this DJ page. Disconnect the other controller first.';S.worker.postMessage({type:'disconnect',id:m.id});log(c.error);}else S.owner=m.id;}else if(d.nativeFormat&&d.dsp)ensureAudio().catch(e=>{c.error=e.message;log(e.message);paint();});paint();
+ }else if(d.type==='control'){
+  const last=S.lastSeq.get(m.id)||0;if(d.seq<=last)return;S.lastSeq.set(m.id,d.seq);if(S.owner!==m.id)return;let error=null;try{if(d.kind==='set')control(d.id,d.value);else if(d.kind==='midi')midi(d.bytes);else if(d.kind==='action')action(d.id,d.value);else throw Error('Unknown control kind');}catch(e){error=e.message;log(error);}emit(m.id,{type:'ack',seq:d.seq,error});
+ }else if(d.type==='snapshot-request'){emit(m.id,{type:'snapshot',values:snapshot()});}
+ else if(d.type==='release-holds')releaseHolds();
+ else if(d.type==='probe-control-result'){const p=S.pending.get(d.id);if(p){clearTimeout(p.timer);S.pending.delete(d.id);p.resolve({...d,browserRoundTripMs:performance.now()-p.start});}}
+ else if(d.type==='probe-ready'){const p=S.pending.get(String(d.id));if(p){p.start=performance.now();S.worker.postMessage({type:'probe-start',id:m.id,probe:d.id});}}
+ else if(d.type==='probe-audio-result'){const p=S.pending.get(String(d.id));if(p){clearTimeout(p.timer);S.pending.delete(String(d.id));if(d.ok)p.resolve({...d,browserAudioProbeRoundTripMs:performance.now()-p.start});else p.reject(Error(d.error||'Probe failed'));}}
+ else if(d.type==='stats'){c.stats=d.stats;paint();}
+ else if(d.type==='error'){c.error=d.message;log(d.message);paint();}
+}
+function connect(code){const match=String(code).trim().match(/^(\d{4,5}):([a-f0-9]{32})$/i);if(!match||Number(match[1])<1024||Number(match[1])>65535)throw Error('Paste the valid port:pairing-key from one Max for Live device.');if(S.connections.size>=8)throw Error('Disconnect a device before adding more than eight connections.');startWorker();const id='connection-'+S.counter++;S.connections.set(id,{id,port:+match[1],config:null,error:null});S.worker.postMessage({type:'connect',id,port:+match[1],key:match[2]});paint();return id;}
+function probe(id,audio=false){return new Promise((resolve,reject)=>{const key=audio?String((Math.random()*0xffffff)|0):'control-'+S.counter++;const start=performance.now();const timer=setTimeout(()=>{S.pending.delete(key);if(audio)emit(id,{type:'probe-cancel'});reject(Error('Probe timed out. Is Live audio running and the device connected?'));},6000);S.pending.set(key,{resolve,reject,timer,start,connection:id});emit(id,audio?{type:'probe-prepare',id:Number(key)}:{type:'probe-control',id:key,sent:start});});}
+function summary(values){const a=values.filter(Number.isFinite).sort((a,b)=>a-b);return a.length?{count:a.length,minMs:a[0],p50Ms:(a[Math.floor((a.length-1)/2)]+a[Math.ceil((a.length-1)/2)])/2,p95Ms:a[Math.max(0,Math.ceil(a.length*.95)-1)],maxMs:a[a.length-1]}:{count:0};}
+async function runLatency(audio=false){const candidates=[...S.connections.values()].filter(c=>c.config&&(audio?c.config.role==='return'&&c.config.dsp&&c.config.nativeFormat:true));if(!candidates.length)throw Error(audio?'Connect a Stem Return and enable Live audio first.':'Pair a device first.');const selected=$('#abDiagnosticTarget').value,c=candidates.find(c=>c.id===selected)||candidates[0];if(audio)await ensureAudio();const report={kind:audio?'browser/Max audio-path probe':'Max event-path round trip',deviceId:c.config.id,role:c.config.role,sampleRate:c.config.rate,configuredBufferMs:c.config.latencyMs,hardwareLatencyIncluded:false,startedAt:new Date().toISOString(),attempts:[],notes:audio?'Returned probe traverses AudioWorklet → browser Worker → loopback → native jit.net.recv/release~/catch~ → Node → browser. Native sub-metric starts when Node hands PCM to Jitter. Physical interface and master hardware outputs are not measured.':'Browser → Node → Max scheduler/JS → Node → browser. This is NOT audio latency.'};$('#abRunControl').disabled=true;$('#abRunAudio').disabled=true;
+ try{for(let i=0;i<8;i++){try{const result=await probe(c.id,audio);report.attempts.push({ok:true,...result});}catch(e){report.attempts.push({ok:false,error:e.message});}$('#abLatency').textContent=`${i+1}/8 probes complete`;await new Promise(r=>setTimeout(r,audio?300:50));}report.browser=summary(report.attempts.filter(x=>x.ok).map(x=>audio?x.browserAudioProbeRoundTripMs:x.browserRoundTripMs));report.native=summary(report.attempts.filter(x=>x.ok).map(x=>audio?x.nativeAudioRoundTripMs:x.maxMessageRoundTripMs));report.misses=report.attempts.filter(x=>!x.ok).length;S.measurements.push(report);$('#abLatency').textContent=JSON.stringify(report,null,2);return report;}finally{$('#abRunControl').disabled=false;$('#abRunAudio').disabled=false;}}
+function download(name,value){S.app.downloadBlob(name,new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));}
+function paint(){const box=$('#abConnections');if(!box)return;box.replaceChildren();const select=$('#abDiagnosticTarget'),old=select.value;select.replaceChildren();for(const c of S.connections.values()){const f=c.config,row=document.createElement('div');row.className='ab-device';const label=document.createElement('strong');label.textContent=f?(f.role==='performance'?'Performance · MIDI + automation':'Stem Return · '+(SCHEMA.buses.find(b=>b.id===f.bus)?.label||'audio')):`Pairing ${c.port}…`;const info=document.createElement('span');info.textContent=c.error||(!f?'Waiting for authentication':f.role==='performance'?(f.armed?'Armed · MIDI / automation active':'Disarmed · arm in the Live device'):`${f.rate||'?'} Hz · ${f.latencyMs} ms buffer · ${f.nativeFormat?'native format calibrated':'waiting for DSP calibration'} · ${f.outputEnabled?'output enabled':'muted'}`);const btn=document.createElement('button');btn.type='button';btn.textContent='Disconnect';btn.onclick=()=>S.worker.postMessage({type:'disconnect',id:c.id});row.append(label,info,btn);if(c.stats){const stat=document.createElement('small');stat.textContent=f?.role==='performance'?`${c.stats.controlSent} control messages · ${c.stats.feedbackReceived} feedback updates`:`${c.stats.frames} frames · ${c.stats.droppedPackets} drops · ${c.stats.sequenceGaps} sequence gaps`;row.append(stat);}const ws=(S.workerStats||[]).find(w=>w.id===c.id);if(ws&&f?.role==='return'){const wstat=document.createElement('small');wstat.textContent=`Browser sender: ${ws.sent} packets · ${ws.dropped} dropped · ${ws.bufferedBytes} queued bytes`;row.append(wstat);}box.append(row);if(f){const o=document.createElement('option');o.value=c.id;o.textContent=(f.role==='performance'?'Performance':'Return '+(SCHEMA.buses.find(b=>b.id===f.bus)?.label||f.bus))+' · '+c.port;select.append(o);}}if([...select.options].some(o=>o.value===old))select.value=old;if(!S.connections.size)box.textContent='No device connected. Drag an .amxd onto a Live track, then paste its pairing code.';}
+function wire(){try{S.app=ensureApp();}catch(e){return;}const page=$('[data-settings-page="midi"]');if(!page)return;
+ const style=document.createElement('style');style.textContent=`#abletonBridge{margin:18px 0;border:1px solid #366386;border-radius:7px;background:#0c1b28;padding:14px}#abletonBridge summary{cursor:pointer;font-size:14px;font-weight:700;color:#91d1ff}#abletonBridge p{font-size:11px;line-height:1.6;color:#a0bed4}.ab-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.ab-row input[type=text]{flex:1;min-width:180px;user-select:text}.ab-device{position:relative;border:1px solid #304b61;padding:12px;border-radius:5px;margin-top:8px}.ab-device strong,.ab-device span,.ab-device small{display:block;font-size:11px;line-height:1.6}.ab-device span,.ab-device small{color:#96b0c4}.ab-device button{position:absolute;right:8px;top:8px}#abletonBridge pre{max-height:260px;overflow:auto;white-space:pre-wrap;font:10px/1.5 ui-monospace,monospace;color:#a8cbe4;background:#07111b;padding:10px;user-select:text}#abletonBridge table{width:100%;font-size:10px;border-collapse:collapse}#abletonBridge td{border-bottom:1px solid #29455c;padding:5px}#abletonBridge label{font-size:11px;color:#b4cddd}.ab-badge{font-size:9px;padding:3px 6px;border:1px solid #94713c;color:#efc689;border-radius:4px;margin-left:8px}@media(max-width:650px){.ab-device button{position:static;margin-top:6px}.ab-row{align-items:stretch;flex-direction:column}}`;document.head.append(style);
+ const panel=document.createElement('details');panel.id='abletonBridge';panel.innerHTML=`<summary>Ableton Bridge <span class="ab-badge">PROTOTYPE · TEST ON YOUR MAC</span></summary><p>One Performance device for notes and named automation. Add Stem Return devices on audio tracks for the full mix or either stereo deck, with or without FX. No VST installer or browser extension.</p><div class="ab-row"><input type="text" id="abCode" placeholder="Port:pairing-key from the Max for Live device" autocomplete="off" spellcheck="false"><button type="button" id="abConnect">Pair device</button></div><div id="abConnections"></div><div class="ab-row"><label><input type="checkbox" id="abMute"> Monitor through Ableton only (mute browser speakers)</label><label>MIDI channel <select id="abChannel">${Array.from({length:16},(_,i)=>`<option>${i+1}</option>`).join('')}</select></label><label><input type="checkbox" id="abCueEditing"> Allow explicit Set Cue notes</label></div><p>Play/Stop and parameter setters are explicit, not toggles. Missing cues are errors, never silently created. Load the same tracks/grid/cues before replay. Master dry bypasses all EQ/filter/FX/limiter; individual wet decks exclude shared master FX and limiter.</p><details><summary>Note, CC and named parameter map</summary><p>MIDI note numbers are authoritative. Live uses C1 for note 36. Use MIDI clips for actions and the device's named automation parameters for precise BPM, filter, FX and levels.</p><table>${SCHEMA.notes.map(n=>`<tr><td>${n.note}</td><td>${n.label}</td><td>${n.mode}</td></tr>`).join('')}</table><button type="button" id="abMapDownload">Download full map</button></details><h3>Latency tests · do not confuse ping with audio latency</h3><p>Audio probes temporarily mute only the chosen return. They traverse its Max DSP release/capture path and report round trips. They do not measure physical audio-interface latency or provide automatic delay compensation. No values are shown until an actual device responds.</p><div class="ab-row"><select id="abDiagnosticTarget"></select><button type="button" id="abRunControl">8 control round trips</button><button type="button" id="abRunAudio">8 audio-path probes</button><button type="button" id="abExport">Save measurements</button></div><pre id="abLatency">Not measured. Pair a device and run the tests.</pre><details><summary>Connection log</summary><pre id="abLog"></pre></details>`;page.append(panel);
+ const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>{log(e.message);$('#abLatency').textContent=e.message;});$('#abConnect').onclick=safe(()=>connect($('#abCode').value));$('#abMute').onchange=e=>speakerMute(e.target.checked);$('#abChannel').onchange=e=>S.channel=Number(e.target.value);$('#abCueEditing').onchange=e=>S.allowCueEditing=e.target.checked;$('#abRunControl').onclick=safe(()=>runLatency(false));$('#abRunAudio').onclick=safe(()=>runLatency(true));$('#abExport').onclick=()=>download('clipsesh-bridge-latency.json',{format:'clip-sesh-bridge-latency',version:1,measurements:S.measurements});$('#abMapDownload').onclick=()=>download('clipsesh-ableton-control-map.json',SCHEMA);wireFeedback();paint();
+ const prefill=new URLSearchParams(location.hash.slice(1)).get('ableton');if(prefill){$('#abCode').value=prefill;panel.open=true;S.app.openSettings('midi');}
+ window.addEventListener('beforeunload',disconnectAll);
+ window.addEventListener('clip-sesh-demo-ready',()=>{if(S.connections.size){disconnectAll();log('Live bridge disconnected: the automated test demo owns a separate audio engine. Re-pair after it finishes.');}});
+}
+window.ClipSeshAbletonBridge=Object.freeze({version:1,schema:SCHEMA,control,action,midi,snapshot,releaseHolds,makeTaps,connect,disconnectAll,runLatency,getState:()=>({owner:S.owner,connections:[...S.connections.values()].map(c=>({id:c.id,config:c.config,error:c.error})),measurements:S.measurements,logs:S.logs})});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+})();
+
+</script>
+<!-- Clip Sesh Ableton Bridge END -->
 </body>
 </html>
