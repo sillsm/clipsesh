@@ -3698,7 +3698,7 @@ if(window.__clipSeshIsolatedChecks){
   async function renderCurrentLoop() {
     if (state.arrangement) return window.ClipSeshArrangement.render();
     if (!state.buffer) throw new Error("Load a source sample first.");
-    const eventCount = state.pattern.reduce((total, step) => total + step.size, 0);
+    const eventCount = state.arrangement?.events.length || state.pattern.reduce((total, step) => total + step.size, 0);
     if (!eventCount) throw new Error("Add at least one sequencer hit before rendering the test.");
     const bars = Number(dom.barsSelect.value);
     const stepsPerBar = Number(dom.stepsPerBarSelect.value);
@@ -4634,7 +4634,7 @@ if(window.__clipSeshIsolatedChecks){
     const source = context.createBufferSource();
     const voiceGain = context.createGain();
     source.buffer = buffer;
-    source.playbackRate.setValueAtTime(rate, when);
+    source.playbackRate.value = rate; // Initialize k-rate pitch before scheduling the note.
     source.connect(voiceGain);
     voiceGain.connect(destination);
     scheduleEnvelope(voiceGain, when, outputDuration, clamp(velocity / 127, 0, 1), settings);
@@ -4819,6 +4819,8 @@ if(window.__clipSeshIsolatedChecks){
   }
 
   function renderSequencer() {
+    if (state.arrangement && window.ClipSeshArrangement?.renderGrid) return window.ClipSeshArrangement.renderGrid();
+    delete dom.sequencerGrid.dataset.arrangement;
     resizePattern(totalSteps());
     prunePatternToSlices();
     dom.sequencerGrid.innerHTML = "";
@@ -4981,7 +4983,7 @@ if(window.__clipSeshIsolatedChecks){
   }
 
   async function startSequencer() {
-    if (state.arrangement) return window.ClipSeshArrangement.play();
+    if (state.arrangement || (state.test.open && state.test.referenceBuffer && window.ClipSeshArrangement)) return window.ClipSeshArrangement.play();
     if (state.sequencer.playing) return;
     if (!state.buffer) {
       showToast("Load a sample before starting the sequencer.");
@@ -5317,6 +5319,7 @@ if(window.__clipSeshIsolatedChecks){
   }
 
   function handleKeyDown(event) {
+    if (window.ClipSeshSamplerCatalog?.state.busy) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (isTypingTarget(event.target)) return;
 
@@ -5440,7 +5443,7 @@ if(window.__clipSeshIsolatedChecks){
       showToast("Load a sample before exporting.");
       return;
     }
-    const eventCount = state.pattern.reduce((total, step) => total + step.size, 0);
+    const eventCount = state.arrangement?.events.length || state.pattern.reduce((total, step) => total + step.size, 0);
     if (eventCount === 0) {
       showToast("Add at least one sequencer hit before exporting.");
       return;
@@ -5453,8 +5456,9 @@ if(window.__clipSeshIsolatedChecks){
       const rendered = await renderCurrentLoop();
       const wav = new Uint8Array(audioBufferToWav(rendered));
       const bars = Number(dom.barsSelect.value);
-      downloadBytes(wav, `${safeBaseName(state.loadedFileName)}-${bars}bar-${getTargetBpm().toFixed(2).replace(".", "_")}bpm.wav`, "audio/wav");
-      showToast(`Rendered ${bars} bars with the full FX chain to a ${rendered.numberOfChannels === 1 ? "mono" : "stereo"} WAV.`);
+      const extent = state.arrangement ? `${rendered.duration.toFixed(3).replace(".", "_")}s` : `${bars}bar`;
+      downloadBytes(wav, `${safeBaseName(state.loadedFileName)}-${extent}-${getTargetBpm().toFixed(2).replace(".", "_")}bpm.wav`, "audio/wav");
+      showToast(`Rendered ${state.arrangement ? `${rendered.duration.toFixed(3)} seconds` : `${bars} bars`} with the full FX chain to a ${rendered.numberOfChannels === 1 ? "mono" : "stereo"} WAV.`);
     } catch (error) {
       console.error(error);
       showToast(`WAV export failed: ${error.message || "unknown error"}`, 5000);
@@ -5921,7 +5925,7 @@ if(window.__clipSeshIsolatedChecks){
       seamSimilarity,
       getPlaybackRate,
       getSlices,
-      ensureAudioContext, createFxChain, getVolumeGain, getAttackSeconds, getReleaseSeconds, drawTestBuffers, startSequencer, stopSequencer,
+      ensureAudioContext, createFxChain, getVolumeGain, getAttackSeconds, getReleaseSeconds, drawTestBuffers, startSequencer, stopSequencer, renderSequencer, requestWaveDraw, setCurrentStepVisual,
     },
   });
 
@@ -5977,7 +5981,7 @@ function schedule(context,destination,compiled,buffers,options={}){
     const buffer=buffers.get(e.source);if(!buffer)throw Error(`Missing audio: ${e.source}`);
     const sourceStart=e.start+elapsed*e.rate;
     if(sourceStart+duration*e.rate>buffer.duration+2/buffer.sampleRate)throw Error(`Source range exceeds ${e.source}.`);
-    const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffer;source.playbackRate.setValueAtTime(e.rate,when);
+    const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffer;source.playbackRate.value=e.rate; // k-rate: initialize before the first render quantum.
     source.connect(gain);let panner=null;
     if(e.pan&&context.createStereoPanner){panner=context.createStereoPanner();panner.pan.value=e.pan;gain.connect(panner);panner.connect(destination);}else gain.connect(destination);
     const fadeIn=Math.min(attack,duration/4),fadeOut=Math.min(release,duration/4);
@@ -6106,6 +6110,7 @@ function caseList(){
   $('canonicalTitle').textContent=S.catalog?.title||'Canonical test library';
   for(const id of ['canonicalLoad','canonicalBundle','canonicalRunAll','canonicalRunSelected','canonicalSelectAll','canonicalSelectNone','canonicalMode'])$(id).disabled=S.busy;
   $('canonicalCancel').disabled=!S.busy;$('canonicalSkip').disabled=!S.busy||!S.live;
+  if($('canonicalAuditionPlay')){$('canonicalAuditionPlay').disabled=!D.state.buffer||S.busy||!!S.live;$('canonicalAuditionStop').disabled=!S.live;$('canonicalAuditionSide').disabled=!D.state.test.referenceBuffer;$('canonicalAuditionSide').textContent=S.side==='reference'?'HEAR A · RECONSTRUCTION':'HEAR B · REFERENCE';$('canonicalAuditionSide').setAttribute('aria-pressed',String(S.side==='reference'));}
 }
 async function loadCatalog(value,base){
   if(S.busy)throw Error('Cancel the current operation first.');D.stopSequencer();S.busy=true;S.abort=new AbortController();caseList();
@@ -6186,26 +6191,27 @@ async function runSuite(ids){
   }return S.report;
 }
 async function play(){
-  D.stopSequencer();const a=D.state.arrangement,rendered=a?null:await D.renderCurrentLoop();const context=await D.ensureAudioContext(),options=a?settings():{},compiled=a?E.compile(a,options):{duration:rendered.duration},when=context.currentTime+.05;
+  D.stopSequencer();const a=D.state.arrangement,rendered=a?null:await D.renderCurrentLoop();const context=await D.ensureAudioContext(),options=a?settings():{},compiled=a?E.compile(a,options):visualTimeline(rendered.duration),when=context.currentTime+.12;
   const candidate=context.createGain(),reference=context.createGain();candidate.connect(a?D.state.masterGain:context.destination);reference.connect(context.destination);
   candidate.gain.value=S.side==='candidate'?1:0;reference.gain.value=S.side==='reference'?1:0;
   const rack=a?window.ClipSeshAutomationEngine.create(context,candidate,a,{...options,start:when,live:true}):null;
   if(a)S.voices=E.schedule(context,rack.input,compiled,buffers(a),{...options,start:when});
   else{const src=context.createBufferSource();src.buffer=rendered;src.connect(candidate);src.start(when);S.voices=[{source:src,gain:candidate}];}
   if(D.state.test.referenceBuffer){const src=context.createBufferSource();src.buffer=D.state.test.referenceBuffer;src.connect(reference);src.start(when);src.stop(when+compiled.duration);S.voices.push({source:src,gain:reference});}
-  S.live={when,duration:compiled.duration,candidate,reference,rack};caseList();D.state.sequencer.playing=true;D.dom.playButton.textContent='▶ PLAYING';D.dom.playButton.classList.add('is-active');
-  S.timer=setInterval(()=>{if(!S.live)return;const elapsed=Math.max(0,context.currentTime-when);D.dom.transportDisplay.textContent=`${S.side.toUpperCase()} · ${Math.min(elapsed,compiled.duration).toFixed(2)} / ${compiled.duration.toFixed(2)} s`;if(elapsed>=compiled.duration)stop();},40);
+  S.live={when,duration:compiled.duration,candidate,reference,rack,compiled};$('arrangementMonitor').hidden=false;S.gridPage=0;if(a)renderGrid();caseList();D.state.sequencer.playing=true;D.dom.playButton.textContent='▶ PLAYING';D.dom.playButton.classList.add('is-active');
+  S.timer=setInterval(()=>{if(!S.live||context.currentTime<when)return;const elapsed=Math.max(0,context.currentTime-when);updateVisuals(elapsed);if(elapsed>=compiled.duration)stop();},16);
 }
 function stop(){
   for(const v of S.preview||[])try{v.source.stop();}catch{}S.preview=[];
   if(S.timer)clearInterval(S.timer);S.timer=null;
   if(S.live){for(const v of S.voices){try{v.source.stop();}catch{}}S.live.rack?.disconnect();S.live.candidate.disconnect();S.live.reference.disconnect();D.state.sequencer.playing=false;D.dom.playButton.textContent='▶ PLAY';D.dom.playButton.classList.remove('is-active');}
   S.voices=[];S.live=null;if($('canonicalSkip'))$('canonicalSkip').disabled=true;
+  if($('playingSourceHead')){clearVisuals();$('canonicalAuditionPlay').disabled=!D.state.buffer||S.busy;$('canonicalAuditionStop').disabled=true;$('arrangementMonitor').hidden=!D.state.arrangement;}
 }
-function side(value){S.side=value;for(const id of ['candidate','reference'])$('arrange-'+id).setAttribute('aria-pressed',String(id===value));if(S.live){const c=D.state.audioContext.currentTime;for(const id of ['candidate','reference'])S.live[id].gain.setTargetAtTime(id===value?1:0,c,.003);}}
+function side(value){S.side=value;if($('canonicalAuditionSide')){$('canonicalAuditionSide').textContent=value==='reference'?'HEAR A · RECONSTRUCTION':'HEAR B · REFERENCE';$('canonicalAuditionSide').setAttribute('aria-pressed',String(value==='reference'));}for(const id of ['candidate','reference'])$('arrange-'+id).setAttribute('aria-pressed',String(id===value));if(S.live){const c=D.state.audioContext.currentTime;for(const id of ['candidate','reference'])S.live[id].gain.setTargetAtTime(id===value?1:0,c,.003);}}
 function refresh(){
-  const a=D.state.arrangement;$('arrangementPanel').hidden=!a;D.dom.sequencerScroller.hidden=!!a;D.dom.clearPatternButton.disabled=!!a;
-  window.ClipSeshAutomationUI?.refresh();if(!a)return;E.validate(a);$('arrangementTitle').textContent=`${a.durationSeconds.toFixed(3)} s · ${a.chops?.length??a.events.length} chops · ${a.events.length} hits · ${new Set(a.sources.map(s=>s.break||s.id)).size} breaks`;
+  const a=D.state.arrangement;$('arrangementPanel').hidden=!a;D.dom.sequencerScroller.hidden=false;D.dom.clearPatternButton.disabled=!!a;$('arrangementMonitor').hidden=!a&&!S.live;$('arrangementGridControls').hidden=!a;
+  window.ClipSeshAutomationUI?.refresh();if(!a){D.renderSequencer();return;}E.validate(a);renderGrid();$('arrangementTitle').textContent=`${a.durationSeconds.toFixed(3)} s · ${a.chops?.length??a.events.length} chops · ${a.events.length} hits · ${new Set(a.sources.map(s=>s.break||s.id)).size} breaks`;
   $('arrangementNote').textContent=a.status||'Editable break arrangement';const tbody=$('arrangementRows');tbody.replaceChildren();const pageSize=40,pages=Math.ceil(a.events.length/pageSize);S.page=Math.max(0,Math.min(S.page,pages-1));$('arrangementPage').textContent=`${S.page+1} / ${pages}`;
   for(let i=S.page*pageSize;i<Math.min(a.events.length,(S.page+1)*pageSize);i++){
     const e=a.events[i],tr=document.createElement('tr');const label=document.createElement('td');label.textContent=String(i+1);tr.append(label);
@@ -6214,10 +6220,62 @@ function refresh(){
       const td=document.createElement('td'),input=document.createElement('input');input.type='number';input.step=String(step);input.value=Number(value).toFixed(key==='semitones'?2:4);input.setAttribute('aria-label',`Cut ${i+1} ${key}`);
       if(a.chops&&key==='start')input.disabled=true;
       input.onchange=()=>{stop();const old=copy(e),v=Number(input.value);if(key==='semitones'){e.rate=2**(v/12);e.semitones=v;}else{e[key]=v;if(key==='start')e.end=old.end+(v-old.start);if(key==='duration'&&!a.chops)e.end=e.start+e.duration*e.rate;}
-        try{E.validate(a);buffers(a);}catch(error){Object.assign(e,old);input.value=String(value);err(error);}};td.append(input);tr.append(td);
+        try{E.validate(a);buffers(a);renderGrid();}catch(error){Object.assign(e,old);input.value=String(value);err(error);}};td.append(input);tr.append(td);
     }tbody.append(tr);
   }
 }
+/* Shared, read-only transport visuals; they follow the audio clock. */
+function visualTimeline(duration){
+ const a=D.state.arrangement;if(a)return E.compile(a,settings());
+ const bpm=Number(D.dom.projectBpm.value),dt=60/bpm*4/Number(D.dom.stepsPerBarSelect.value),rate=D.getPlaybackRate(),slices=D.getSlices(),events=[];
+ D.state.pattern.forEach((hits,step)=>{for(const [sliceIndex,velocity]of hits){const slice=slices[sliceIndex];if(!slice)continue;const when=step*dt+(step%2?dt*Number(D.dom.swing.value)/200:0);events.push({index:events.length,source:'main',sliceIndex,when,start:slice.start,rate,duration:Math.min((slice.end-slice.start)/rate,duration-when),gain:velocity/127});}});
+ events.sort((a,b)=>a.when-b.when);if(D.dom.chokeToggle.checked)for(let i=0;i<events.length;i++){const next=events.slice(i+1).find(e=>e.when>events[i].when+1e-9);if(next)events[i].duration=Math.min(events[i].duration,next.when-events[i].when);}
+ return {duration,bpm,events};
+}
+function renderGrid(){
+ const a=D.state.arrangement;if(!a)return;
+ const compiled=S.live?.compiled||E.compile(a,settings()),spb=Number(D.dom.stepsPerBarSelect.value),dt=60/compiled.bpm*4/spb,total=Math.ceil(compiled.duration/dt-1e-8),pageSize=4*spb;
+ S.gridPage=Math.max(0,Math.min(S.gridPage||0,Math.ceil(total/pageSize)-1));const first=S.gridPage*pageSize,last=Math.min(total,first+pageSize),grid=D.dom.sequencerGrid;
+ grid.replaceChildren();grid.style.setProperty('--total-steps',String(last-first));grid.dataset.arrangement='true';
+ const header=document.createElement('div');header.className='seq-header-row';const label=document.createElement('div');label.className='seq-label';label.textContent=`${a.chops?.length||a.sources.length} rows · ${compiled.bpm.toFixed(2)} BPM`;header.append(label);
+ for(let i=first;i<last;i++){const el=document.createElement('div');el.className='seq-step-label'+(i%spb===0?' bar-start':'');el.dataset.step=i;el.textContent=i%spb===0?`B${Math.floor(i/spb)+1}`:String(i%spb+1);header.append(el);}grid.append(header);
+ const rowDefs=a.chops||a.sources,cells=new Map();for(const rowDef of rowDefs){const row=document.createElement('div');row.className='seq-row';row.dataset.row=rowDef.id;const label=document.createElement('button');label.type='button';label.className='seq-label';label.textContent=rowDef.id;label.setAttribute('aria-label',`Audition ${rowDef.id}`);label.disabled=!a.chops;label.onclick=()=>auditionChop(rowDef.id).catch(err);row.append(label);
+  for(let step=first;step<last;step++){const cell=document.createElement('div');cell.className='arr-step'+(step%spb===0?' bar-start':'');cell.dataset.step=step;cell.setAttribute('role','gridcell');cell.setAttribute('aria-label',`${rowDef.id}, bar ${Math.floor(step/spb)+1}, step ${step%spb+1}`);row.append(cell);cells.set(rowDef.id+':'+step,cell);}grid.append(row);
+ }
+ for(const e of compiled.events){const step=Math.floor((e.when+1e-9)/dt),original=a.events[e.index],id=original.chopId||e.source,cell=cells.get(id+':'+step);if(!cell)continue;const hit=document.createElement('span');hit.className='arr-hit';hit.dataset.event=e.index;hit.style.left=`${Math.min(96,Math.max(0,(e.when/dt-step)*100))}%`;hit.style.width=`${Math.max(4,Math.min(100-(e.when/dt-step)*100,e.duration/dt*100))}%`;hit.title=`${id} · ${e.when.toFixed(4)} s · ${(12*Math.log2(e.rate)).toFixed(2)} st`;cell.append(hit);}
+ $('arrangementBars').textContent=`Bars ${Math.floor(first/spb)+1}–${Math.ceil(last/spb)} / ${Math.ceil(total/spb)}`;$('arrangementBarsPrev').disabled=S.gridPage===0;$('arrangementBarsNext').disabled=last===total;
+}
+const previewCache=new WeakMap();
+function showSource(buffer,name){
+ if(S.visualBuffer===buffer)return;S.visualBuffer=buffer;$('playingSourceName').textContent=name;
+ let points=previewCache.get(buffer);if(!points){const ch=buffer.getChannelData(0),count=800,upper=[],lower=[];for(let i=0;i<count;i++){const start=Math.floor(i*ch.length/count),end=Math.max(start+1,Math.floor((i+1)*ch.length/count));let lo=0,hi=0;for(let j=start;j<Math.min(end,ch.length);j++){lo=Math.min(lo,ch[j]);hi=Math.max(hi,ch[j]);}upper.push(`${i*1000/(count-1)},${50-hi*45}`);lower.push(`${i*1000/(count-1)},${50-lo*45}`);}points=upper.concat(lower.reverse()).join(' ');previewCache.set(buffer,points);}
+ $('playingSourceWave').setAttribute('points',points);$('playingSourcePreview').dataset.source=name;
+}
+function updateVisuals(elapsed){
+ const live=S.live;if(!live)return;const a=D.state.arrangement,c=live.compiled,spb=Number(D.dom.stepsPerBarSelect.value),dt=60/c.bpm*4/spb,t=Math.min(c.duration,Math.max(0,elapsed)),step=Math.min(Math.ceil(c.duration/dt)-1,Math.floor(t/dt));
+ if(a&&$('arrangementFollow').checked&&Math.floor(step/(spb*4))!==(S.gridPage||0)){S.gridPage=Math.floor(step/(spb*4));renderGrid();}
+ D.setCurrentStepVisual(step);
+ const active=c.events.filter(e=>t>=e.when&&t<e.when+e.duration),ids=new Set(active.map(e=>String(e.index)));
+ for(const el of D.dom.sequencerGrid.querySelectorAll('.arr-hit'))el.classList.toggle('is-playing',ids.has(el.dataset.event));
+ if(S.visualStep!==step){S.visualStep=step;const label=D.dom.sequencerGrid.querySelector(`.seq-step-label[data-step="${step}"]`);if(label){const scroller=D.dom.sequencerScroller,left=label.offsetLeft,right=left+label.offsetWidth;if(right>scroller.scrollLeft+scroller.clientWidth||left<scroller.scrollLeft+158)scroller.scrollLeft=Math.max(0,left-180);}}
+ D.dom.transportDisplay.textContent=`${S.side==='reference'?'B · REFERENCE':'A · RECONSTRUCTION'} · BAR ${Math.floor(step/spb)+1} · STEP ${step%spb+1} · ${t.toFixed(2)} / ${c.duration.toFixed(2)} s`;
+ $('canonicalAuditionStatus').textContent=D.dom.transportDisplay.textContent;
+ // Pick the most recently triggered active hit, preferring the stronger layer.
+ const event=active.sort((a,b)=>b.when-a.when||b.gain-a.gain)[0],head=$('playingSourceHead'),region=$('playingSourceRegion');
+ if(event){const source=a?a.sources.find(s=>s.id===event.source):null,record=source?D.state.audioLibrary.get(source.fileMd5):D.state.audioLibrary.get(D.state.loadedFileMd5),buffer=record?.buffer||D.state.buffer;
+  showSource(buffer,record?.name||event.source);const sourceTime=event.start+(t-event.when)*event.rate,x=sourceTime/buffer.duration*1000,original=a?.events[event.index];
+  head.toggleAttribute('hidden',false);head.setAttribute('x1',x);head.setAttribute('x2',x);head.dataset.sourceTime=sourceTime.toFixed(6);head.dataset.event=event.index;
+  region.toggleAttribute('hidden',false);region.setAttribute('x',event.start/buffer.duration*1000);region.setAttribute('width',event.duration*event.rate/buffer.duration*1000);
+  $('playingSourcePosition').textContent=`${original?.chopId||event.source} · source ${sourceTime.toFixed(3)} s · ${event.rate.toFixed(3)}×`;
+  if(!source||source.fileMd5===D.state.loadedFileMd5){D.state.playhead={when:live.when+event.when,endWhen:live.when+event.when+event.duration,start:event.start,rate:event.rate};D.requestWaveDraw();}else D.state.playhead=null;
+ }else{head.toggleAttribute('hidden',true);region.toggleAttribute('hidden',true);D.state.playhead=null;$('playingSourcePosition').textContent='No source hit · FX tails may still be sounding';D.requestWaveDraw();}
+}
+function clearVisuals(){
+ D.state.playhead=null;D.setCurrentStepVisual(-1);D.requestWaveDraw();S.visualStep=-1;
+ for(const el of D.dom.sequencerGrid.querySelectorAll('.is-playing'))el.classList.remove('is-playing');
+ $('playingSourceHead').toggleAttribute('hidden',true);$('playingSourceRegion').toggleAttribute('hidden',true);$('playingSourcePosition').textContent='Stopped';$('canonicalAuditionStatus').textContent='Stopped. Play A/B to hear this case.';
+}
+
 async function exportCase(){
   const doc=D.buildSessionDocument(),entries=[],assets={};for(const [id,dep]of dependencyEntries(doc)){const record=D.state.audioLibrary.get(dep.fileMd5);const extension=/\.(wav|mp3|aiff?|flac|ogg|m4a)$/i.exec(dep.name||'')?.[1]||'audio';const path=`audio/${dep.fileMd5}.${extension}`;if(!entries.some(e=>e.name===path))entries.push({name:path,data:record.bytes});assets[id]=path;}
   const session=enc.encode(JSON.stringify(doc,null,2));entries.push({name:'session.json',data:session});const catalog={format:'clip-sesh-sampler-test-catalog',version:1,title:'Exported sampler case',tests:[{id:'exported-case',title:D.dom.testNameInput.value||'Sampler case',session:{url:'session.json',md5:D.md5Bytes(session)},assets,expect:copy(S.expect||DEFAULT_EXPECT)}]};entries.push({name:'test.json',data:enc.encode(JSON.stringify(catalog,null,2))});save('sampler-test-bundle.zip',D.createZip(entries),'application/zip');
@@ -6226,7 +6284,12 @@ async function exportCase(){
 const style=document.createElement('style');style.textContent=`#arrangementPanel{padding:12px;border-top:1px solid #374653}#arrangementPanel table{border-collapse:collapse;font-size:11px;width:100%}#arrangementPanel th,#arrangementPanel td{padding:4px;text-align:left}#arrangementPanel input{width:82px;background:#0d151d;color:#ddd;border:1px solid #44515c;padding:5px}#arrangementPanel select{max-width:125px}#arrangementPanel .scroll{overflow:auto;max-height:360px}.arrangement-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.arrangement-controls button[aria-pressed=true]{background:#286b83}.canonical-case{display:grid;grid-template-columns:20px 1fr auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #354451}.canonical-case button{text-align:left;padding:6px;font-size:11px}.canonical-case span{font-size:10px}.canonical-case [data-status=PASS]{color:#7ae4af}.canonical-case [data-status=FAIL],.canonical-case [data-status=ERROR]{color:#ffa799}#canonicalLibrary{padding:12px;border-bottom:1px solid #465360}#canonicalLibrary input[type=url],#canonicalFilter{width:100%;padding:8px;margin:7px 0;background:#111b24;color:#eee;border:1px solid #4d606d}#canonicalLibrary button,#arrangementPanel button{cursor:pointer;color:#eee;border:1px solid #526776;background:#203440;padding:7px}#canonicalStatus{font-size:12px;line-height:1.5;white-space:pre-wrap}#canonicalCases{max-height:300px;overflow:auto}#canonicalLibrary pre,#arrangementResult{white-space:pre-wrap;word-break:break-word;font:11px/1.5 monospace;max-height:280px;overflow:auto}#arrangementNote{font-size:12px;color:#d6b36d}`;document.head.append(style);
 const panel=document.createElement('section');panel.id='arrangementPanel';panel.hidden=true;panel.innerHTML=`<strong id="arrangementTitle">Break arrangement</strong><p id="arrangementNote"></p><div class="arrangement-controls"><button id="arrange-candidate" aria-pressed="true">A · reconstruction</button><button id="arrange-reference" aria-pressed="false">B · reference</button><button id="arrangementAnalyze">Compare render</button><button id="arrangementExport">Export test bundle</button><button id="arrangementGrid">Return to step grid</button></div><p>Play starts both sides together. A/B changes only what you hear; exported reconstruction audio always uses the source breaks.</p><div class="arrangement-controls"><button id="arrangementPrev">Previous cuts</button><span id="arrangementPage"></span><button id="arrangementNext">Next cuts</button></div><div class="scroll"><table><thead><tr><th>Cut</th><th>Source</th><th>Time (s)</th><th>Source start (s)</th><th>Length (s)</th><th>Pitch (st)</th><th>Gain</th></tr></thead><tbody id="arrangementRows"></tbody></table></div><details><summary>Comparison result</summary><pre id="arrangementResult">Not measured.</pre></details>`;
 document.querySelector('.sequencer-panel').append(panel);
-const library=document.createElement('section');library.id='canonicalLibrary';library.innerHTML=`<strong id="canonicalTitle">Canonical test library</strong><input id="canonicalUrl" type="url" aria-label="Catalog URL" placeholder="Catalog URL · ./test/test.json"><div class="arrangement-controls"><button id="canonicalLoad">Load URL</button><button id="canonicalBundle">Open test bundle</button><input id="canonicalFile" type="file" accept=".zip" hidden></div><input id="canonicalFilter" type="search" aria-label="Filter canonical tests" placeholder="Filter tests"><div class="arrangement-controls"><button id="canonicalSelectAll">Select all</button><button id="canonicalSelectNone">None</button><label>Mode <select id="canonicalMode"><option value="fast">Silent render</option><option value="demo">Play each case</option></select></label></div><div id="canonicalCases"></div><div class="arrangement-controls"><button id="canonicalRunSelected">Run selected</button><button id="canonicalRunAll">Run all</button><button id="canonicalCancel" disabled>Cancel</button><button id="canonicalSkip" disabled>Skip playback</button><button id="canonicalSaveReport">Save report</button><button id="canonicalSaveCaseReport">Save case result</button></div><p id="canonicalStatus">Open a catalog URL or a test bundle. Audio and sessions are verified by MD5.</p><details><summary>Suite report</summary><pre id="canonicalReport">No suite run.</pre></details>`;$('testSidebar').prepend(library);
+const monitor=document.createElement('section');monitor.id='arrangementMonitor';monitor.hidden=true;monitor.innerHTML=`<div class="arrangement-controls"><strong>NOW SAMPLED</strong><span id="playingSourceName">Press Play to follow the source</span><span id="playingSourcePosition">Stopped</span></div><svg id="playingSourcePreview" viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label="Playing source waveform"><polygon id="playingSourceWave" fill="#477955"/><rect id="playingSourceRegion" y="0" height="100" fill="#ffe07c" opacity=".2" hidden/><line id="playingSourceHead" y1="0" y2="100" stroke="white" stroke-width="2" hidden/></svg><div id="arrangementGridControls" class="arrangement-controls"><button id="arrangementBarsPrev">Previous bars</button><strong id="arrangementBars"></strong><button id="arrangementBarsNext">Next bars</button><label><input id="arrangementFollow" type="checkbox" checked> Follow playback</label><span>Exact hit positions · edit notes in the hit table</span></div>`;document.querySelector('.sequencer-toolbar').after(monitor);
+const monitorStyle=document.createElement('style');monitorStyle.textContent=`#arrangementMonitor{margin:12px 0;padding:10px;background:#17231e;color:#e3eadf;border:2px solid #526958}#playingSourcePreview{display:block;width:100%;height:100px;background:#050a08}#playingSourcePreview [hidden]{display:none}#playingSourcePosition{margin-left:auto;font-size:12px}#arrangementGridControls{font-size:12px}#arrangementMonitor button{padding:6px;cursor:pointer}.arr-step{position:relative;width:var(--cell);height:var(--cell);border-right:1px solid #6b2b2b;border-bottom:1px solid #5c2424;background:#111}.arr-step.bar-start{border-left:3px solid var(--cream)}.arr-step.is-current{background:#5b1a19;outline:2px solid var(--orange);outline-offset:-2px}.arr-hit{position:absolute;top:5px;height:17px;background:#68ff47;opacity:.65;min-width:2px}.arr-hit.is-playing{background:#fff;opacity:1;box-shadow:0 0 7px #ffe07c}#canonicalAudition{padding:10px 0;border-bottom:1px solid #465360}#canonicalAuditionStatus{font-size:11px;line-height:1.5}#canonicalAudition button[aria-pressed=true]{background:#633d76}`;document.head.append(monitorStyle);
+$('arrangementBarsPrev').onclick=()=>{$('arrangementFollow').checked=false;S.gridPage--;renderGrid();};$('arrangementBarsNext').onclick=()=>{$('arrangementFollow').checked=false;S.gridPage++;renderGrid();};
+
+const library=document.createElement('section');library.id='canonicalLibrary';library.innerHTML=`<strong id="canonicalTitle">Canonical test library</strong><input id="canonicalUrl" type="url" aria-label="Catalog URL" placeholder="Catalog URL · ./test/test.json"><div class="arrangement-controls"><button id="canonicalLoad">Load URL</button><button id="canonicalBundle">Open test bundle</button><input id="canonicalFile" type="file" accept=".zip" hidden></div><input id="canonicalFilter" type="search" aria-label="Filter canonical tests" placeholder="Filter tests"><div class="arrangement-controls"><button id="canonicalSelectAll">Select all</button><button id="canonicalSelectNone">None</button><label>Mode <select id="canonicalMode"><option value="fast">Silent checks</option><option value="demo" selected>Audition A/B</option></select></label></div><div id="canonicalAudition"><div class="arrangement-controls"><button id="canonicalAuditionPlay" disabled>PLAY A/B</button><button id="canonicalAuditionStop" disabled>STOP AUDITION</button><button id="canonicalAuditionSide" aria-pressed="false" disabled>HEAR B · REFERENCE</button></div><p id="canonicalAuditionStatus">Load a case to audition reconstruction and reference together.</p></div><div id="canonicalCases"></div><div class="arrangement-controls"><button id="canonicalRunSelected">Run selected</button><button id="canonicalRunAll">Run all</button><button id="canonicalCancel" disabled>Cancel</button><button id="canonicalSkip" disabled>Skip playback</button><button id="canonicalSaveReport">Save report</button><button id="canonicalSaveCaseReport">Save case result</button></div><p id="canonicalStatus">Open a catalog URL or a test bundle. Audio and sessions are verified by MD5.</p><details><summary>Suite report</summary><pre id="canonicalReport">No suite run.</pre></details>`;$('testSidebar').prepend(library);
+$('canonicalAuditionPlay').onclick=()=>play().catch(err);$('canonicalAuditionStop').onclick=()=>{if(S.busy)S.abort?.abort();D.stopSequencer();};$('canonicalAuditionSide').onclick=()=>side(S.side==='candidate'?'reference':'candidate');
 $('canonicalLoad').onclick=()=>loadCatalog($('canonicalUrl').value||'./test/test.json').catch(err);
 $('canonicalBundle').onclick=()=>$('canonicalFile').click();$('canonicalFile').onchange=async event=>{try{if(S.busy)throw Error('Cancel the current operation first.');const file=event.target.files[0];if(!file)return;const files=await D.parseZip(new Uint8Array(await file.arrayBuffer()));S.files=files;const names=[...files.keys()].filter(p=>/(^|\/)test\.json$/.test(p));if(names.length!==1)throw Error('The bundle must contain one test.json catalog.');await loadCatalog('bundle://local/'+names[0]);}catch(e){err(e);}finally{event.target.value='';}};
 $('canonicalSkip').onclick=()=>{if(S.busy&&S.live){S.skipped=true;stop();}};
@@ -6236,7 +6299,7 @@ $('canonicalSaveCaseReport').onclick=()=>{const result=S.results.get(S.active);i
 $('arrange-candidate').onclick=()=>side('candidate');$('arrange-reference').onclick=()=>side('reference');$('arrangementAnalyze').onclick=()=>score().catch(err);$('arrangementExport').onclick=()=>exportCase().catch(err);$('arrangementGrid').onclick=()=>{stop();D.state.arrangement=null;refresh();};$('arrangementPrev').onclick=()=>{S.page--;refresh();};$('arrangementNext').onclick=()=>{S.page++;refresh();};
 async function auditionChop(id){D.stopSequencer();const a=D.state.arrangement,c=a?.chops?.find(c=>c.id===id);if(!c)throw Error('Unknown chop.');const hits=a.events.filter(e=>e.chopId===id),rates=hits.map(e=>e.rate).sort((a,b)=>a-b),gains=hits.map(e=>e.gain).sort((a,b)=>a-b),rate=rates[Math.floor(rates.length/2)]||1,duration=Math.min(1,(c.end-c.start)/rate),context=await D.ensureAudioContext();S.preview=E.schedule(context,D.state.masterGain,{duration,events:[{source:c.source,when:0,start:c.start,rate,duration,gain:(gains[Math.floor(gains.length/2)]||1)*(a.masterGain??1),pan:0}]},buffers(a),{start:context.currentTime+.02,attack:.0015,release:.0015});}
 function updateAutomation(){if(!S.live?.rack)return;const context=D.state.audioContext,a=D.state.arrangement,fx=window.ClipSeshAutomationEngine.validate(a.sendEffects,a.durationSeconds);for(const kind of ['delay','reverb'])if(S.live.rack.params[kind])window.ClipSeshAutomationEngine.automate(S.live.rack.params[kind],fx.lanes[kind],{start:context.currentTime,scale:a.bpm/Number(D.dom.projectBpm.value),offset:Math.max(0,context.currentTime-S.live.when)});}
-window.ClipSeshArrangement={render,play,stop,refresh,score,exportCase,validate:E.validate,buffers,updateAutomation,auditionChop};
+window.ClipSeshArrangement={render,play,stop,refresh,score,exportCase,validate:E.validate,buffers,updateAutomation,auditionChop,renderGrid,updateVisuals};
 window.ClipSeshSamplerCatalog={load:loadCatalog,inspect,run:runSuite,validateCatalog,dependencyEntries,readResource:bytes,state:S};
 caseList();const params=new URLSearchParams(location.search);if(location.protocol!=='file:'&&!window.__clipSeshIsolatedChecks&&!window.__clipSeshSkipAutoCatalog)loadCatalog(params.get('suite')||'./test/test.json').then(()=>{const id=params.get('case');if(id){const t=S.catalog.tests.find(t=>t.id===id);if(t)inspect(t).catch(err);}}).catch(err);
 })();
@@ -6353,7 +6416,7 @@ async function runInCurrentPage(options={}){
   for(const [key,value]of [['time',-1],['rate',NaN],['gain',17],['source','reference']]){const a=clone(arr);a.events[0][key]=value;assert.throws(()=>Engine.compile(a));}
  });
  await test('Load an arrangement, retain per-note edits in session JSON, and resolve all sample dependencies',async()=>{
-  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));D.state.arrangement.events[0].gain=.6;const doc=D.buildSessionDocument();assert.equal(doc.recipe.arrangement.events[0].gain,.6);assert.equal(Object.keys(doc.audioDependencies.samples).length,2);assert.equal(w.document.querySelectorAll('#arrangementRows tr').length,4);assert(w.document.getElementById('sequencerScroller').hidden);
+  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));D.state.arrangement.events[0].gain=.6;const doc=D.buildSessionDocument();assert.equal(doc.recipe.arrangement.events[0].gain,.6);assert.equal(Object.keys(doc.audioDependencies.samples).length,2);assert.equal(w.document.querySelectorAll('#arrangementRows tr').length,4);assert(!w.document.getElementById('sequencerScroller').hidden);assert.equal(w.document.querySelectorAll('.arr-hit').length,4);
  });
  await test('Edited reference identity cannot enter the candidate audio graph',()=>{
   const a=clone(D.state.arrangement);a.sources[0].fileMd5=D.state.test.referenceFileMd5;assert.throws(()=>w.ClipSeshArrangement.buffers(a),/reference/);
@@ -6367,6 +6430,32 @@ async function runInCurrentPage(options={}){
  });
  await test('Changing A/B side never changes the offline candidate render',async()=>{
   w.document.getElementById('arrange-candidate').click();const a=await D.renderCurrentLoop();w.document.getElementById('arrange-reference').click();const b=await D.renderCurrentLoop();assert.equal(Engine.pcmMetrics(a,b).nrmse,0);
+ });
+ await test('Repitched hits start at the right rate inside a native audio render block',async()=>{
+  const ctx=new w.OfflineAudioContext(2,24000,48000),source=ctx.createBuffer(2,48000,48000);for(let c=0;c<2;c++)for(let i=0;i<48000;i++)source.getChannelData(c)[i]=i/96000;
+  const a={format:'clipsesh-break-arrangement',version:1,bpm:120,durationSeconds:.5,sources:[{id:'ramp'}],events:[{source:'ramp',time:.125,start:.25,end:.35,rate:2,duration:.025,gain:1}]};
+  Engine.schedule(ctx,ctx.destination,Engine.compile(a),new Map([['ramp',source]]),{attack:0,release:0});const out=await ctx.startRendering();
+  for(let i=0;i<128;i++)assert(Math.abs(out.getChannelData(0)[6000+i]-(12000+2*i)/96000)<1e-6,'First-block source pitch or phase is wrong');
+ });
+ await test('A/B shares one clock while the grid and source marker follow the active chop',async()=>{
+  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));const A=w.ClipSeshArrangement;await A.play();try{
+   const live=C.state.live;A.updateVisuals(.125);const head=w.document.getElementById('playingSourceHead');assert.equal(head.hasAttribute('hidden'),false);assert.equal(Number(head.dataset.sourceTime),.375);assert.equal(head.dataset.event,'0');
+   A.updateVisuals(1.8125);assert.equal(Number(head.dataset.sourceTime),.625);assert.equal(head.dataset.event,'3');assert.equal(D.state.sequencer.visualStep,14);assert(w.document.querySelector('.arr-hit[data-event="3"]').classList.contains('is-playing'));assert(w.document.querySelector('.arr-step[data-step="14"]').classList.contains('is-current'));assert.equal(w.document.getElementById('playingSourceName').textContent,'fixture-source-b.wav');
+   w.document.getElementById('canonicalAuditionSide').click();assert.equal(C.state.side,'reference');assert.equal(C.state.live,live);assert.equal(w.document.getElementById('canonicalAuditionSide').getAttribute('aria-pressed'),'true');
+   w.document.getElementById('canonicalAuditionSide').click();assert.equal(C.state.side,'candidate');assert.equal(C.state.live.when,live.when);
+  }finally{A.stop();}assert.equal(D.state.sequencer.visualStep,-1);assert.equal(w.document.querySelectorAll('.arr-hit.is-playing').length,0);assert(w.document.getElementById('playingSourceHead').hasAttribute('hidden'));
+ });
+ await test('Audible test queues keep their A/B switch and stop control operable',async()=>{
+  const mode=w.document.getElementById('canonicalMode');mode.value='demo';const running=C.run(['arrangement-poly']);try{
+   const deadline=Date.now()+10000;while(!C.state.live&&C.state.busy&&Date.now()<deadline)await new Promise(r=>setTimeout(r,20));assert(C.state.live,'Audition did not start');assert(C.state.busy);assert(w.document.querySelector('main').inert);
+   const button=w.document.getElementById('canonicalAuditionSide'),live=C.state.live;assert.equal(button.disabled,false);assert(w.document.getElementById('canonicalLibrary').contains(button));assert(!w.document.querySelector('main').contains(button));button.click();assert.equal(C.state.side,'reference');assert.equal(C.state.live,live);assert.equal(w.document.getElementById('canonicalAuditionStop').disabled,false);
+  }finally{w.document.getElementById('canonicalAuditionStop').click();C.state.abort?.abort();w.ClipSeshArrangement.stop();await running;mode.value='fast';}
+  assert.equal(C.state.busy,false);assert.equal(w.document.querySelector('main').inert,false);assert.equal(C.state.report.cancelled,true);
+ });
+ await test('Save WAV exports an arrangement even when the legacy step pattern is empty',async()=>{
+  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));assert(D.state.pattern.every(step=>step.size===0));const originalURL=w.URL.createObjectURL,originalClick=w.HTMLAnchorElement.prototype.click;let timer;
+  try{const downloaded=new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(Error('No WAV was exported')),10000);w.URL.createObjectURL=blob=>{resolve(blob);return 'blob:engineering-export';};});w.HTMLAnchorElement.prototype.click=function(){};D.dom.exportWavButton.click();const blob=await downloaded;assert.equal(blob.type,'audio/wav');assert.equal(blob.size,44+96000*2*2);
+  }finally{clearTimeout(timer);w.URL.createObjectURL=originalURL;w.HTMLAnchorElement.prototype.click=originalClick;}
  });
  await test('Session MD5 mismatch is rejected before audio loading',async()=>{
   const t=clone(C.state.catalog.tests[0]);t.session.md5='0'.repeat(32);const count=e.requests.length;await assert.rejects(C.inspect(t),/Session MD5 mismatch/);assert.equal(e.requests.length,count+1);
@@ -6471,7 +6560,7 @@ $('samplerFormatHelp').innerHTML=`<p>Deploy <code>sampler.html</code> as the onl
     "delay": [{"time": 0, "value": 0.02}, {"time": 30, "value": 0}],
     "reverb": [{"time": 0, "value": 0.04}, {"time": 30, "value": 0.02}]
   }
-}</pre><p>Use <b>FX / AUTOMATION</b> beside Play and Stop in the main sequencer to show or hide the delay/reverb settings and both lanes. The panel can stay open while changing sessions; its visibility saves with the session workspace. Lane points are strictly ascending, with values from 0 to 1. Drag points to edit, drag the line to move it vertically, or Clear to zero the send. All edits persist in session JSON.</p><p>Optional external manifests use <code>format: "clip-sesh-sampler-test-manifest"</code>, version 1, pinned <code>session: {url, md5}</code>, and <code>assets: [{id, url, md5}]</code>. Set a case's <code>manifest</code> URL instead of <code>session</code>; every asset hash must agree with the session.</p><p><b>Run selected / Run all</b> compare rendered audio against external references. <b>Run engineering checks</b> runs the executable checks embedded in this HTML and requires the supplied native-quarter-identity, arrangement-poly, arrangement-choke, and think10-best fixtures. Reports keep engineering correctness separate from musical similarity. The current Think reconstruction is an approximation and its strict musical checks report FAIL.</p>`;
+}</pre><p>Use <b>FX / AUTOMATION</b> beside Play and Stop in the main sequencer to show or hide the delay/reverb settings and both lanes. The panel can stay open while changing sessions; its visibility saves with the session workspace. Lane points are strictly ascending, with values from 0 to 1. Drag points to edit, drag the line to move it vertically, or Clear to zero the send. All edits persist in session JSON.</p><p>Optional external manifests use <code>format: "clip-sesh-sampler-test-manifest"</code>, version 1, pinned <code>session: {url, md5}</code>, and <code>assets: [{id, url, md5}]</code>. Set a case's <code>manifest</code> URL instead of <code>session</code>; every asset hash must agree with the session.</p><p><b>Audition A/B</b> plays each test after measuring it. Click <b>HEAR B · REFERENCE</b> to switch from the reconstruction, then <b>HEAR A · RECONSTRUCTION</b> to switch back at the same playback position. These controls stay enabled during a test. <b>Silent checks</b> runs without audio. The main grid follows exact hit times in four-bar pages; <b>NOW SAMPLED</b> shows the active source and jumping chop playhead. <b>Follow playback</b> controls page following.</p><p><b>Run selected / Run all</b> compare rendered audio against external references. <b>Run engineering checks</b> runs the executable checks embedded in this HTML and requires the supplied native-quarter-identity, arrangement-poly, arrangement-choke, and think10-best fixtures. Reports keep engineering correctness separate from musical similarity. The current Think reconstruction is an approximation and its strict musical checks report FAIL.</p>`;
 let active=null,last=null;
 function status(text){$('engineeringStatus').textContent=text;}
 function download(report){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)+'\n'],{type:'application/json'}));a.href=url;a.download='sampler-engineering-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
