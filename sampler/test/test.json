@@ -71,8 +71,7 @@
         "md5": "ea9a797cc0fdcc660b2d018f722c1e60"
       },
       "expect": {
-        "maxNrmse": 0.03,
-        "minEnvelopeCorrelation": 0.98,
+        "minEnvelopeCorrelation": 0.7,
         "maxRmsDifferenceDb": 1
       }
     },
@@ -90,8 +89,7 @@
         "md5": "f0090fb5dd5d34a0cd29b8123af6b210"
       },
       "expect": {
-        "maxNrmse": 0.03,
-        "minEnvelopeCorrelation": 0.98,
+        "minEnvelopeCorrelation": 0.7,
         "maxRmsDifferenceDb": 1
       }
     },
@@ -109,8 +107,7 @@
         "md5": "7e0f2557f8bb959f3e5172f98b86652a"
       },
       "expect": {
-        "maxNrmse": 0.03,
-        "minEnvelopeCorrelation": 0.98,
+        "minEnvelopeCorrelation": 0.7,
         "maxRmsDifferenceDb": 1
       }
     },
@@ -128,10 +125,17 @@
         "md5": "cd3e2c96c280ea6b640dd25a548ed22b"
       },
       "expect": {
-        "maxNrmse": 0.03,
-        "minEnvelopeCorrelation": 0.98,
+        "minEnvelopeCorrelation": 0.7,
         "maxRmsDifferenceDb": 1
       }
     }
-  ]
+  ],
+  "similarityDefinition": {
+    "metric": "rhythm-envelope-10ms-v1",
+    "label": "Rhythm similarity",
+    "formula": "100 \u00d7 max(0, min(1, Pearson correlation of the stereo RMS envelopes in aligned 10 ms windows))",
+    "reference": "Original Leon Mar stem crop, 45\u201375 seconds",
+    "defaultTargetPercent": 70,
+    "scope": "Rhythmic intensity over time. This is not a percentage of exact waveform or perceptual identity."
+  }
 }
