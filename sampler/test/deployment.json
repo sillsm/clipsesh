@@ -1,0 +1,37 @@
+{
+  "format": "clip-sesh-sampler-deployment",
+  "version": 1,
+  "application": "sampler.html",
+  "install": "Place sampler.html and the test folder together under clipsesh/sampler. No companion JavaScript, CSS, service worker, build step, or backend is required.",
+  "defaultCatalog": "./test/test.json",
+  "customCatalog": "?suite=./my-test/test.json",
+  "initialCase": "?case=think10-best",
+  "dataContract": "Test cases pin session bytes by MD5. Session JSON contains audio dependency MD5s and URLs; recipe contains chop points, notes, automation and control/effect configs.",
+  "offline": "Open this deployment ZIP using Open test bundle inside the sampler.",
+  "engineeringChecks": "Open the test sidebar, expand Engineering checks & file format, then Run engineering checks. Requires the supplied fixture catalog.",
+  "validation": {
+    "embeddedEngineering": {
+      "pass": 33,
+      "fail": 0
+    },
+    "additionalIntegration": {
+      "pass": 4,
+      "fail": 0
+    },
+    "mechanicalAudio": {
+      "pass": 3,
+      "fail": 0
+    },
+    "musicalAudio": {
+      "pass": 0,
+      "fail": 4
+    },
+    "runtime": "DOM emulation and software Web Audio. Frame message protocol simulated. Native browser layout and device audio are unverified.",
+    "musicalStatus": "Think-only ten-chop best-fit approximation; strict musical PCM gates remain FAIL.",
+    "renderUnchanged": true,
+    "fxToggle": "PASS: direct toolbar access, loading a session while open, visibility persistence, stale-control hiding, and preserved live playback/recipe.",
+    "reportScope": "Embedded engineering checks and FX-toggle smoke checks rerun for this revision. Catalog and general integration reports retained from the preceding release; audio engine and canonical JSON/WAV assets are unchanged."
+  },
+  "revision": "main-sequencer-fx-toggle",
+  "automationPanel": "Click FX / AUTOMATION beside Play and Stop in the main sequencer. The panel shows delay/reverb settings and both automation lanes for the loaded arrangement. Before loading an arrangement it offers Open Sessions. Visibility is saved as workspace.automationOpen; the sound recipe is unaffected."
+}

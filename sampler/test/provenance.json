@@ -1,0 +1,40 @@
+{
+  "reference": {
+    "upload": "[fadr.com] Drums - Leon Mar - Release The Love.wav",
+    "uploadedSha256": "e611f8f5c7f90e93daefa2db1f1ccedc987eae15ff85f26cb1b0dea923fcfa7f",
+    "startSeconds": 45,
+    "endSeconds": 75,
+    "path": "test/audio/leon-mar-reference-45s-75s.wav",
+    "sha256": "47a5c1c5813ea248e1012b95e97d78b3fa8741ff5e03b85b943d508b6801a1d1",
+    "processing": "Exact PCM crop; no normalization, fades, EQ, or source replacement."
+  },
+  "sources": [
+    {
+      "name": "Lyn Collins - Think (part1)",
+      "url": "https://rhythm-lab.com/sstorage/53/2015/03/Lyn Collins - Think (part1).wav",
+      "path": "test/audio/Lyn_Collins_-_Think_part1_.wav",
+      "md5": "f6c637fcbcaac584042a8f5e1511404f",
+      "sha256": "c53ee295c3cdbbec4fa8e0adfc0c41fc19de02f4b7282c7b906eaf712961f0b7",
+      "attribution": "Break identity follows the source library label; its use in Leon Mar is not established."
+    }
+  ],
+  "applicationBase": {
+    "repository": "https://github.com/sillsm/clipsesh",
+    "path": "sampler/sampler.html",
+    "githubBlobSha": "a221a42073bcaf26270387c6a7c237923236cf7d",
+    "sha256": "695cea44d4dbe982f3c544b3027401624ee8d211f0090dd6b3c8d9666e1e8335"
+  },
+  "djInspectedSha256": "b6b93a16ca78ef707fc6624a189d787847ba0ba09adfadd2d3cccc73694a4979",
+  "revision": "Think-only, at most ten fixed reusable source regions, programmable delay/reverb sends",
+  "consolidation": {
+    "previousPackageSha256": "87dc60f8f9a997bb7b2356db15943ce4f0a4ae7273d6b7ea91fee9640a1a2e56",
+    "changes": [
+      "All application JavaScript, styles, test execution logic, engineering assertions, and format help are embedded in sampler.html.",
+      "Removed the optional service-worker file dependency.",
+      "Added a disposable instance of the same HTML for silent engineering checks.",
+      "Added FX / AUTOMATION in the main sequencer toolbar; moved send controls and lanes beneath it, retaining the reusable-chop editor in the arrangement. Panel visibility saves in workspace.automationOpen."
+    ],
+    "candidateRenderUnchanged": true,
+    "candidateRenderSha256": "1bb880c86625aed3770a52f6ae9f925d4afb379b9f2d2282944d89c973951d2f"
+  }
+}

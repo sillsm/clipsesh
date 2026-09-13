@@ -1,0 +1,176 @@
+{
+  "schema": "clip-sesh-session-json",
+  "version": 2,
+  "description": "arrangement-poly",
+  "audioDependencies": {
+    "source": {
+      "role": "source",
+      "name": "fixture-source-a.wav",
+      "type": "audio/wav",
+      "fileMd5": "584704bd53f150cc517a346da8df399f",
+      "sampleRate": 48000,
+      "channels": 2,
+      "frames": 96000,
+      "url": "../audio/fixture-source-a.wav"
+    },
+    "reference": {
+      "role": "reference",
+      "name": "fixture-arrangement-poly-reference.wav",
+      "type": "audio/wav",
+      "fileMd5": "ab047013fede1cb87936a00bbb1ea82c",
+      "sampleRate": 48000,
+      "channels": 2,
+      "frames": 96000,
+      "url": "../audio/fixture-arrangement-poly-reference.wav"
+    },
+    "samples": {
+      "a": {
+        "role": "a",
+        "name": "fixture-source-a.wav",
+        "type": "audio/wav",
+        "fileMd5": "584704bd53f150cc517a346da8df399f",
+        "sampleRate": 48000,
+        "channels": 2,
+        "frames": 96000,
+        "url": "../audio/fixture-source-a.wav"
+      },
+      "b": {
+        "role": "b",
+        "name": "fixture-source-b.wav",
+        "type": "audio/wav",
+        "fileMd5": "2aada72121b42e164b33d57b4461c65d",
+        "sampleRate": 48000,
+        "channels": 2,
+        "frames": 96000,
+        "url": "../audio/fixture-source-b.wav"
+      }
+    }
+  },
+  "recipe": {
+    "schema": "clip-sesh-recipe",
+    "version": 2,
+    "controls": {
+      "projectBpm": "120",
+      "targetBpm": "120",
+      "sourceBpm": "120",
+      "barsSelect": "1",
+      "stepsPerBarSelect": "16",
+      "pitchSemitones": "0",
+      "fineTune": "0",
+      "volume": "100",
+      "attack": "0",
+      "release": "0",
+      "chokeToggle": false,
+      "swing": "0"
+    },
+    "fx": {
+      "compressor": {
+        "enabled": false
+      },
+      "filter": {
+        "enabled": false
+      },
+      "eq": {
+        "enabled": false
+      }
+    },
+    "sliceDisplayMode": "bpm",
+    "loopLock": {
+      "locked": false,
+      "start": 0,
+      "end": 2,
+      "beats": 4,
+      "divisionBeats": 1
+    },
+    "boundaries": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2
+    ],
+    "pattern": [
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ],
+    "selectedSlice": 0,
+    "arrangement": {
+      "format": "clipsesh-break-arrangement",
+      "version": 1,
+      "status": "Mechanical timing fixture; not a musical reconstruction.",
+      "durationSeconds": 2,
+      "bpm": 120,
+      "masterGain": 0.8,
+      "attackSeconds": 0,
+      "releaseSeconds": 0,
+      "sources": [
+        {
+          "id": "a",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "b",
+          "fileMd5": "2aada72121b42e164b33d57b4461c65d"
+        }
+      ],
+      "events": [
+        {
+          "source": "a",
+          "time": 0,
+          "start": 0.125,
+          "end": 1.625,
+          "rate": 2,
+          "duration": 0.75,
+          "gain": 0.75
+        },
+        {
+          "source": "b",
+          "time": 0.5,
+          "start": 0.25,
+          "end": 1.25,
+          "rate": 1,
+          "duration": 1,
+          "gain": 0.5
+        },
+        {
+          "source": "a",
+          "time": 0.5,
+          "start": 1,
+          "end": 1.5,
+          "rate": 1,
+          "duration": 0.5,
+          "gain": 0.2
+        },
+        {
+          "source": "b",
+          "time": 1.75,
+          "start": 0.5,
+          "end": 1.5,
+          "rate": 2,
+          "duration": 0.5,
+          "gain": 0.8
+        }
+      ]
+    }
+  },
+  "workspace": {
+    "testOpen": true,
+    "testMode": "run",
+    "testName": "arrangement-poly",
+    "autoScore": false
+  }
+}

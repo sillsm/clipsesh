@@ -1,0 +1,384 @@
+{
+  "format": "clip-sesh-sampler-suite-result",
+  "version": 1,
+  "createdAt": "2026-09-13T12:48:56.479Z",
+  "catalog": "https://sampler-unit.invalid/sampler/test/test.json",
+  "mode": "fast",
+  "durationSeconds": 17.665489753000003,
+  "cancelled": false,
+  "passed": false,
+  "results": [
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "native-quarter-identity",
+      "canonicalSessionMd5": "353e558bbaac769589081f95c8d008aa",
+      "renderedRecipeMd5": "d8d7250231e1eb6a60f3e661873f1c63",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:39.284Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 96000,
+      "referenceFrames": 96000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 0,
+      "maxAbsoluteError": 0,
+      "waveformCosine": 1,
+      "envelopeCorrelation": 1,
+      "rmsDifferenceDb": 0,
+      "passed": true,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": true,
+        "peakError": true,
+        "envelope": true,
+        "level": true
+      },
+      "status": "PASS"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "arrangement-poly",
+      "canonicalSessionMd5": "b3fa78ae4cdaf3cb4561fc9b52e1f717",
+      "renderedRecipeMd5": "0e9c95542831954051d1151953449e48",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "ab047013fede1cb87936a00bbb1ea82c"
+        },
+        {
+          "id": "a",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "b",
+          "fileMd5": "2aada72121b42e164b33d57b4461c65d"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:39.917Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 96000,
+      "referenceFrames": 96000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 0.00010881954480064881,
+      "maxAbsoluteError": 0.000017959624528884888,
+      "waveformCosine": 0.9999999940789386,
+      "envelopeCorrelation": 0.9999999999637817,
+      "rmsDifferenceDb": -0.000001074756556471053,
+      "passed": true,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": true,
+        "peakError": true,
+        "envelope": true,
+        "level": true
+      },
+      "status": "PASS"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "arrangement-choke",
+      "canonicalSessionMd5": "e012fa1bf48ac20927db655902f32eb5",
+      "renderedRecipeMd5": "d99423a63507e1799d3420c4ab258eab",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "3c67fdddab4886c55dc6fb50aba153ff"
+        },
+        {
+          "id": "a",
+          "fileMd5": "584704bd53f150cc517a346da8df399f"
+        },
+        {
+          "id": "b",
+          "fileMd5": "2aada72121b42e164b33d57b4461c65d"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:40.280Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 96000,
+      "referenceFrames": 96000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 0.00011592583151518583,
+      "maxAbsoluteError": 0.000016061589121818542,
+      "waveformCosine": 0.9999999932804143,
+      "envelopeCorrelation": 0.9999999999581181,
+      "rmsDifferenceDb": -0.0000024002662766544746,
+      "passed": true,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": true,
+        "peakError": true,
+        "envelope": true,
+        "level": true
+      },
+      "status": "PASS"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "think10-best",
+      "canonicalSessionMd5": "ea9a797cc0fdcc660b2d018f722c1e60",
+      "renderedRecipeMd5": "85e09263f2449b5660b6dd7cc21d99c4",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "42c075108b1a385f64d0378ef58be4c4"
+        },
+        {
+          "id": "think",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:46.232Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 1440000,
+      "referenceFrames": 1440000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 1.445606553769186,
+      "maxAbsoluteError": 1.0811643451452255,
+      "waveformCosine": -0.05630497272973289,
+      "envelopeCorrelation": 0.8486102555333399,
+      "rmsDifferenceDb": -0.09487256159453582,
+      "passed": false,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": false,
+        "envelope": false,
+        "level": true
+      },
+      "status": "FAIL"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "think10-dry",
+      "canonicalSessionMd5": "f0090fb5dd5d34a0cd29b8123af6b210",
+      "renderedRecipeMd5": "83155a5368ff734862a60a7293196ad6",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "42c075108b1a385f64d0378ef58be4c4"
+        },
+        {
+          "id": "think",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:48.952Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 1440000,
+      "referenceFrames": 1440000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 1.4472950214025835,
+      "maxAbsoluteError": 1.075786992907524,
+      "waveformCosine": -0.0559249817705753,
+      "envelopeCorrelation": 0.8479619513540728,
+      "rmsDifferenceDb": -0.07125527429545764,
+      "passed": false,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": false,
+        "envelope": false,
+        "level": true
+      },
+      "status": "FAIL"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "think10-sparser",
+      "canonicalSessionMd5": "7e0f2557f8bb959f3e5172f98b86652a",
+      "renderedRecipeMd5": "60dea96a3e80f00eb75587d21ccd1eed",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "42c075108b1a385f64d0378ef58be4c4"
+        },
+        {
+          "id": "think",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:53.400Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 1440000,
+      "referenceFrames": 1440000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 1.359838105539087,
+      "maxAbsoluteError": 1.0153202712535858,
+      "waveformCosine": 0.037251003478889426,
+      "envelopeCorrelation": 0.7924637556179123,
+      "rmsDifferenceDb": -0.3590803015906638,
+      "passed": false,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": false,
+        "envelope": false,
+        "level": true
+      },
+      "status": "FAIL"
+    },
+    {
+      "format": "clip-sesh-sampler-test-result",
+      "version": 1,
+      "id": "think10-fixed-pitch",
+      "canonicalSessionMd5": "cd3e2c96c280ea6b640dd25a548ed22b",
+      "renderedRecipeMd5": "b26db0745c04c4a7c22115e469ed9a97",
+      "editedSinceLoad": false,
+      "dependencies": [
+        {
+          "id": "source",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        },
+        {
+          "id": "reference",
+          "fileMd5": "42c075108b1a385f64d0378ef58be4c4"
+        },
+        {
+          "id": "think",
+          "fileMd5": "f6c637fcbcaac584042a8f5e1511404f"
+        }
+      ],
+      "createdAt": "2026-09-13T12:48:56.472Z",
+      "metric": "stereo-pcm-v1",
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      },
+      "sameRate": true,
+      "sameFrames": true,
+      "sameChannels": true,
+      "frames": 1440000,
+      "referenceFrames": 1440000,
+      "sampleRate": 48000,
+      "channels": 2,
+      "nrmse": 1.3169804701373282,
+      "maxAbsoluteError": 1.0308544039726257,
+      "waveformCosine": 0.12403823165160896,
+      "envelopeCorrelation": 0.8166454297278556,
+      "rmsDifferenceDb": -0.08763422869482926,
+      "passed": false,
+      "checks": {
+        "sampleRate": true,
+        "frames": true,
+        "channels": true,
+        "waveform": false,
+        "envelope": false,
+        "level": true
+      },
+      "status": "FAIL"
+    }
+  ],
+  "counts": {
+    "PASS": 3,
+    "FAIL": 4
+  },
+  "runtime": "Command-line jsdom + web-audio-engine 0.13.4; not browser-native Web Audio"
+}

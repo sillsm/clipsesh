@@ -1,0 +1,146 @@
+{
+  "format": "clip-sesh-sampler-engineering-report",
+  "version": 1,
+  "runtime": "Command-line DOM emulation + web-audio-engine 0.13.4; not native browser verification",
+  "catalogUrl": "https://sampler-unit.invalid/sampler/test/test.json",
+  "passed": true,
+  "counts": {
+    "pass": 33,
+    "fail": 0
+  },
+  "codeMd5": "4b7198d2d9bf8f68a08ca4803302dd16",
+  "tests": [
+    {
+      "name": "Catalog loading is lazy and keeps cancel controls outside the locked editor",
+      "status": "PASS"
+    },
+    {
+      "name": "Doubling BPM halves time and doubles source rate; pitch changes source rate only",
+      "status": "PASS"
+    },
+    {
+      "name": "Mono choke preserves simultaneous layers and truncates the previous hit",
+      "status": "PASS"
+    },
+    {
+      "name": "Reject corrupt time, pitch, gain, and source identity before scheduling",
+      "status": "PASS"
+    },
+    {
+      "name": "Load an arrangement, retain per-note edits in session JSON, and resolve all sample dependencies",
+      "status": "PASS"
+    },
+    {
+      "name": "Edited reference identity cannot enter the candidate audio graph",
+      "status": "PASS"
+    },
+    {
+      "name": "Out-of-range source cuts fail explicitly",
+      "status": "PASS"
+    },
+    {
+      "name": "Independent expected PCM passes; replacing the candidate with silence fails",
+      "status": "PASS"
+    },
+    {
+      "name": "Stereo channel inversion cannot pass a waveform gate",
+      "status": "PASS"
+    },
+    {
+      "name": "Changing A/B side never changes the offline candidate render",
+      "status": "PASS"
+    },
+    {
+      "name": "Session MD5 mismatch is rejected before audio loading",
+      "status": "PASS"
+    },
+    {
+      "name": "Audio tampering is rejected against the session hash",
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate catalog IDs, duplicate queue IDs, disabled and missing cases are rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Cancellation aborts loading and marks every unfinished queue item cancelled",
+      "status": "PASS"
+    },
+    {
+      "name": "Export ZIP round-trips catalog, pinned session, and external audio",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy mono choke is also applied in offline rendering",
+      "status": "PASS"
+    },
+    {
+      "name": "Non-finite PCM cannot produce a misleading comparison report",
+      "status": "PASS"
+    },
+    {
+      "name": "External manifests bind session and every audio identity at their own relative URL",
+      "status": "PASS"
+    },
+    {
+      "name": "Bundle-relative catalog, session, and audio load without network requests",
+      "status": "PASS"
+    },
+    {
+      "name": "A nonzero attack holds its sustain level between the two fades",
+      "status": "PASS"
+    },
+    {
+      "name": "Clearing the sample clears timed arrangement state and restores the grid",
+      "status": "PASS"
+    },
+    {
+      "name": "A chop budget rejects an eleventh region and undeclared per-hit boundaries",
+      "status": "PASS"
+    },
+    {
+      "name": "Automation validates bounds, ordering, and a finite feedback range",
+      "status": "PASS"
+    },
+    {
+      "name": "Linear envelope interpolation and tempo scaling preserve automation time",
+      "status": "PASS"
+    },
+    {
+      "name": "Cleared sends leave dry PCM unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Delay repeats arrive at the chosen beat interval with decreasing amplitudes",
+      "status": "PASS"
+    },
+    {
+      "name": "A send ramp changes successive hit echoes without changing dry hits",
+      "status": "PASS"
+    },
+    {
+      "name": "Reverb produces deterministic delayed energy and clears completely",
+      "status": "PASS"
+    },
+    {
+      "name": "Lane API, keyboard edit, clear, and source kit persist in session JSON",
+      "status": "PASS"
+    },
+    {
+      "name": "The musical kit contains at most ten Think regions and edits one region for all its hits",
+      "status": "PASS"
+    },
+    {
+      "name": "Dragging a send during playback keeps the running source timeline",
+      "status": "PASS"
+    },
+    {
+      "name": "Single HTML contains every engine and executable regression check",
+      "status": "PASS"
+    },
+    {
+      "name": "File MD5 uses the standard digest, including empty and UTF-8 inputs",
+      "status": "PASS"
+    }
+  ]
+}

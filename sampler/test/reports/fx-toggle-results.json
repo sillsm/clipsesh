@@ -1,0 +1,12 @@
+{
+  "runtime": "DOM emulation and software Web Audio; no native browser verification",
+  "passed": true,
+  "checks": [
+    "Toolbar toggle is available before a session is loaded.",
+    "Opening shows the session prompt, then displays delay/reverb controls and 21 points per lane when Think is loaded.",
+    "Hiding and showing the panel preserves the recipe and running audio timeline.",
+    "Panel visibility round-trips through session workspace state.",
+    "Clearing audio shows the session prompt without exposing stale controls."
+  ],
+  "standalone": true
+}

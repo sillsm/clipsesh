@@ -1,0 +1,117 @@
+{
+  "schema": "clip-sesh-session-json",
+  "version": 2,
+  "description": "Native quarter identity",
+  "audioDependencies": {
+    "source": {
+      "role": "source",
+      "name": "fixture-source-a.wav",
+      "type": "audio/wav",
+      "fileMd5": "584704bd53f150cc517a346da8df399f",
+      "sampleRate": 48000,
+      "channels": 2,
+      "frames": 96000,
+      "url": "../audio/fixture-source-a.wav"
+    },
+    "reference": {
+      "role": "reference",
+      "name": "fixture-quarter-reference.wav",
+      "type": "audio/wav",
+      "fileMd5": "584704bd53f150cc517a346da8df399f",
+      "sampleRate": 48000,
+      "channels": 2,
+      "frames": 96000,
+      "url": "../audio/fixture-quarter-reference.wav"
+    },
+    "samples": {}
+  },
+  "recipe": {
+    "schema": "clip-sesh-recipe",
+    "version": 2,
+    "controls": {
+      "projectBpm": "120",
+      "targetBpm": "120",
+      "sourceBpm": "120",
+      "barsSelect": "1",
+      "stepsPerBarSelect": "16",
+      "pitchSemitones": "0",
+      "fineTune": "0",
+      "volume": "100",
+      "attack": "0",
+      "release": "0",
+      "chokeToggle": false,
+      "swing": "0"
+    },
+    "fx": {
+      "compressor": {
+        "enabled": false
+      },
+      "filter": {
+        "enabled": false
+      },
+      "eq": {
+        "enabled": false
+      }
+    },
+    "sliceDisplayMode": "bpm",
+    "loopLock": {
+      "locked": true,
+      "start": 0,
+      "end": 2,
+      "beats": 4,
+      "divisionBeats": 1
+    },
+    "boundaries": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2
+    ],
+    "pattern": [
+      [
+        {
+          "slice": 0,
+          "velocity": 127
+        }
+      ],
+      [],
+      [],
+      [],
+      [
+        {
+          "slice": 1,
+          "velocity": 127
+        }
+      ],
+      [],
+      [],
+      [],
+      [
+        {
+          "slice": 2,
+          "velocity": 127
+        }
+      ],
+      [],
+      [],
+      [],
+      [
+        {
+          "slice": 3,
+          "velocity": 127
+        }
+      ],
+      [],
+      [],
+      []
+    ],
+    "selectedSlice": 0
+  },
+  "workspace": {
+    "testOpen": true,
+    "testMode": "run",
+    "testName": "Native quarter identity",
+    "autoScore": false
+  }
+}

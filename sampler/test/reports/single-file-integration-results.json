@@ -1,0 +1,22 @@
+{
+  "runtime": "DOM emulation and software Web Audio; frame message protocol simulated, not native browser verification",
+  "passed": true,
+  "tests": [
+    {
+      "name": "Embedded checks also pass from a local test ZIP with network disabled",
+      "status": "PASS"
+    },
+    {
+      "name": "A custom nested test-folder URL resolves sessions and audio relative to that folder",
+      "status": "PASS"
+    },
+    {
+      "name": "Isolated check frames suppress automatic catalog loading and saved-test storage",
+      "status": "PASS"
+    },
+    {
+      "name": "The embedded parent runner validates message source, cleans up, and preserves the open recipe",
+      "status": "PASS"
+    }
+  ]
+}

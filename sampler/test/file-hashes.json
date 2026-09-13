@@ -1,0 +1,112 @@
+{
+  "sampler.html": {
+    "md5": "e64a96850d8fef6c0c29608a904e4f74",
+    "sha256": "0a5f72c74fe44e10b73e6faddc2da7dd4461b85bdf891d21b17f693fa171f2b6",
+    "bytes": 315435
+  },
+  "test/audio/Lyn_Collins_-_Think_part1_.wav": {
+    "md5": "f6c637fcbcaac584042a8f5e1511404f",
+    "sha256": "c53ee295c3cdbbec4fa8e0adfc0c41fc19de02f4b7282c7b906eaf712961f0b7",
+    "bytes": 2611272
+  },
+  "test/audio/fixture-arrangement-choke-reference.wav": {
+    "md5": "3c67fdddab4886c55dc6fb50aba153ff",
+    "sha256": "1f73c73ec9cb424f22fbe63f47fd61ddb0857a3957f7c05293235eed13772146",
+    "bytes": 384044
+  },
+  "test/audio/fixture-arrangement-poly-reference.wav": {
+    "md5": "ab047013fede1cb87936a00bbb1ea82c",
+    "sha256": "2426bdb935b5d0b7e2b327390902286e03378eb31d757cf0d0f544d31bb6db71",
+    "bytes": 384044
+  },
+  "test/audio/fixture-quarter-reference.wav": {
+    "md5": "584704bd53f150cc517a346da8df399f",
+    "sha256": "d07fda9ee7de27e3af5184c6e3d3ffd62941b5700ab103d5d6b66bb7d88c59fa",
+    "bytes": 384044
+  },
+  "test/audio/fixture-source-a.wav": {
+    "md5": "584704bd53f150cc517a346da8df399f",
+    "sha256": "d07fda9ee7de27e3af5184c6e3d3ffd62941b5700ab103d5d6b66bb7d88c59fa",
+    "bytes": 384044
+  },
+  "test/audio/fixture-source-b.wav": {
+    "md5": "2aada72121b42e164b33d57b4461c65d",
+    "sha256": "77ddfea4db51adb178a11777c2cb3374890fa8e5fb5d2c0fc9c15f73ea8a0afd",
+    "bytes": 384044
+  },
+  "test/audio/leon-mar-reference-45s-75s.wav": {
+    "md5": "42c075108b1a385f64d0378ef58be4c4",
+    "sha256": "47a5c1c5813ea248e1012b95e97d78b3fa8741ff5e03b85b943d508b6801a1d1",
+    "bytes": 5292044
+  },
+  "test/deployment.json": {
+    "md5": "d2b3c5eac2bab364fcd31f0e95f0051c",
+    "sha256": "545282d41c743aa6480df10a830e50e75fa4c41f60af4481366a3dfca4b1546c",
+    "bytes": 2150
+  },
+  "test/provenance.json": {
+    "md5": "2850c7a9d5f6fd1d912653380ce596ba",
+    "sha256": "2b5e131a3599aa1c814f8b495eaa93f12cf311907797b43a668d056c3f0f3a16",
+    "bytes": 2164
+  },
+  "test/reports/catalog-software-results.json": {
+    "md5": "d9e86969fd4e5d9b1bf7011465c44485",
+    "sha256": "b821c7c194d2487cc21b423d9690a88a68b29711050e2150c65b242872fba132",
+    "bytes": 10828
+  },
+  "test/reports/embedded-engineering-results.json": {
+    "md5": "cb747fcf327df5fb1101508b604e4d1a",
+    "sha256": "e27d50ba49b8345ff51a74f11a28425d11ba4f942ecd73db285229fbed6db1fc",
+    "bytes": 4386
+  },
+  "test/reports/fx-toggle-results.json": {
+    "md5": "8397c119497a64e8d40d08dedd99462b",
+    "sha256": "93ccd5af64347c52f747890c5fd3af7ab6be5e34e8ed7cbbf3cf5ffad5837122",
+    "bytes": 565
+  },
+  "test/reports/single-file-integration-results.json": {
+    "md5": "d92ed2f4ee6c5792fbe54070da1c5b70",
+    "sha256": "9e45349d2e2d7103f267fdf6bd944f1ca4d36228a6a2dbc0b8220ce992b3ba2b",
+    "bytes": 698
+  },
+  "test/sessions/arrangement-choke.session.json": {
+    "md5": "e012fa1bf48ac20927db655902f32eb5",
+    "sha256": "4e97973bd0b7d1e6e064fb9611ae31bb97cf765227c41ad15dfe26cae8035b8c",
+    "bytes": 3755
+  },
+  "test/sessions/arrangement-poly.session.json": {
+    "md5": "b3fa78ae4cdaf3cb4561fc9b52e1f717",
+    "sha256": "6fd80219ce7e969ab751b7cc374c2bb467163e60f66d428ca82402cba253abbb",
+    "bytes": 3752
+  },
+  "test/sessions/native-quarter-identity.session.json": {
+    "md5": "353e558bbaac769589081f95c8d008aa",
+    "sha256": "3c8173db2075e84e025a828869d5659b18444c5a5eeeacc757836b30bfc7472e",
+    "bytes": 2176
+  },
+  "test/sessions/think10-best.session.json": {
+    "md5": "ea9a797cc0fdcc660b2d018f722c1e60",
+    "sha256": "e2efc82c3be76a2be23b766a64946f14165449abe9fdbe039329162503ecfe11",
+    "bytes": 191459
+  },
+  "test/sessions/think10-dry.session.json": {
+    "md5": "f0090fb5dd5d34a0cd29b8123af6b210",
+    "sha256": "254d2f278897e91e6c0660a1371b15bf658a69b4b7e24b205c748116c68eb4c9",
+    "bytes": 187007
+  },
+  "test/sessions/think10-fixed-pitch.session.json": {
+    "md5": "cd3e2c96c280ea6b640dd25a548ed22b",
+    "sha256": "412c5f7190caab53bd9132239ed167931076fd9d113234b3be47c1e802555e29",
+    "bytes": 186951
+  },
+  "test/sessions/think10-sparser.session.json": {
+    "md5": "7e0f2557f8bb959f3e5172f98b86652a",
+    "sha256": "3567d8ccc0ee8d078463c8b0c0f100b7fa6874904a553fcc3a87807104d2c393",
+    "bytes": 98751
+  },
+  "test/test.json": {
+    "md5": "a297a8d05d0be64a5b3ae2fecbc1ba0d",
+    "sha256": "5cb922777db7a412ef7c02f1de1250173320157ed5d29d41ff2b7a5b00654401",
+    "bytes": 3511
+  }
+}

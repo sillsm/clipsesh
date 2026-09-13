@@ -1,0 +1,137 @@
+{
+  "format": "clip-sesh-sampler-test-catalog",
+  "version": 1,
+  "title": "Think only \u00b7 ten reusable chops \u00b7 send automation",
+  "tests": [
+    {
+      "id": "native-quarter-identity",
+      "title": "Mechanical \u00b7 native quarter cuts at unity pitch",
+      "tags": [
+        "mechanical",
+        "legacy"
+      ],
+      "session": {
+        "url": "sessions/native-quarter-identity.session.json",
+        "md5": "353e558bbaac769589081f95c8d008aa"
+      },
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      }
+    },
+    {
+      "id": "arrangement-poly",
+      "title": "Mechanical \u00b7 overlap, repitch, offset, and final tail",
+      "tags": [
+        "mechanical",
+        "arrangement"
+      ],
+      "session": {
+        "url": "sessions/arrangement-poly.session.json",
+        "md5": "b3fa78ae4cdaf3cb4561fc9b52e1f717"
+      },
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      }
+    },
+    {
+      "id": "arrangement-choke",
+      "title": "Mechanical \u00b7 mono choke and simultaneous layers",
+      "tags": [
+        "mechanical",
+        "arrangement"
+      ],
+      "session": {
+        "url": "sessions/arrangement-choke.session.json",
+        "md5": "e012fa1bf48ac20927db655902f32eb5"
+      },
+      "expect": {
+        "maxNrmse": 0.003,
+        "maxAbsoluteError": 0.002,
+        "minEnvelopeCorrelation": 0.999,
+        "maxRmsDifferenceDb": 0.02
+      }
+    },
+    {
+      "id": "think10-best",
+      "title": "Think \u00b7 10 chops \u00b7 delay/reverb automation",
+      "tags": [
+        "musical",
+        "think-only",
+        "max-10-chops",
+        "candidate"
+      ],
+      "session": {
+        "url": "sessions/think10-best.session.json",
+        "md5": "ea9a797cc0fdcc660b2d018f722c1e60"
+      },
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      }
+    },
+    {
+      "id": "think10-dry",
+      "title": "Think \u00b7 same 10 chops \u00b7 dry",
+      "tags": [
+        "musical",
+        "think-only",
+        "max-10-chops",
+        "candidate"
+      ],
+      "session": {
+        "url": "sessions/think10-dry.session.json",
+        "md5": "f0090fb5dd5d34a0cd29b8123af6b210"
+      },
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      }
+    },
+    {
+      "id": "think10-sparser",
+      "title": "Think \u00b7 10 chops \u00b7 fewer hits",
+      "tags": [
+        "musical",
+        "think-only",
+        "max-10-chops",
+        "candidate"
+      ],
+      "session": {
+        "url": "sessions/think10-sparser.session.json",
+        "md5": "7e0f2557f8bb959f3e5172f98b86652a"
+      },
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      }
+    },
+    {
+      "id": "think10-fixed-pitch",
+      "title": "Think \u00b7 10 chops \u00b7 fixed pitch",
+      "tags": [
+        "musical",
+        "think-only",
+        "max-10-chops",
+        "candidate"
+      ],
+      "session": {
+        "url": "sessions/think10-fixed-pitch.session.json",
+        "md5": "cd3e2c96c280ea6b640dd25a548ed22b"
+      },
+      "expect": {
+        "maxNrmse": 0.03,
+        "minEnvelopeCorrelation": 0.98,
+        "maxRmsDifferenceDb": 1
+      }
+    }
+  ]
+}
