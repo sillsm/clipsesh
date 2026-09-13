@@ -1,0 +1,532 @@
+[
+  {
+    "cancelled": false,
+    "catalog": "https://clipsesh.com/sampler/test/test.json",
+    "counts": {
+      "FAIL": 6,
+      "PASS": 1
+    },
+    "createdAt": "2026-09-13T14:45:40.008Z",
+    "durationSeconds": 14.76820000000298,
+    "format": "clip-sesh-sampler-suite-result",
+    "mode": "fast",
+    "passed": false,
+    "results": [
+      {
+        "canonicalSessionMd5": "353e558bbaac769589081f95c8d008aa",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": true,
+          "frames": true,
+          "level": true,
+          "peakError": true,
+          "sampleRate": true,
+          "waveform": true
+        },
+        "createdAt": "2026-09-13T14:45:25.988Z",
+        "dependencies": [
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "reference"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 1,
+        "expect": {
+          "maxAbsoluteError": 0.002,
+          "maxNrmse": 0.003,
+          "maxRmsDifferenceDb": 0.02,
+          "minEnvelopeCorrelation": 0.999
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 96000,
+        "id": "native-quarter-identity",
+        "maxAbsoluteError": 0,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 0,
+        "passed": true,
+        "referenceFrames": 96000,
+        "renderedRecipeMd5": "d8d7250231e1eb6a60f3e661873f1c63",
+        "rmsDifferenceDb": 0,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "PASS",
+        "version": 1,
+        "waveformCosine": 1
+      },
+      {
+        "canonicalSessionMd5": "b3fa78ae4cdaf3cb4561fc9b52e1f717",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": true,
+          "frames": true,
+          "level": true,
+          "peakError": false,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:26.571Z",
+        "dependencies": [
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "ab047013fede1cb87936a00bbb1ea82c",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "a"
+          },
+          {
+            "fileMd5": "2aada72121b42e164b33d57b4461c65d",
+            "id": "b"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.9998387692392884,
+        "expect": {
+          "maxAbsoluteError": 0.002,
+          "maxNrmse": 0.003,
+          "maxRmsDifferenceDb": 0.02,
+          "minEnvelopeCorrelation": 0.999
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 96000,
+        "id": "arrangement-poly",
+        "maxAbsoluteError": 0.28347599506378174,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 0.7674593674868658,
+        "passed": false,
+        "referenceFrames": 96000,
+        "renderedRecipeMd5": "0e9c95542831954051d1151953449e48",
+        "rmsDifferenceDb": -0.0007282504140454706,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": 0.7054783706221628
+      },
+      {
+        "canonicalSessionMd5": "e012fa1bf48ac20927db655902f32eb5",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": true,
+          "frames": true,
+          "level": true,
+          "peakError": false,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:26.946Z",
+        "dependencies": [
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "3c67fdddab4886c55dc6fb50aba153ff",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "584704bd53f150cc517a346da8df399f",
+            "id": "a"
+          },
+          {
+            "fileMd5": "2aada72121b42e164b33d57b4461c65d",
+            "id": "b"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.999808275752864,
+        "expect": {
+          "maxAbsoluteError": 0.002,
+          "maxNrmse": 0.003,
+          "maxRmsDifferenceDb": 0.02,
+          "minEnvelopeCorrelation": 0.999
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 96000,
+        "id": "arrangement-choke",
+        "maxAbsoluteError": 0.28347599506378174,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 0.8195609815978743,
+        "passed": false,
+        "referenceFrames": 96000,
+        "renderedRecipeMd5": "d99423a63507e1799d3420c4ab258eab",
+        "rmsDifferenceDb": -0.0008316700844496826,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": 0.6641277452244247
+      },
+      {
+        "canonicalSessionMd5": "ea9a797cc0fdcc660b2d018f722c1e60",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": false,
+          "frames": true,
+          "level": true,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:31.915Z",
+        "dependencies": [
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "42c075108b1a385f64d0378ef58be4c4",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "think"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.8430675180389307,
+        "expect": {
+          "maxNrmse": 0.03,
+          "maxRmsDifferenceDb": 1,
+          "minEnvelopeCorrelation": 0.98
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 1440000,
+        "id": "think10-best",
+        "maxAbsoluteError": 1.081577569246292,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.439748866273456,
+        "passed": false,
+        "referenceFrames": 1440000,
+        "renderedRecipeMd5": "85e09263f2449b5660b6dd7cc21d99c4",
+        "rmsDifferenceDb": -0.002812676815177821,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": -0.036774021802628495
+      },
+      {
+        "canonicalSessionMd5": "f0090fb5dd5d34a0cd29b8123af6b210",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": false,
+          "frames": true,
+          "level": true,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:34.484Z",
+        "dependencies": [
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "42c075108b1a385f64d0378ef58be4c4",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "think"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.8432285027314271,
+        "expect": {
+          "maxNrmse": 0.03,
+          "maxRmsDifferenceDb": 1,
+          "minEnvelopeCorrelation": 0.98
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 1440000,
+        "id": "think10-dry",
+        "maxAbsoluteError": 1.075874537229538,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.4387377980849552,
+        "passed": false,
+        "referenceFrames": 1440000,
+        "renderedRecipeMd5": "83155a5368ff734862a60a7293196ad6",
+        "rmsDifferenceDb": -0.004235770291909451,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": -0.0354879510333434
+      },
+      {
+        "canonicalSessionMd5": "7e0f2557f8bb959f3e5172f98b86652a",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": false,
+          "frames": true,
+          "level": true,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:37.296Z",
+        "dependencies": [
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "42c075108b1a385f64d0378ef58be4c4",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "think"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.7818144179821956,
+        "expect": {
+          "maxNrmse": 0.03,
+          "maxRmsDifferenceDb": 1,
+          "minEnvelopeCorrelation": 0.98
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 1440000,
+        "id": "think10-sparser",
+        "maxAbsoluteError": 1.0738137066364288,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.3907335814851445,
+        "passed": false,
+        "referenceFrames": 1440000,
+        "renderedRecipeMd5": "60dea96a3e80f00eb75587d21ccd1eed",
+        "rmsDifferenceDb": -0.0019712762382454816,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": 0.03271057547362363
+      },
+      {
+        "canonicalSessionMd5": "cd3e2c96c280ea6b640dd25a548ed22b",
+        "channels": 2,
+        "checks": {
+          "channels": true,
+          "envelope": false,
+          "frames": true,
+          "level": true,
+          "sampleRate": true,
+          "waveform": false
+        },
+        "createdAt": "2026-09-13T14:45:40.007Z",
+        "dependencies": [
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "source"
+          },
+          {
+            "fileMd5": "42c075108b1a385f64d0378ef58be4c4",
+            "id": "reference"
+          },
+          {
+            "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
+            "id": "think"
+          }
+        ],
+        "editedSinceLoad": false,
+        "envelopeCorrelation": 0.8168831401486312,
+        "expect": {
+          "maxNrmse": 0.03,
+          "maxRmsDifferenceDb": 1,
+          "minEnvelopeCorrelation": 0.98
+        },
+        "format": "clip-sesh-sampler-test-result",
+        "frames": 1440000,
+        "id": "think10-fixed-pitch",
+        "maxAbsoluteError": 0.9829204380512238,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.3179278269073176,
+        "passed": false,
+        "referenceFrames": 1440000,
+        "renderedRecipeMd5": "b26db0745c04c4a7c22115e469ed9a97",
+        "rmsDifferenceDb": -0.026210805987288775,
+        "sameChannels": true,
+        "sameFrames": true,
+        "sameRate": true,
+        "sampleRate": 48000,
+        "status": "FAIL",
+        "version": 1,
+        "waveformCosine": 0.1289130042406298
+      }
+    ],
+    "version": 1
+  },
+  {
+    "catalogUrl": "https://clipsesh.com/sampler/test/test.json",
+    "codeMd5": "4b7198d2d9bf8f68a08ca4803302dd16",
+    "counts": {
+      "fail": 1,
+      "pass": 32
+    },
+    "format": "clip-sesh-sampler-engineering-report",
+    "passed": false,
+    "runtime": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "tests": [
+      {
+        "name": "Catalog loading is lazy and keeps cancel controls outside the locked editor",
+        "status": "PASS"
+      },
+      {
+        "name": "Doubling BPM halves time and doubles source rate; pitch changes source rate only",
+        "status": "PASS"
+      },
+      {
+        "name": "Mono choke preserves simultaneous layers and truncates the previous hit",
+        "status": "PASS"
+      },
+      {
+        "name": "Reject corrupt time, pitch, gain, and source identity before scheduling",
+        "status": "PASS"
+      },
+      {
+        "name": "Load an arrangement, retain per-note edits in session JSON, and resolve all sample dependencies",
+        "status": "PASS"
+      },
+      {
+        "name": "Edited reference identity cannot enter the candidate audio graph",
+        "status": "PASS"
+      },
+      {
+        "name": "Out-of-range source cuts fail explicitly",
+        "status": "PASS"
+      },
+      {
+        "error": "Error: Assertion failed\n    at assert (https://clipsesh.com/sampler/sampler?_samplerChecks=bd651b55a6ec4e8e547faf5fd3817908:6294:67)\n    at https://clipsesh.com/sampler/sampler?_samplerChecks=bd651b55a6ec4e8e547faf5fd3817908:6363:137\n    at async test (https://clipsesh.com/sampler/sampler?_samplerChecks=bd651b55a6ec4e8e547faf5fd3817908:6332:28)\n    at async Object.runInCurrentPage (https://clipsesh.com/sampler/sampler?_samplerChecks=bd651b55a6ec4e8e547faf5fd3817908:6362:2)\n    at async https://clipsesh.com/sampler/sampler?_samplerChecks=bd651b55a6ec4e8e547faf5fd3817908:6508:33",
+        "name": "Independent expected PCM passes; replacing the candidate with silence fails",
+        "status": "FAIL"
+      },
+      {
+        "name": "Stereo channel inversion cannot pass a waveform gate",
+        "status": "PASS"
+      },
+      {
+        "name": "Changing A/B side never changes the offline candidate render",
+        "status": "PASS"
+      },
+      {
+        "name": "Session MD5 mismatch is rejected before audio loading",
+        "status": "PASS"
+      },
+      {
+        "name": "Audio tampering is rejected against the session hash",
+        "status": "PASS"
+      },
+      {
+        "name": "Duplicate catalog IDs, duplicate queue IDs, disabled and missing cases are rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "Cancellation aborts loading and marks every unfinished queue item cancelled",
+        "status": "PASS"
+      },
+      {
+        "name": "Export ZIP round-trips catalog, pinned session, and external audio",
+        "status": "PASS"
+      },
+      {
+        "name": "Legacy mono choke is also applied in offline rendering",
+        "status": "PASS"
+      },
+      {
+        "name": "Non-finite PCM cannot produce a misleading comparison report",
+        "status": "PASS"
+      },
+      {
+        "name": "External manifests bind session and every audio identity at their own relative URL",
+        "status": "PASS"
+      },
+      {
+        "name": "Bundle-relative catalog, session, and audio load without network requests",
+        "status": "PASS"
+      },
+      {
+        "name": "A nonzero attack holds its sustain level between the two fades",
+        "status": "PASS"
+      },
+      {
+        "name": "Clearing the sample clears timed arrangement state and restores the grid",
+        "status": "PASS"
+      },
+      {
+        "name": "A chop budget rejects an eleventh region and undeclared per-hit boundaries",
+        "status": "PASS"
+      },
+      {
+        "name": "Automation validates bounds, ordering, and a finite feedback range",
+        "status": "PASS"
+      },
+      {
+        "name": "Linear envelope interpolation and tempo scaling preserve automation time",
+        "status": "PASS"
+      },
+      {
+        "name": "Cleared sends leave dry PCM unchanged",
+        "status": "PASS"
+      },
+      {
+        "name": "Delay repeats arrive at the chosen beat interval with decreasing amplitudes",
+        "status": "PASS"
+      },
+      {
+        "name": "A send ramp changes successive hit echoes without changing dry hits",
+        "status": "PASS"
+      },
+      {
+        "name": "Reverb produces deterministic delayed energy and clears completely",
+        "status": "PASS"
+      },
+      {
+        "name": "Lane API, keyboard edit, clear, and source kit persist in session JSON",
+        "status": "PASS"
+      },
+      {
+        "name": "The musical kit contains at most ten Think regions and edits one region for all its hits",
+        "status": "PASS"
+      },
+      {
+        "name": "Dragging a send during playback keeps the running source timeline",
+        "status": "PASS"
+      },
+      {
+        "name": "Single HTML contains every engine and executable regression check",
+        "status": "PASS"
+      },
+      {
+        "name": "File MD5 uses the standard digest, including empty and UTF-8 inputs",
+        "status": "PASS"
+      }
+    ],
+    "version": 1
+  }
+]

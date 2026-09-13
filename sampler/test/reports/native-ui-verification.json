@@ -1,0 +1,42 @@
+{
+  "runtime": "Native Chrome 151 on the published sampler",
+  "applicationCommit": "11c776dd2e33d5c79028ebd31ef0152a2123c5d2",
+  "case": "think10-best",
+  "passed": true,
+  "checks": [
+    "Audition A/B runs the selected 30-second Think case.",
+    "HEAR B switches to the reference during the test; HEAR A switches back without restarting.",
+    "The arrangement grid shows all ten reusable chops, highlights active notes, and follows four-bar pages.",
+    "NOW SAMPLED displays the Think waveform and a playhead that jumps to the active chop.",
+    "The FX / AUTOMATION toggle opens during playback with 21 points on each delay and reverb lane.",
+    "Stop clears the current grid column, active hits, and source marker."
+  ],
+  "observations": [
+    {
+      "transport": "A · RECONSTRUCTION · BAR 7 · STEP 16 · 10.49 / 30.00 s",
+      "bars": "Bars 5–8 / 20",
+      "event": 180,
+      "sourceSeconds": 8.338,
+      "activeHits": 1,
+      "currentCells": 10,
+      "toggleEnabled": true
+    },
+    {
+      "transport": "B · REFERENCE · BAR 20 · STEP 10 · 29.53 / 30.00 s",
+      "bars": "Bars 17–20 / 20",
+      "event": 488,
+      "sourceSeconds": 14.318,
+      "activeHits": 1,
+      "currentCells": 10,
+      "toggleEnabled": true
+    },
+    {
+      "transport": "STOPPED · BAR 1 · STEP 1",
+      "activeHits": 0,
+      "currentCells": 0,
+      "headHidden": true,
+      "stopDisabled": true
+    }
+  ],
+  "limits": "UI and native Web Audio behavior verified; this does not establish a musical match."
+}

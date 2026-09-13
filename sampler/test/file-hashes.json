@@ -1,8 +1,8 @@
 {
   "sampler.html": {
-    "md5": "e64a96850d8fef6c0c29608a904e4f74",
-    "sha256": "0a5f72c74fe44e10b73e6faddc2da7dd4461b85bdf891d21b17f693fa171f2b6",
-    "bytes": 315435
+    "md5": "c778338cbcea20d31785459123f5b492",
+    "sha256": "01045f665213ab2557ddffcedd5a6210e1233c72f964c7ac3250cdb2b0b9b76d",
+    "bytes": 332620
   },
   "test/audio/Lyn_Collins_-_Think_part1_.wav": {
     "md5": "f6c637fcbcaac584042a8f5e1511404f",
@@ -40,29 +40,39 @@
     "bytes": 5292044
   },
   "test/deployment.json": {
-    "md5": "d2b3c5eac2bab364fcd31f0e95f0051c",
-    "sha256": "545282d41c743aa6480df10a830e50e75fa4c41f60af4481366a3dfca4b1546c",
-    "bytes": 2150
+    "md5": "1153d863ff19856c566abdfaae1e70f4",
+    "sha256": "0a05ac15603e8ca1783c35304f7f5e46d3c6359f44bc133abe5d05e9309287e5",
+    "bytes": 2852
   },
   "test/provenance.json": {
-    "md5": "2850c7a9d5f6fd1d912653380ce596ba",
-    "sha256": "2b5e131a3599aa1c814f8b495eaa93f12cf311907797b43a668d056c3f0f3a16",
-    "bytes": 2164
+    "md5": "46df5f8e446996105ea5f8408e844c82",
+    "sha256": "a63f0b0b8f928369c6fcc3a719e0d2ff181c950c663e2a328800854c70be3d1b",
+    "bytes": 3308
   },
   "test/reports/catalog-software-results.json": {
-    "md5": "d9e86969fd4e5d9b1bf7011465c44485",
-    "sha256": "b821c7c194d2487cc21b423d9690a88a68b29711050e2150c65b242872fba132",
-    "bytes": 10828
+    "md5": "d60d0c3e00a90d8168d607497633fc57",
+    "sha256": "7cb69acd8f9d1ee9b634fa232f04bb07bb87e3dbe9d6c8fa3fad667a31128228",
+    "bytes": 10827
   },
   "test/reports/embedded-engineering-results.json": {
-    "md5": "cb747fcf327df5fb1101508b604e4d1a",
-    "sha256": "e27d50ba49b8345ff51a74f11a28425d11ba4f942ecd73db285229fbed6db1fc",
-    "bytes": 4386
+    "md5": "470e45d4d79b3c034fb26f01d91358e2",
+    "sha256": "b33b1de93654c27f1213bcd3f41308ad86c42fa4aca7bea1afc6690295115d2f",
+    "bytes": 4892
   },
-  "test/reports/fx-toggle-results.json": {
-    "md5": "8397c119497a64e8d40d08dedd99462b",
-    "sha256": "93ccd5af64347c52f747890c5fd3af7ab6be5e34e8ed7cbbf3cf5ffad5837122",
-    "bytes": 565
+  "test/reports/native-chrome-after.json": {
+    "md5": "dd40861dd6cc9b7b21a41d95d96fa77c",
+    "sha256": "256f366d8074a551fd998a280ff1503f5871e9651bd25e171ed29dd88df40214",
+    "bytes": 16774
+  },
+  "test/reports/native-chrome-before.json": {
+    "md5": "e9ea93161d575e01735785d77b10d3f7",
+    "sha256": "663d84483cb1d1df76405c4e82feb9fea825e8b0fd703023a35072655e98c21d",
+    "bytes": 16799
+  },
+  "test/reports/native-ui-verification.json": {
+    "md5": "ad4731754bb42bb79fe2a9c41d74c5fb",
+    "sha256": "33c671a766279e58d1b7066b5d2572b75b93987331448c01e96ec7a6e6deaf03",
+    "bytes": 1524
   },
   "test/reports/single-file-integration-results.json": {
     "md5": "d92ed2f4ee6c5792fbe54070da1c5b70",

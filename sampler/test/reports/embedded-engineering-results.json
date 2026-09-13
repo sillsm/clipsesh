@@ -5,10 +5,10 @@
   "catalogUrl": "https://sampler-unit.invalid/sampler/test/test.json",
   "passed": true,
   "counts": {
-    "pass": 33,
+    "pass": 37,
     "fail": 0
   },
-  "codeMd5": "4b7198d2d9bf8f68a08ca4803302dd16",
+  "codeMd5": "87cfd51b86197f11e94eb4ef9d17836d",
   "tests": [
     {
       "name": "Catalog loading is lazy and keeps cancel controls outside the locked editor",
@@ -48,6 +48,22 @@
     },
     {
       "name": "Changing A/B side never changes the offline candidate render",
+      "status": "PASS"
+    },
+    {
+      "name": "Repitched hits start at the right rate inside a native audio render block",
+      "status": "PASS"
+    },
+    {
+      "name": "A/B shares one clock while the grid and source marker follow the active chop",
+      "status": "PASS"
+    },
+    {
+      "name": "Audible test queues keep their A/B switch and stop control operable",
+      "status": "PASS"
+    },
+    {
+      "name": "Save WAV exports an arrangement even when the legacy step pattern is empty",
       "status": "PASS"
     },
     {

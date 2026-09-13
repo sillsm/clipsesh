@@ -34,7 +34,23 @@
       "Added a disposable instance of the same HTML for silent engineering checks.",
       "Added FX / AUTOMATION in the main sequencer toolbar; moved send controls and lanes beneath it, retaining the reusable-chop editor in the arrangement. Panel visibility saves in workspace.automationOpen."
     ],
-    "candidateRenderUnchanged": true,
-    "candidateRenderSha256": "1bb880c86625aed3770a52f6ae9f925d4afb379b9f2d2282944d89c973951d2f"
+    "candidateRenderUnchanged": false,
+    "candidateRenderSha256": "1bb880c86625aed3770a52f6ae9f925d4afb379b9f2d2282944d89c973951d2f",
+    "candidateRenderSha256Scope": "Historical software render from the earlier consolidation; not a native-browser checksum for this revision."
+  },
+  "nativeChromeFix": {
+    "previousApplicationSha256": "0a5f72c74fe44e10b73e6faddc2da7dd4461b85bdf891d21b17f693fa171f2b6",
+    "applicationCommit": "11c776dd2e33d5c79028ebd31ef0152a2123c5d2",
+    "cause": "AudioBufferSourceNode.playbackRate is k-rate. Setting its value at a future note start within a render quantum left the beginning of that note at the default rate in Chrome.",
+    "fix": "Initialize each source playbackRate.value before scheduling start, in both arrangement and native-grid engines.",
+    "specification": "https://www.w3.org/TR/webaudio-1.1/",
+    "otherChanges": [
+      "Test A/B controls remain available during locked test playback.",
+      "Exact arrangement grid and source-waveform monitor follow the shared audio clock.",
+      "WAV export recognizes arrangement events even with an empty native pattern.",
+      "Four new engineering regressions embedded in sampler.html."
+    ],
+    "audioAndSessionFilesChanged": false,
+    "comparisonLimitsChanged": false
   }
 }
