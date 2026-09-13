@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#2b2430" />
-  <meta name="description" content="A standalone browser sampler, slicer, MIDI instrument, and 8-bar step sequencer." />
+  <meta name="description" content="A standalone browser sampler, slicer, MIDI instrument, and sequencer with reusable chops, automation, and embedded test tools." />
   <title>Clip Sesh Sampler</title>
   <style>
 :root {
@@ -1746,7 +1746,7 @@ body.test-mode .test-deck { display: block; }
           <label>BARS
             <select id="barsSelect">
               <option>1</option><option>2</option><option>3</option><option selected>4</option>
-              <option>5</option><option>6</option><option>7</option><option>8</option>
+              <option>5</option><option>6</option><option>7</option><option>8</option><option>16</option><option>20</option><option>32</option>
             </select>
           </label>
           <label>STEPS / BAR
@@ -1844,7 +1844,18 @@ body.test-mode .test-deck { display: block; }
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script>
+  <script id="sampler-isolation">
+// A disposable test instance must not read or write the main page's saved tests.
+window.__clipSeshIsolatedChecks=new URLSearchParams(location.search).has('_samplerChecks');
+if(window.__clipSeshIsolatedChecks){
+ Object.defineProperty(window,'indexedDB',{configurable:true,value:undefined});
+ // Do not wait for autoplay permission in a silent engineering-check frame.
+ const NativeContext=window.AudioContext||window.webkitAudioContext;
+ if(NativeContext)window.AudioContext=class extends NativeContext{constructor(options){super(options);this.resume=async()=>{};}};
+ window.addEventListener('pagehide',()=>{try{window.__clipSeshDiagnostics?.state.audioContext?.close();}catch{}});
+}
+</script>
+<script id="sampler-core">
 (() => {
   "use strict";
 
@@ -2954,6 +2965,7 @@ body.test-mode .test-deck { display: block; }
       version: FORMAT_VERSION,
       controls,
       fx: readFxSettings(),
+      arrangement: state.arrangement ? JSON.parse(JSON.stringify(state.arrangement)) : null,
       sliceDisplayMode: state.sliceDisplayMode,
       loopLock: { ...state.loopLock },
       boundaries: state.boundaries.slice(),
@@ -2967,6 +2979,8 @@ body.test-mode .test-deck { display: block; }
 
   function applyRecipe(recipe) {
     if (!recipe || (recipe.schema && recipe.schema !== RECIPE_SCHEMA)) throw new Error("That solution recipe is not compatible with this sampler.");
+    state.arrangement = recipe.arrangement ? JSON.parse(JSON.stringify(recipe.arrangement)) : null;
+    if (state.arrangement) window.ClipSeshArrangementEngine.validate(state.arrangement);
     const controls = recipe.controls || {};
     for (const [id, value] of Object.entries(controls)) {
       const element = dom[id];
@@ -3022,6 +3036,7 @@ body.test-mode .test-deck { display: block; }
     renderSequencer();
     updateSliceStatus();
     requestWaveDraw();
+    window.ClipSeshArrangement?.refresh();
   }
 
 
@@ -3154,6 +3169,7 @@ body.test-mode .test-deck { display: block; }
       audioDependencies: {
         source: audioDependencyDescriptor(source, "source"),
         reference: audioDependencyDescriptor(reference, "reference"),
+        samples: Object.fromEntries((state.arrangement?.sources || []).map(source => [source.id, audioDependencyDescriptor(state.audioLibrary.get(source.fileMd5), source.id)])),
       },
       recipe: captureRecipe(),
       workspace: {
@@ -3163,6 +3179,7 @@ body.test-mode .test-deck { display: block; }
         testThreshold: clamp(numericValue(dom.testThresholdInput, 95), 1, 100),
         autoScore: dom.autoScoreToggle.checked,
         fxDrawerOpen: dom.fxDrawer.classList.contains("is-open"),
+        automationOpen: window.ClipSeshAutomationUI?.isOpen() || false,
       },
     };
   }
@@ -3177,7 +3194,7 @@ body.test-mode .test-deck { display: block; }
     }
     const sourceDescriptor = document.audioDependencies?.source;
     const referenceDescriptor = document.audioDependencies?.reference;
-    const missing = [sourceDescriptor, referenceDescriptor].filter(Boolean).filter((dep) => !resolveAudioDependency(dep));
+    const missing = [sourceDescriptor, referenceDescriptor, ...Object.values(document.audioDependencies?.samples || {})].filter(Boolean).filter((dep) => !resolveAudioDependency(dep));
     if (missing.length) {
       state.pendingDocument = { kind: options.pendingKind || "session", document: options.pendingDocument || document };
       updateAudioLibraryStatus(`MISSING ${missing.length}: ${missingDependencyMessage(missing)}`);
@@ -3202,6 +3219,7 @@ body.test-mode .test-deck { display: block; }
     dom.autoScoreToggle.checked = workspace.autoScore !== false;
     toggleFxDrawer(Boolean(workspace.fxDrawerOpen));
     if (options.restoreWorkspace !== false) {
+      window.ClipSeshAutomationUI?.setOpen(Boolean(workspace.automationOpen));
       switchTestWorkspace(workspace.testMode === "design" ? "design" : "run");
       setTestMode(Boolean(workspace.testOpen || referenceDescriptor));
     }
@@ -3678,6 +3696,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function renderCurrentLoop() {
+    if (state.arrangement) return window.ClipSeshArrangement.render();
     if (!state.buffer) throw new Error("Load a source sample first.");
     const eventCount = state.pattern.reduce((total, step) => total + step.size, 0);
     if (!eventCount) throw new Error("Add at least one sequencer hit before rendering the test.");
@@ -3695,10 +3714,16 @@ body.test-mode .test-deck { display: block; }
     createFxChain(offline, inputGain, offline.destination, readFxSettings(), duration);
     const stepDuration = (60 / getTargetBpm()) * (4 / stepsPerBar);
     const sourceSettings = { rate: getPlaybackRate(), attackSeconds: getAttackSeconds(), releaseSeconds: getReleaseSeconds(), buffer: state.buffer };
+    const renderVoices = [];
+    function renderVoice(region, velocity, when) {
+      if (dom.chokeToggle.checked) for (const voice of renderVoices) stopVoice(voice, when, offline);
+      const voice = createScheduledSource(offline, inputGain, region, velocity, when, sourceSettings);
+      renderVoices.push(voice);
+    }
     for (let bar = 0; bar < bars; bar += 1) {
       const chain = getSeamlessBarChain(bar);
       if (chain) {
-        createScheduledSource(offline, inputGain, chain.region, chain.velocity, bar * 4 * 60 / getTargetBpm(), sourceSettings);
+        renderVoice(chain.region, chain.velocity, bar * 4 * 60 / getTargetBpm());
         continue;
       }
       const startStep = bar * stepsPerBar;
@@ -3708,7 +3733,7 @@ body.test-mode .test-deck { display: block; }
         if (when >= duration) continue;
         for (const [sliceIndex, velocity] of state.pattern[step]) {
           const slice = getSlices()[sliceIndex];
-          if (slice) createScheduledSource(offline, inputGain, slice, velocity, when, sourceSettings);
+          if (slice) renderVoice(slice, velocity, when);
         }
       }
     }
@@ -3716,6 +3741,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function runSimilarityTest(options = {}) {
+    if (state.arrangement) return window.ClipSeshArrangement.score().catch(error => { showToast(error.message); return null; });
     if (state.test.scoring) return state.test.analysis;
     if (!state.test.referenceBuffer) {
       if (!options.silent) showToast("Load or select a reference file first.");
@@ -3954,6 +3980,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function exportCurrentTest() {
+    if (state.arrangement) return window.ClipSeshArrangement.exportCase();
     if (!state.buffer) { showToast("Load the sampler source first."); return; }
     if (!state.test.referenceBuffer) { showToast("Load a reference file for the test."); return; }
     const oldText = dom.exportTestButton.textContent;
@@ -4615,9 +4642,9 @@ body.test-mode .test-deck { display: block; }
     return { source, gain: voiceGain, rate, sourceDuration, outputDuration, start: region.start, end: region.end, when };
   }
 
-  function stopVoice(voice, when = null) {
+  function stopVoice(voice, when = null, renderContext = null) {
     if (!voice) return;
-    const context = state.audioContext;
+    const context = renderContext || state.audioContext;
     if (!context) return;
     const stopTime = Math.max(context.currentTime, when == null ? context.currentTime : when);
 
@@ -4765,7 +4792,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   function totalSteps() {
-    return clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 8) * clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
+    return clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 32) * clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
   }
 
   function resizePattern(newLength = totalSteps()) {
@@ -4796,7 +4823,7 @@ body.test-mode .test-deck { display: block; }
     prunePatternToSlices();
     dom.sequencerGrid.innerHTML = "";
     const steps = totalSteps();
-    const bars = clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 8);
+    const bars = clamp(Math.round(numericValue(dom.barsSelect, 4)), 1, 32);
     const stepsPerBar = clamp(Math.round(numericValue(dom.stepsPerBarSelect, 16)), 4, 16);
     const stepsPerBeat = stepsPerBar / 4;
     dom.sequencerGrid.style.setProperty("--total-steps", String(steps));
@@ -4954,6 +4981,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   async function startSequencer() {
+    if (state.arrangement) return window.ClipSeshArrangement.play();
     if (state.sequencer.playing) return;
     if (!state.buffer) {
       showToast("Load a sample before starting the sequencer.");
@@ -4971,6 +4999,7 @@ body.test-mode .test-deck { display: block; }
   }
 
   function stopSequencer() {
+    window.ClipSeshArrangement?.stop();
     state.sequencer.playing = false;
     state.sequencer.generation += 1;
     if (state.sequencer.timer) window.clearInterval(state.sequencer.timer);
@@ -5016,6 +5045,8 @@ body.test-mode .test-deck { display: block; }
       const decoded = await context.decodeAudioData(copy);
       if (!decoded.length || !decoded.duration) throw new Error("The decoded audio buffer was empty.");
       state.buffer = decoded;
+      state.arrangement = null;
+      window.ClipSeshArrangement?.refresh();
       state.loadedFileName = name;
       state.loadedFileType = type;
       state.loadedFileBytes = bytes;
@@ -5097,6 +5128,8 @@ body.test-mode .test-deck { display: block; }
 
   function clearSample() {
     stopSequencer();
+    state.arrangement = null;
+    window.ClipSeshArrangement?.refresh();
     state.buffer = null; state.peaks = []; state.boundaries = []; state.selection = null;
     state.loopLock = { locked: false, start: 0, end: 0, beats: 4, divisionBeats: Number(dom.bpmDivision?.value) || 1 };
     state.selectedSlice = 0; state.viewStart = 0; state.viewDuration = 1;
@@ -5828,9 +5861,6 @@ body.test-mode .test-deck { display: block; }
     dom.testModeButton.setAttribute("aria-pressed", "false");
     resizePattern(totalSteps());
     renderPads(); renderSequencer(); renderTestList(); requestWaveDraw(); drawTestBuffers(); wireEvents(); loadStoredTests();
-    if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("./sw.js").catch(() => { /* optional */ });
-    }
   }
 
   Object.defineProperty(window, "__clipSeshDiagnostics", {
@@ -5891,6 +5921,7 @@ body.test-mode .test-deck { display: block; }
       seamSimilarity,
       getPlaybackRate,
       getSlices,
+      ensureAudioContext, createFxChain, getVolumeGain, getAttackSeconds, getReleaseSeconds, drawTestBuffers, startSequencer, stopSequencer,
     },
   });
 
@@ -5898,5 +5929,588 @@ body.test-mode .test-deck { display: block; }
 })();
 
   </script>
+<script id="sampler-arrangement">
+/* ClipSesh timed break arrangements. Shared scheduling for live/offline audio. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ClipSeshArrangementEngine=api;})(typeof window==='object'?window:this,function(){
+'use strict';
+const finite=(v,label,min,max)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label} must be between ${min} and ${max}.`);return v;};
+function validate(a){
+  if(!a||a.format!=='clipsesh-break-arrangement'||a.version!==1)throw Error('Unsupported break arrangement.');
+  finite(a.bpm,'Arrangement BPM',20,400);finite(a.durationSeconds,'Duration',.001,3600);
+  if(!Array.isArray(a.sources)||!a.sources.length||a.sources.length>32)throw Error('An arrangement needs 1–32 source files.');
+  const ids=new Set();for(const s of a.sources){if(!s||typeof s.id!=='string'||!s.id||['source','reference'].includes(s.id)||ids.has(s.id))throw Error('Source IDs must be unique and cannot be source or reference.');ids.add(s.id);}
+  if(!Array.isArray(a.events)||!a.events.length||a.events.length>20000)throw Error('An arrangement needs 1–20,000 events.');
+  for(const [i,e]of a.events.entries()){
+    if(!ids.has(e.source))throw Error(`Event ${i+1}: unknown source.`);
+    finite(e.time,`Event ${i+1} time`,0,a.durationSeconds);finite(e.start,'Source start',0,86400);
+    finite(e.end,'Source end',e.start+.000001,86400);finite(e.rate,'Playback rate',1/32,32);
+    finite(e.duration,'Event duration',.000001,3600);finite(e.gain,'Event gain',0,16);
+    if(e.pan!=null)finite(e.pan,'Pan',-1,1);
+  }
+  if(a.maxChops!=null){
+    finite(a.maxChops,'Maximum chops',1,128);
+    if(!Array.isArray(a.chops)||!a.chops.length||a.chops.length>a.maxChops)throw Error('The reusable chop budget was exceeded.');
+    const chops=new Map();for(const c of a.chops){if(!c.id||chops.has(c.id)||!ids.has(c.source))throw Error('Chop IDs must be unique and use a loaded source.');finite(c.start,'Chop start',0,86400);finite(c.end,'Chop end',c.start+.000001,86400);chops.set(c.id,c);}
+    for(const e of a.events){const c=chops.get(e.chopId);if(!c||c.source!==e.source||Math.abs(c.start-e.start)>1e-9||Math.abs(c.end-e.end)>1e-9)throw Error('Each hit must reuse a declared chop without changing its source boundaries.');}
+  }
+  if(a.masterGain!=null)finite(a.masterGain,'Master gain',0,16);
+  return a;
+}
+function compile(a,options={}){
+  validate(a);const bpm=finite(options.bpm??a.bpm,'Project BPM',20,400),scale=a.bpm/bpm;
+  const pitch=finite(options.pitch??0,'Pitch',-48,48),pitchRatio=2**(pitch/12);
+  const duration=a.durationSeconds*scale;
+  const list=a.events.map((e,i)=>({index:i,source:e.source,when:e.time*scale,start:e.start,rate:e.rate/scale*pitchRatio,
+    duration:Math.min(e.duration*scale,(e.end-e.start)/(e.rate/scale*pitchRatio),duration-e.time*scale),gain:e.gain*(a.masterGain??1),pan:e.pan??0})).filter(e=>e.duration>0).sort((x,y)=>x.when-y.when||x.index-y.index);
+  if(options.choke){
+    for(let i=0;i<list.length;i++){let next=i+1;while(next<list.length&&Math.abs(list[next].when-list[i].when)<1e-9)next++;
+      if(next<list.length)list[i].duration=Math.min(list[i].duration,list[next].when-list[i].when);}
+  }
+  return {duration,events:list,bpm};
+}
+function schedule(context,destination,compiled,buffers,options={}){
+  const start=options.start??0,offset=options.offset??0,voices=[];
+  const attack=options.attack??.0015,release=options.release??.0015;
+  for(const e of compiled.events){
+    if(e.when+e.duration<=offset)continue;
+    const elapsed=Math.max(0,offset-e.when),duration=e.duration-elapsed,when=start+Math.max(0,e.when-offset);
+    const buffer=buffers.get(e.source);if(!buffer)throw Error(`Missing audio: ${e.source}`);
+    const sourceStart=e.start+elapsed*e.rate;
+    if(sourceStart+duration*e.rate>buffer.duration+2/buffer.sampleRate)throw Error(`Source range exceeds ${e.source}.`);
+    const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffer;source.playbackRate.setValueAtTime(e.rate,when);
+    source.connect(gain);let panner=null;
+    if(e.pan&&context.createStereoPanner){panner=context.createStereoPanner();panner.pan.value=e.pan;gain.connect(panner);panner.connect(destination);}else gain.connect(destination);
+    const fadeIn=Math.min(attack,duration/4),fadeOut=Math.min(release,duration/4);
+    gain.gain.setValueAtTime(fadeIn?0:e.gain,when);
+    if(fadeIn){gain.gain.linearRampToValueAtTime(e.gain,when+fadeIn);gain.gain.setValueAtTime(e.gain,when+fadeIn);}
+    gain.gain.setValueAtTime(e.gain,when+duration-fadeOut);gain.gain.linearRampToValueAtTime(0,when+duration);
+    source.start(when,sourceStart,Math.min(duration*e.rate,buffer.duration-sourceStart));
+    source.stop(when+duration+.00001);voices.push({source,gain,panner,when,duration,event:e});
+  }
+  return voices;
+}
+function pcmMetrics(actual,reference){
+  const sameRate=actual.sampleRate===reference.sampleRate,sameFrames=actual.length===reference.length,sameChannels=actual.numberOfChannels===reference.numberOfChannels;
+  const n=Math.min(actual.length,reference.length),channels=Math.min(actual.numberOfChannels,reference.numberOfChannels);
+  let error=0,energy=0,actualEnergy=0,maxError=0,dot=0;
+  for(let c=0;c<channels;c++){const x=actual.getChannelData(c),y=reference.getChannelData(c);for(let i=0;i<n;i++){if(!Number.isFinite(x[i])||!Number.isFinite(y[i]))throw Error('Audio comparison encountered a non-finite sample.');const d=x[i]-y[i];error+=d*d;energy+=y[i]*y[i];actualEnergy+=x[i]*x[i];dot+=x[i]*y[i];maxError=Math.max(maxError,Math.abs(d));}}
+  let ex=[],ey=[];const hop=Math.max(1,Math.round(reference.sampleRate*.01));
+  for(let t=0;t<n;t+=hop){let x2=0,y2=0;for(let c=0;c<channels;c++){const x=actual.getChannelData(c),y=reference.getChannelData(c);for(let i=t;i<Math.min(t+hop,n);i++){x2+=x[i]*x[i];y2+=y[i]*y[i];}}ex.push(Math.sqrt(x2));ey.push(Math.sqrt(y2));}
+  const mean=x=>x.reduce((a,b)=>a+b,0)/Math.max(1,x.length);const mx=mean(ex),my=mean(ey);let xy=0,xx=0,yy=0;
+  for(let i=0;i<ex.length;i++){const a=ex[i]-mx,b=ey[i]-my;xy+=a*b;xx+=a*a;yy+=b*b;}
+  return {sameRate,sameFrames,sameChannels,frames:actual.length,referenceFrames:reference.length,sampleRate:actual.sampleRate,channels:actual.numberOfChannels,
+    nrmse:Math.sqrt(error/Math.max(energy,1e-30)),maxAbsoluteError:maxError,waveformCosine:dot/Math.sqrt(Math.max(1e-30,energy*actualEnergy)),
+    envelopeCorrelation:xy/Math.sqrt(Math.max(1e-30,xx*yy)),rmsDifferenceDb:10*Math.log10(Math.max(1e-30,actualEnergy)/Math.max(1e-30,energy))};
+}
+function judge(metrics,expect={}){
+  const checks={sampleRate:metrics.sameRate,frames:metrics.sameFrames,channels:metrics.sameChannels};
+  if(expect.maxNrmse!=null)checks.waveform=metrics.nrmse<=expect.maxNrmse;
+  if(expect.maxAbsoluteError!=null)checks.peakError=metrics.maxAbsoluteError<=expect.maxAbsoluteError;
+  if(expect.minEnvelopeCorrelation!=null)checks.envelope=metrics.envelopeCorrelation>=expect.minEnvelopeCorrelation;
+  if(expect.maxRmsDifferenceDb!=null)checks.level=Math.abs(metrics.rmsDifferenceDb)<=expect.maxRmsDifferenceDb;
+  if(Object.keys(checks).length===3)throw Error('A test must include an audio comparison requirement.');
+  return {passed:Object.values(checks).every(Boolean),checks};
+}
+return {validate,compile,schedule,pcmMetrics,judge};
+});
+
+</script>
+<script id="sampler-automation">
+/* Deterministic delay/reverb sends with shared live/offline automation. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ClipSeshAutomationEngine=api;})(typeof window==='object'?window:this,function(){
+'use strict';
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const defaults=()=>({delay:{beats:.5,feedback:.3},reverb:{decay:.7},lanes:{delay:[{time:0,value:0}],reverb:[{time:0,value:0}]}});
+function validate(fx,duration){
+ if(fx==null)return defaults();if(!fx||typeof fx!=='object')throw Error('Invalid send effects.');
+ const f=defaults();for(const kind of ['delay','reverb'])Object.assign(f[kind],fx[kind]||{});
+ for(const [value,min,max,name]of [[f.delay.beats,.0625,4,'Delay beats'],[f.delay.feedback,0,.85,'Delay feedback'],[f.reverb.decay,.1,3,'Reverb decay']])if(!Number.isFinite(value)||value<min||value>max)throw Error(`${name} is outside its range.`);
+ for(const kind of ['delay','reverb']){const lane=fx.lanes?.[kind]??f.lanes[kind];if(!Array.isArray(lane)||!lane.length||lane.length>256)throw Error('Automation needs 1–256 points.');let previous=-1;
+  for(const p of lane){if(!Number.isFinite(p.time)||p.time<0||p.time>duration||p.time<=previous||!Number.isFinite(p.value)||p.value<0||p.value>1)throw Error('Automation points need ascending times and values from 0 to 1.');previous=p.time;}f.lanes[kind]=lane.map(p=>({...p}));
+ }return f;
+}
+function valueAt(points,time){if(time<=points[0].time)return points[0].value;for(let i=1;i<points.length;i++){if(time<=points[i].time){const a=points[i-1],b=points[i],f=(time-a.time)/(b.time-a.time);return a.value+(b.value-a.value)*f;}}return points.at(-1).value;}
+function automate(param,points,{start=0,scale=1,offset=0}={}){param.cancelScheduledValues(start);param.setValueAtTime(valueAt(points,offset/scale),start);for(const p of points){const t=p.time*scale-offset;if(t>0){param.linearRampToValueAtTime(p.value,start+t);param.setValueAtTime(p.value,start+t);}}}
+function taps(kind,settings,bpm){
+ if(kind==='delay')return Array.from({length:8},(_,i)=>({time:(i+1)*settings.beats*60/bpm,gain:settings.feedback**i}));
+ // A small diffuse room: 48 irregular, alternating-polarity reflections.
+ let seed=9137;const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};let out=[];
+ for(let i=0;i<48;i++){const fraction=(i+random()*.7)/48,t=.012+fraction*settings.decay;out.push({time:t,gain:(random()<.5?-1:1)*Math.exp(-3*fraction)});}
+ const norm=Math.sqrt(out.reduce((s,p)=>s+p.gain*p.gain,0));return out.map(p=>({...p,gain:p.gain/norm}));
+}
+function create(context,destination,arrangement,options={}){
+ const fx=validate(arrangement.sendEffects,arrangement.durationSeconds),bpm=options.bpm??arrangement.bpm,start=options.start??0,scale=arrangement.bpm/bpm;
+ const input=context.createGain();input.connect(destination);const nodes=[input],params={};
+ for(const kind of ['delay','reverb']){
+  const lane=fx.lanes[kind];if(!options.live&&!lane.some(p=>p.value>0))continue;
+  const send=context.createGain();nodes.push(send);input.connect(send);automate(send.gain,lane,{start,scale,offset:options.offset??0});params[kind]=send.gain;
+  for(const tap of taps(kind,fx[kind],bpm)){if(Math.abs(tap.gain)<1e-7)continue;const delay=context.createDelay(Math.max(.1,tap.time+.1)),gain=context.createGain();delay.delayTime.value=tap.time;gain.gain.value=tap.gain;send.connect(delay);delay.connect(gain);gain.connect(destination);nodes.push(delay,gain);}
+ }
+ return {input,params,disconnect(){for(const node of nodes)try{node.disconnect();}catch{}}};
+}
+return {defaults,validate,valueAt,automate,taps,create};
+});
+
+</script>
+<script id="sampler-catalog">
+/* Hosted and local canonical tests, timed arrangements, and synchronized A/B. */
+(function(){
+'use strict';
+const D=window.__clipSeshDiagnostics,E=window.ClipSeshArrangementEngine,$=id=>document.getElementById(id);
+const copy=x=>JSON.parse(JSON.stringify(x)),enc=new TextEncoder(),dec=new TextDecoder();
+const S={catalog:null,base:null,files:new Map(),selected:new Set(),results:new Map(),active:null,expect:null,busy:false,abort:null,report:null,page:0,voices:[],timer:null,live:null,side:'candidate'};
+const DEFAULT_EXPECT={maxNrmse:.03,minEnvelopeCorrelation:.98,maxRmsDifferenceDb:1};
+function msg(text){$('canonicalStatus').textContent=text;}
+function err(e){msg(e.message||String(e));console.error(e);}
+function save(name,data,type='application/json'){const blob=data instanceof Blob?data:new Blob([data],{type}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function url(value,base){const u=new URL(value,base||document.baseURI);if(!['http:','https:','file:','bundle:'].includes(u.protocol))throw Error('Only HTTP(S) and imported bundle resources are supported.');return u.href;}
+async function bytes(value,base,signal,max=100*1024*1024){
+  const u=url(value,base),parsed=new URL(u);
+  if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
+  if(parsed.protocol==='bundle:'){
+    const path=decodeURIComponent(parsed.pathname).replace(/^\//,'');const data=S.files.get(path);if(!data)throw Error(`Missing bundle file: ${path}`);return {data:data.slice(),url:u};
+  }
+  if(parsed.protocol==='file:')throw Error('For offline use, open the test bundle ZIP. For hosted use, open an HTTP(S) catalog.');
+  const requestSignal=typeof AbortSignal?.any==='function'?AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(45000)]):signal;
+  const response=await fetch(u,{signal:requestSignal,credentials:'omit'});if(!response.ok)throw Error(`HTTP ${response.status}: ${u}`);
+  if(Number(response.headers.get('content-length')||0)>max)throw Error('Resource exceeds the size limit.');
+  const reader=response.body?.getReader();let data;
+  if(reader){const chunks=[];let size=0;for(;;){const r=await reader.read();if(r.done)break;size+=r.value.length;if(size>max){await reader.cancel();throw Error('Resource exceeds the size limit.');}chunks.push(r.value);}data=new Uint8Array(size);let at=0;for(const c of chunks){data.set(c,at);at+=c.length;}}
+  else{data=new Uint8Array(await response.arrayBuffer());if(data.length>max)throw Error('Resource exceeds the size limit.');}
+  return {data,url:response.url||u};
+}
+async function json(value,base,signal){const r=await bytes(value,base,signal,8*1024*1024);return {...r,value:JSON.parse(dec.decode(r.data))};}
+function validateCatalog(c){
+  if(c?.format!=='clip-sesh-sampler-test-catalog'||c.version!==1||!Array.isArray(c.tests)||c.tests.length>500)throw Error('Unsupported sampler test catalog (maximum 500 cases).');
+  const ids=new Set();for(const t of c.tests){if(!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(t.id||'')||ids.has(t.id))throw Error('Test IDs must be valid and unique.');ids.add(t.id);
+    if(Boolean(t.session)===Boolean(t.manifest))throw Error(`${t.id}: choose a session or a manifest.`);
+    if(t.session&&(!t.session.url||!/^[a-f0-9]{32}$/i.test(t.session.md5||'')))throw Error(`${t.id}: session URL and MD5 are required.`);
+    if(t.manifest&&(typeof t.manifest!=='string'||t.assets))throw Error(`${t.id}: manifest must be a URL; asset overrides belong in it.`);
+    if(t.tags&&(!Array.isArray(t.tags)||t.tags.some(tag=>typeof tag!=='string')))throw Error(`${t.id}: tags must be text.`);
+    if(t.disabled!=null&&typeof t.disabled!=='boolean')throw Error(`${t.id}: disabled must be boolean.`);
+    if(!t.expect||!['maxNrmse','maxAbsoluteError','minEnvelopeCorrelation','maxRmsDifferenceDb'].some(k=>Number.isFinite(t.expect[k])))throw Error(`${t.id}: explicit comparison limits are required.`);
+    for(const [k,v]of Object.entries(t.expect))if(!Number.isFinite(v)||v<0)throw Error(`${t.id}: invalid ${k}.`);
+    for(const p of Object.values(t.assets||{}))if(typeof p!=='string')throw Error(`${t.id}: asset URLs must be text.`);
+  }return c;
+}
+function caseList(){
+  document.querySelector('main').inert=S.busy;
+  for(const child of $('testSidebar').children)if(child.id!=='canonicalLibrary')child.inert=S.busy;
+  const box=$('canonicalCases');box.replaceChildren();const query=$('canonicalFilter').value.toLowerCase();
+  for(const t of S.catalog?.tests||[]){if(query&&!`${t.id} ${t.title||''} ${(t.tags||[]).join(' ')}`.toLowerCase().includes(query))continue;
+    const row=document.createElement('div');row.className='canonical-case';const check=document.createElement('input');check.type='checkbox';check.checked=S.selected.has(t.id);check.disabled=S.busy||!!t.disabled;check.setAttribute('aria-label',`Select ${t.title||t.id}`);check.onchange=()=>check.checked?S.selected.add(t.id):S.selected.delete(t.id);
+    const title=document.createElement('button');title.type='button';title.textContent=t.title||t.id;title.disabled=S.busy||!!t.disabled;title.onclick=()=>inspect(t).catch(err);
+    const result=document.createElement('span');result.textContent=t.disabled?'DISABLED':S.results.get(t.id)?.status||'NOT RUN';result.dataset.status=result.textContent;
+    const run=document.createElement('button');run.textContent='Run';run.disabled=S.busy||!!t.disabled;run.onclick=()=>runSuite([t.id]).catch(err);row.append(check,title,result,run);box.append(row);
+  }
+  $('canonicalTitle').textContent=S.catalog?.title||'Canonical test library';
+  for(const id of ['canonicalLoad','canonicalBundle','canonicalRunAll','canonicalRunSelected','canonicalSelectAll','canonicalSelectNone','canonicalMode'])$(id).disabled=S.busy;
+  $('canonicalCancel').disabled=!S.busy;$('canonicalSkip').disabled=!S.busy||!S.live;
+}
+async function loadCatalog(value,base){
+  if(S.busy)throw Error('Cancel the current operation first.');D.stopSequencer();S.busy=true;S.abort=new AbortController();caseList();
+  const timer=setTimeout(()=>S.abort?.abort(),20000);
+  try{const r=await json(value,base,S.abort.signal),catalog=validateCatalog(r.value);
+    for(const t of catalog.tests){url(t.session?.url||t.manifest,r.url);for(const p of Object.values(t.assets||{}))url(p,r.url);}
+    S.catalog=catalog;S.base=r.url;S.results.clear();S.selected=new Set(S.catalog.tests.filter(t=>!t.disabled).map(t=>t.id));
+    $('canonicalUrl').value=S.base;msg(`${S.catalog.tests.length} cases. Audio loads only when a case is opened or run.`);
+  }finally{clearTimeout(timer);S.busy=false;S.abort=null;caseList();}
+}
+function dependencyEntries(doc){return [['source',doc.audioDependencies?.source],['reference',doc.audioDependencies?.reference],...Object.entries(doc.audioDependencies?.samples||{})].filter(([,d])=>d);}
+async function loadEntry(t,signal){
+  D.stopSequencer();let descriptor=t.session,assetBase=S.base,assets=t.assets||{},pins=null;
+  if(t.manifest){const m=await json(t.manifest,S.base,signal),v=m.value;
+    if(v.format!=='clip-sesh-sampler-test-manifest'||v.version!==1||!v.session?.url||!/^[a-f0-9]{32}$/i.test(v.session.md5||'')||!Array.isArray(v.assets))throw Error('Unsupported or unpinned test manifest.');
+    descriptor=v.session;assetBase=m.url;assets={};pins=new Map();for(const a of v.assets){if(!a.id||pins.has(a.id)||!a.url||!/^[a-f0-9]{32}$/i.test(a.md5||''))throw Error('Manifest assets need unique IDs, URLs, and MD5s.');pins.set(a.id,a.md5.toLowerCase());assets[a.id]=a.url;}
+  }
+  const r=await json(descriptor.url,assetBase,signal);
+  if(D.md5Bytes(r.data)!==descriptor.md5.toLowerCase())throw Error('Session MD5 mismatch.');
+  const doc=r.value,entries=dependencyEntries(doc);
+  if(pins){for(const [id,dep]of entries)if(pins.get(id)!==dep.fileMd5?.toLowerCase())throw Error(`Manifest identity disagrees with session: ${id}`);if(pins.size!==entries.length)throw Error('Manifest has unexpected assets.');}
+  for(const [id,dep]of entries){
+    if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
+    if(!/^[a-f0-9]{32}$/i.test(dep.fileMd5||''))throw Error(`Missing file MD5: ${id}`);
+    if(D.state.audioLibrary.has(dep.fileMd5))continue;
+    const override=assets[id],asset=override??dep.url;if(!asset)throw Error(`No audio URL for ${id}.`);
+    const audio=await bytes(asset,override?assetBase:r.url,signal);
+    if(D.md5Bytes(audio.data)!==dep.fileMd5.toLowerCase())throw Error(`Audio MD5 mismatch: ${id}`);
+    await D.registerAudioDependency(audio.data,{name:dep.name||id,type:dep.type||'audio/wav'});
+  }
+  if(signal?.aborted)throw new DOMException('Cancelled','AbortError');
+  D.state.test.suppressAutoScore=true;try{if(!await D.loadSessionDocument(doc,{restoreWorkspace:false}))throw Error('Session dependencies are unresolved.');}finally{D.state.test.suppressAutoScore=false;}
+  S.active=t.id;S.sessionMd5=descriptor.md5;S.dependencies=entries.map(([id,dep])=>({id,fileMd5:dep.fileMd5,waveformMd5:dep.waveformMd5}));S.expect=copy(t.expect);D.dom.autoScoreToggle.checked=false;D.setTestMode(true);side('candidate');refresh();S.loadedRecipeMd5=D.md5Text(JSON.stringify(D.captureRecipe()));return doc;
+}
+async function inspect(t){if(S.busy)throw Error('A suite is already running.');S.busy=true;S.abort=new AbortController();caseList();
+  try{msg(`Loading ${t.title||t.id}…`);await loadEntry(t,S.abort.signal);msg(`Loaded ${t.title||t.id}. Play, compare, or edit its cuts.`);}finally{S.busy=false;S.abort=null;caseList();}}
+function buffers(a){
+  const map=new Map(),ref=D.state.test.referenceFileMd5;
+  for(const source of a.sources){if(source.fileMd5===ref)throw Error('The reference cannot be used as a reconstruction source.');
+    const record=D.state.audioLibrary.get(source.fileMd5);if(!record?.buffer)throw Error(`Load source audio: ${source.id}`);if(record.waveformMd5===D.state.test.referenceWaveformMd5)throw Error('The reference waveform cannot be a reconstruction source.');map.set(source.id,record.buffer);}
+  for(const event of a.events){const buffer=map.get(event.source);if(event.end>buffer.duration+2/buffer.sampleRate)throw Error(`Cut exceeds source: ${event.source}`);}
+  return map;
+}
+function settings(){const a=D.state.arrangement;return {bpm:Number(D.dom.projectBpm.value),pitch:Number(D.dom.pitchSemitones.value)+Number(D.dom.fineTune.value)/100,choke:D.dom.chokeToggle.checked,attack:a.attackSeconds??D.getAttackSeconds(),release:a.releaseSeconds??D.getReleaseSeconds()};}
+async function render(){const a=E.validate(D.state.arrangement),options=settings(),compiled=E.compile(a,options),audio=buffers(a);
+  const sr=D.state.buffer.sampleRate,context=new OfflineAudioContext(2,Math.round(compiled.duration*sr),sr),input=context.createGain();input.gain.value=D.getVolumeGain();D.createFxChain(context,input,context.destination,D.readFxSettings(),compiled.duration);
+  const rack=window.ClipSeshAutomationEngine.create(context,input,a,options);E.schedule(context,rack.input,compiled,audio,options);return context.startRendering();
+}
+async function score(){
+  if(!D.state.test.referenceBuffer)throw Error('Load an independent reference first.');
+  const actual=await (D.state.arrangement?render():D.renderCurrentLoop());D.state.test.renderedBuffer=actual;D.drawTestBuffers();
+  const metrics=E.pcmMetrics(actual,D.state.test.referenceBuffer),validation=E.judge(metrics,S.expect||DEFAULT_EXPECT);
+  const result={format:'clip-sesh-sampler-test-result',version:1,id:S.active,canonicalSessionMd5:S.sessionMd5,renderedRecipeMd5:D.md5Text(JSON.stringify(D.captureRecipe())),editedSinceLoad:S.loadedRecipeMd5!==D.md5Text(JSON.stringify(D.captureRecipe())),dependencies:S.dependencies,createdAt:new Date().toISOString(),metric:'stereo-pcm-v1',expect:copy(S.expect||DEFAULT_EXPECT),...metrics,...validation};
+  $('arrangementResult').textContent=JSON.stringify(result,null,2);D.dom.renderedMeta.textContent=`${actual.duration.toFixed(3)} s · ${actual.sampleRate} Hz · stereo`;
+  D.dom.overallScoreBox.querySelector('small').textContent='NORMALIZED PCM ERROR';
+  D.dom.overallScore.textContent=`${metrics.nrmse.toFixed(4)} error`;D.dom.passStatus.textContent=validation.passed?'PASS · PCM REQUIREMENTS':'FAIL · PCM REQUIREMENTS';D.dom.overallScoreBox.classList.toggle('is-fail',!validation.passed);
+  D.dom.envelopeScore.textContent=metrics.envelopeCorrelation.toFixed(4);D.dom.waveScore.textContent=metrics.waveformCosine.toFixed(4);D.dom.loudnessScore.textContent=`${metrics.rmsDifferenceDb.toFixed(2)} dB`;D.dom.durationScore.textContent=metrics.sameFrames?'EXACT':'DIFFERENT';D.dom.spectrumScore.textContent='—';D.dom.seamScore.textContent='CASE RULES';
+  return result;
+}
+async function runSuite(ids){
+  if(S.busy)throw Error('A suite is already running.');if(!S.catalog)throw Error('Load a catalog first.');
+  if(!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length)throw Error('Select a nonempty queue with unique case IDs.');
+  for(const id of ids)if(!S.catalog.tests.some(t=>t.id===id&&!t.disabled))throw Error(`Unknown or disabled case: ${id}`);
+  ids=[...ids];const mode=$('canonicalMode').value,started=performance.now();S.busy=true;S.abort=new AbortController();const signal=S.abort.signal;const results=[];
+  for(const id of ids)S.results.set(id,{id,status:'QUEUED'});caseList();
+  try{for(const [i,id]of ids.entries()){
+    const t=S.catalog.tests.find(x=>x.id===id);if(!t||t.disabled)continue;
+    if(signal.aborted){const r={id,status:'CANCELLED'};results.push(r);S.results.set(id,r);continue;}
+    try{S.results.set(id,{id,status:'LOADING'});caseList();msg(`${i+1}/${ids.length}: ${t.title||id}`);await loadEntry(t,signal);
+      if(signal.aborted)throw new DOMException('Cancelled','AbortError');S.results.set(id,{id,status:'RENDERING'});caseList();const result=await score();
+      if(signal.aborted)throw new DOMException('Cancelled','AbortError');const row={...result,status:result.passed?'PASS':'FAIL'};results.push(row);S.results.set(id,row);
+      if(mode==='demo'){S.skipped=false;await play();await new Promise(resolve=>{const poll=setInterval(()=>{if(signal.aborted||!S.live){clearInterval(poll);stop();resolve();}},100);});row.demo={skipped:S.skipped,cancelled:signal.aborted,candidateGraphUsesReference:false,auditionSide:S.side};if(S.skipped)row.status='SKIPPED';if(signal.aborted)row.status='CANCELLED';}
+    }catch(e){const row={id,status:e.name==='AbortError'?'CANCELLED':'ERROR',error:e.message};results.push(row);S.results.set(id,row);}caseList();
+  }}finally{
+    stop();S.report={format:'clip-sesh-sampler-suite-result',version:1,createdAt:new Date().toISOString(),catalog:S.base,mode,durationSeconds:(performance.now()-started)/1000,cancelled:signal.aborted,passed:results.length>0&&!signal.aborted&&results.every(r=>r.status==='PASS'),results,counts:{}};
+    for(const r of results)S.report.counts[r.status]=(S.report.counts[r.status]||0)+1;
+    S.busy=false;S.abort=null;caseList();msg(Object.entries(S.report.counts).map(([s,n])=>`${n} ${s}`).join(' · '));$('canonicalReport').textContent=JSON.stringify(S.report,null,2);
+  }return S.report;
+}
+async function play(){
+  D.stopSequencer();const a=D.state.arrangement,rendered=a?null:await D.renderCurrentLoop();const context=await D.ensureAudioContext(),options=a?settings():{},compiled=a?E.compile(a,options):{duration:rendered.duration},when=context.currentTime+.05;
+  const candidate=context.createGain(),reference=context.createGain();candidate.connect(a?D.state.masterGain:context.destination);reference.connect(context.destination);
+  candidate.gain.value=S.side==='candidate'?1:0;reference.gain.value=S.side==='reference'?1:0;
+  const rack=a?window.ClipSeshAutomationEngine.create(context,candidate,a,{...options,start:when,live:true}):null;
+  if(a)S.voices=E.schedule(context,rack.input,compiled,buffers(a),{...options,start:when});
+  else{const src=context.createBufferSource();src.buffer=rendered;src.connect(candidate);src.start(when);S.voices=[{source:src,gain:candidate}];}
+  if(D.state.test.referenceBuffer){const src=context.createBufferSource();src.buffer=D.state.test.referenceBuffer;src.connect(reference);src.start(when);src.stop(when+compiled.duration);S.voices.push({source:src,gain:reference});}
+  S.live={when,duration:compiled.duration,candidate,reference,rack};caseList();D.state.sequencer.playing=true;D.dom.playButton.textContent='▶ PLAYING';D.dom.playButton.classList.add('is-active');
+  S.timer=setInterval(()=>{if(!S.live)return;const elapsed=Math.max(0,context.currentTime-when);D.dom.transportDisplay.textContent=`${S.side.toUpperCase()} · ${Math.min(elapsed,compiled.duration).toFixed(2)} / ${compiled.duration.toFixed(2)} s`;if(elapsed>=compiled.duration)stop();},40);
+}
+function stop(){
+  for(const v of S.preview||[])try{v.source.stop();}catch{}S.preview=[];
+  if(S.timer)clearInterval(S.timer);S.timer=null;
+  if(S.live){for(const v of S.voices){try{v.source.stop();}catch{}}S.live.rack?.disconnect();S.live.candidate.disconnect();S.live.reference.disconnect();D.state.sequencer.playing=false;D.dom.playButton.textContent='▶ PLAY';D.dom.playButton.classList.remove('is-active');}
+  S.voices=[];S.live=null;if($('canonicalSkip'))$('canonicalSkip').disabled=true;
+}
+function side(value){S.side=value;for(const id of ['candidate','reference'])$('arrange-'+id).setAttribute('aria-pressed',String(id===value));if(S.live){const c=D.state.audioContext.currentTime;for(const id of ['candidate','reference'])S.live[id].gain.setTargetAtTime(id===value?1:0,c,.003);}}
+function refresh(){
+  const a=D.state.arrangement;$('arrangementPanel').hidden=!a;D.dom.sequencerScroller.hidden=!!a;D.dom.clearPatternButton.disabled=!!a;
+  window.ClipSeshAutomationUI?.refresh();if(!a)return;E.validate(a);$('arrangementTitle').textContent=`${a.durationSeconds.toFixed(3)} s · ${a.chops?.length??a.events.length} chops · ${a.events.length} hits · ${new Set(a.sources.map(s=>s.break||s.id)).size} breaks`;
+  $('arrangementNote').textContent=a.status||'Editable break arrangement';const tbody=$('arrangementRows');tbody.replaceChildren();const pageSize=40,pages=Math.ceil(a.events.length/pageSize);S.page=Math.max(0,Math.min(S.page,pages-1));$('arrangementPage').textContent=`${S.page+1} / ${pages}`;
+  for(let i=S.page*pageSize;i<Math.min(a.events.length,(S.page+1)*pageSize);i++){
+    const e=a.events[i],tr=document.createElement('tr');const label=document.createElement('td');label.textContent=String(i+1);tr.append(label);
+    const src=document.createElement('td'),select=document.createElement('select');select.setAttribute('aria-label',`Cut ${i+1} source`);for(const s of a.chops||a.sources){const option=document.createElement('option');option.value=s.id;option.textContent=s.id;select.append(option);}select.value=e.chopId||e.source;select.onchange=()=>{stop();if(a.chops){const c=a.chops.find(c=>c.id===select.value);Object.assign(e,{chopId:c.id,source:c.source,start:c.start,end:c.end});refresh();}else e.source=select.value;};src.append(select);tr.append(src);
+    for(const [key,value,step]of [['time',e.time,.001],['start',e.start,.001],['duration',e.duration,.001],['semitones',12*Math.log2(e.rate),.1],['gain',e.gain,.01]]){
+      const td=document.createElement('td'),input=document.createElement('input');input.type='number';input.step=String(step);input.value=Number(value).toFixed(key==='semitones'?2:4);input.setAttribute('aria-label',`Cut ${i+1} ${key}`);
+      if(a.chops&&key==='start')input.disabled=true;
+      input.onchange=()=>{stop();const old=copy(e),v=Number(input.value);if(key==='semitones'){e.rate=2**(v/12);e.semitones=v;}else{e[key]=v;if(key==='start')e.end=old.end+(v-old.start);if(key==='duration'&&!a.chops)e.end=e.start+e.duration*e.rate;}
+        try{E.validate(a);buffers(a);}catch(error){Object.assign(e,old);input.value=String(value);err(error);}};td.append(input);tr.append(td);
+    }tbody.append(tr);
+  }
+}
+async function exportCase(){
+  const doc=D.buildSessionDocument(),entries=[],assets={};for(const [id,dep]of dependencyEntries(doc)){const record=D.state.audioLibrary.get(dep.fileMd5);const extension=/\.(wav|mp3|aiff?|flac|ogg|m4a)$/i.exec(dep.name||'')?.[1]||'audio';const path=`audio/${dep.fileMd5}.${extension}`;if(!entries.some(e=>e.name===path))entries.push({name:path,data:record.bytes});assets[id]=path;}
+  const session=enc.encode(JSON.stringify(doc,null,2));entries.push({name:'session.json',data:session});const catalog={format:'clip-sesh-sampler-test-catalog',version:1,title:'Exported sampler case',tests:[{id:'exported-case',title:D.dom.testNameInput.value||'Sampler case',session:{url:'session.json',md5:D.md5Bytes(session)},assets,expect:copy(S.expect||DEFAULT_EXPECT)}]};entries.push({name:'test.json',data:enc.encode(JSON.stringify(catalog,null,2))});save('sampler-test-bundle.zip',D.createZip(entries),'application/zip');
+}
+
+const style=document.createElement('style');style.textContent=`#arrangementPanel{padding:12px;border-top:1px solid #374653}#arrangementPanel table{border-collapse:collapse;font-size:11px;width:100%}#arrangementPanel th,#arrangementPanel td{padding:4px;text-align:left}#arrangementPanel input{width:82px;background:#0d151d;color:#ddd;border:1px solid #44515c;padding:5px}#arrangementPanel select{max-width:125px}#arrangementPanel .scroll{overflow:auto;max-height:360px}.arrangement-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.arrangement-controls button[aria-pressed=true]{background:#286b83}.canonical-case{display:grid;grid-template-columns:20px 1fr auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #354451}.canonical-case button{text-align:left;padding:6px;font-size:11px}.canonical-case span{font-size:10px}.canonical-case [data-status=PASS]{color:#7ae4af}.canonical-case [data-status=FAIL],.canonical-case [data-status=ERROR]{color:#ffa799}#canonicalLibrary{padding:12px;border-bottom:1px solid #465360}#canonicalLibrary input[type=url],#canonicalFilter{width:100%;padding:8px;margin:7px 0;background:#111b24;color:#eee;border:1px solid #4d606d}#canonicalLibrary button,#arrangementPanel button{cursor:pointer;color:#eee;border:1px solid #526776;background:#203440;padding:7px}#canonicalStatus{font-size:12px;line-height:1.5;white-space:pre-wrap}#canonicalCases{max-height:300px;overflow:auto}#canonicalLibrary pre,#arrangementResult{white-space:pre-wrap;word-break:break-word;font:11px/1.5 monospace;max-height:280px;overflow:auto}#arrangementNote{font-size:12px;color:#d6b36d}`;document.head.append(style);
+const panel=document.createElement('section');panel.id='arrangementPanel';panel.hidden=true;panel.innerHTML=`<strong id="arrangementTitle">Break arrangement</strong><p id="arrangementNote"></p><div class="arrangement-controls"><button id="arrange-candidate" aria-pressed="true">A · reconstruction</button><button id="arrange-reference" aria-pressed="false">B · reference</button><button id="arrangementAnalyze">Compare render</button><button id="arrangementExport">Export test bundle</button><button id="arrangementGrid">Return to step grid</button></div><p>Play starts both sides together. A/B changes only what you hear; exported reconstruction audio always uses the source breaks.</p><div class="arrangement-controls"><button id="arrangementPrev">Previous cuts</button><span id="arrangementPage"></span><button id="arrangementNext">Next cuts</button></div><div class="scroll"><table><thead><tr><th>Cut</th><th>Source</th><th>Time (s)</th><th>Source start (s)</th><th>Length (s)</th><th>Pitch (st)</th><th>Gain</th></tr></thead><tbody id="arrangementRows"></tbody></table></div><details><summary>Comparison result</summary><pre id="arrangementResult">Not measured.</pre></details>`;
+document.querySelector('.sequencer-panel').append(panel);
+const library=document.createElement('section');library.id='canonicalLibrary';library.innerHTML=`<strong id="canonicalTitle">Canonical test library</strong><input id="canonicalUrl" type="url" aria-label="Catalog URL" placeholder="Catalog URL · ./test/test.json"><div class="arrangement-controls"><button id="canonicalLoad">Load URL</button><button id="canonicalBundle">Open test bundle</button><input id="canonicalFile" type="file" accept=".zip" hidden></div><input id="canonicalFilter" type="search" aria-label="Filter canonical tests" placeholder="Filter tests"><div class="arrangement-controls"><button id="canonicalSelectAll">Select all</button><button id="canonicalSelectNone">None</button><label>Mode <select id="canonicalMode"><option value="fast">Silent render</option><option value="demo">Play each case</option></select></label></div><div id="canonicalCases"></div><div class="arrangement-controls"><button id="canonicalRunSelected">Run selected</button><button id="canonicalRunAll">Run all</button><button id="canonicalCancel" disabled>Cancel</button><button id="canonicalSkip" disabled>Skip playback</button><button id="canonicalSaveReport">Save report</button><button id="canonicalSaveCaseReport">Save case result</button></div><p id="canonicalStatus">Open a catalog URL or a test bundle. Audio and sessions are verified by MD5.</p><details><summary>Suite report</summary><pre id="canonicalReport">No suite run.</pre></details>`;$('testSidebar').prepend(library);
+$('canonicalLoad').onclick=()=>loadCatalog($('canonicalUrl').value||'./test/test.json').catch(err);
+$('canonicalBundle').onclick=()=>$('canonicalFile').click();$('canonicalFile').onchange=async event=>{try{if(S.busy)throw Error('Cancel the current operation first.');const file=event.target.files[0];if(!file)return;const files=await D.parseZip(new Uint8Array(await file.arrayBuffer()));S.files=files;const names=[...files.keys()].filter(p=>/(^|\/)test\.json$/.test(p));if(names.length!==1)throw Error('The bundle must contain one test.json catalog.');await loadCatalog('bundle://local/'+names[0]);}catch(e){err(e);}finally{event.target.value='';}};
+$('canonicalSkip').onclick=()=>{if(S.busy&&S.live){S.skipped=true;stop();}};
+$('canonicalFilter').oninput=caseList;$('canonicalSelectAll').onclick=()=>{S.selected=new Set(S.catalog?.tests.filter(t=>!t.disabled).map(t=>t.id));caseList();};$('canonicalSelectNone').onclick=()=>{S.selected.clear();caseList();};
+$('canonicalRunAll').onclick=()=>runSuite((S.catalog?.tests||[]).filter(t=>!t.disabled).map(t=>t.id)).catch(err);$('canonicalRunSelected').onclick=()=>runSuite([...S.selected]).catch(err);$('canonicalCancel').onclick=()=>{S.abort?.abort();stop();};$('canonicalSaveReport').onclick=()=>S.report?save('sampler-suite-report.json',JSON.stringify(S.report,null,2)):msg('Run a suite first.');
+$('canonicalSaveCaseReport').onclick=()=>{const result=S.results.get(S.active);if(result)save(`${S.active}-result.json`,JSON.stringify(result,null,2));else msg('Run the loaded case first.');};
+$('arrange-candidate').onclick=()=>side('candidate');$('arrange-reference').onclick=()=>side('reference');$('arrangementAnalyze').onclick=()=>score().catch(err);$('arrangementExport').onclick=()=>exportCase().catch(err);$('arrangementGrid').onclick=()=>{stop();D.state.arrangement=null;refresh();};$('arrangementPrev').onclick=()=>{S.page--;refresh();};$('arrangementNext').onclick=()=>{S.page++;refresh();};
+async function auditionChop(id){D.stopSequencer();const a=D.state.arrangement,c=a?.chops?.find(c=>c.id===id);if(!c)throw Error('Unknown chop.');const hits=a.events.filter(e=>e.chopId===id),rates=hits.map(e=>e.rate).sort((a,b)=>a-b),gains=hits.map(e=>e.gain).sort((a,b)=>a-b),rate=rates[Math.floor(rates.length/2)]||1,duration=Math.min(1,(c.end-c.start)/rate),context=await D.ensureAudioContext();S.preview=E.schedule(context,D.state.masterGain,{duration,events:[{source:c.source,when:0,start:c.start,rate,duration,gain:(gains[Math.floor(gains.length/2)]||1)*(a.masterGain??1),pan:0}]},buffers(a),{start:context.currentTime+.02,attack:.0015,release:.0015});}
+function updateAutomation(){if(!S.live?.rack)return;const context=D.state.audioContext,a=D.state.arrangement,fx=window.ClipSeshAutomationEngine.validate(a.sendEffects,a.durationSeconds);for(const kind of ['delay','reverb'])if(S.live.rack.params[kind])window.ClipSeshAutomationEngine.automate(S.live.rack.params[kind],fx.lanes[kind],{start:context.currentTime,scale:a.bpm/Number(D.dom.projectBpm.value),offset:Math.max(0,context.currentTime-S.live.when)});}
+window.ClipSeshArrangement={render,play,stop,refresh,score,exportCase,validate:E.validate,buffers,updateAutomation,auditionChop};
+window.ClipSeshSamplerCatalog={load:loadCatalog,inspect,run:runSuite,validateCatalog,dependencyEntries,readResource:bytes,state:S};
+caseList();const params=new URLSearchParams(location.search);if(location.protocol!=='file:'&&!window.__clipSeshIsolatedChecks&&!window.__clipSeshSkipAutoCatalog)loadCatalog(params.get('suite')||'./test/test.json').then(()=>{const id=params.get('case');if(id){const t=S.catalog.tests.find(t=>t.id===id);if(t)inspect(t).catch(err);}}).catch(err);
+})();
+
+</script>
+<script id="sampler-automation-ui">
+/* Break-kit editor and draggable send envelopes. Uses SVG pointer and keyboard controls. */
+(function(){'use strict';
+const D=window.__clipSeshDiagnostics,A=window.ClipSeshAutomationEngine,$=id=>document.getElementById(id),copy=x=>JSON.parse(JSON.stringify(x));
+const ns='http://www.w3.org/2000/svg',svg=(tag,attrs={})=>{const e=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,String(v));return e;};
+const root=document.createElement('section');root.id='thinkAutomation';root.hidden=true;
+root.setAttribute('aria-label','Delay and reverb FX automation');
+const kit=document.createElement('section');kit.innerHTML=`<div id="kitEditor"><h3>Reusable chops</h3><p>Changing a source boundary here updates every hit that uses that chop.</p><div class="kit-scroll"><table><thead><tr><th>Chop</th><th>Source start (s)</th><th>Source end (s)</th><th>Hits</th></tr></thead><tbody id="kitRows"></tbody></table></div></div>`;
+$('arrangementPanel').prepend(kit.firstElementChild);
+root.innerHTML=`<h3>Delay / Reverb FX &amp; Automation</h3><div id="automationEmptyState"><p>Load an arrangement session to edit delay and reverb automation.</p><button id="automationLoadSession" class="rack-button" type="button">OPEN SESSIONS</button></div><div id="sendAutomationControls" hidden><p>Click to add a point. Drag points to shape the line; drag the line to move it up or down. Double-click a point to remove it. Arrow keys adjust a focused point.</p><div class="send-settings"><label>Delay <select id="sendDelayBeats"><option value="0.25">1/16</option><option value="0.5">1/8</option><option value="0.75">Dotted 1/8</option><option value="1">1/4</option><option value="2">1/2</option></select></label><label>Feedback <input id="sendDelayFeedback" type="number" min="0" max=".85" step=".05"></label><label>Reverb decay (s) <input id="sendReverbDecay" type="number" min=".1" max="3" step=".05"></label></div><div id="sendLanes"></div><p id="sendEditStatus" role="status"></p></div>`;
+const toolbar=document.querySelector('.sequencer-toolbar'),toggle=document.createElement('button');
+toggle.id='seqFxAutomationToggle';toggle.type='button';toggle.className='rack-button';toggle.textContent='FX / AUTOMATION';toggle.setAttribute('aria-controls','thinkAutomation');toggle.setAttribute('aria-expanded','false');
+toolbar.querySelector('.transport-buttons').after(toggle);toolbar.after(root);
+let expanded=false;
+function setOpen(value){expanded=Boolean(value);root.hidden=!expanded;toggle.setAttribute('aria-expanded',String(expanded));toggle.classList.toggle('is-active',expanded);return expanded;}
+toggle.onclick=()=>setOpen(!expanded);
+$('automationLoadSession').onclick=()=>{D.setTestMode(true);$('canonicalLibrary').scrollIntoView({block:'nearest'});};
+const style=document.createElement('style');style.textContent=`#thinkAutomation{border:1px solid #465766;padding:12px;margin:12px 0 16px;background:#111d26;color:#e4edf4}#kitEditor{margin-bottom:16px}#kitEditor table{max-width:570px}#seqFxAutomationToggle.is-active{background:var(--green);color:var(--black)}#thinkAutomation h3{font-size:14px;margin:7px 0}#thinkAutomation p{font-size:11px;line-height:1.5;color:#b9c9d3}#thinkAutomation table{max-width:570px}.send-settings{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin:14px 0}.send-settings input{width:68px!important}.send-lane{margin:14px 0}.send-lane header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:5px}.send-lane header strong{margin-right:auto}.send-lane svg{display:block;width:100%;height:150px;background:#0b151d;border:1px solid #405669;touch-action:none}.send-lane circle{cursor:grab;outline:none}.send-lane circle:focus{stroke:#fff;stroke-width:3}.send-lane polyline{cursor:ns-resize}.kit-scroll{overflow:auto}`;document.head.append(style);
+let drag=null;
+function arrangement(){const a=D.state.arrangement;if(!a)throw Error('Load an arrangement first.');a.sendEffects=A.validate(a.sendEffects,a.durationSeconds);return a;}
+function changed(message='Automation saved in the session.'){window.ClipSeshArrangement.updateAutomation?.();$('sendEditStatus').textContent=message;}
+function setLane(kind,points){if(!['delay','reverb'].includes(kind))throw Error('Unknown automation lane.');const a=arrangement(),next=copy(a.sendEffects);next.lanes[kind]=copy(points);a.sendEffects=A.validate(next,a.durationSeconds);changed();drawLane(kind);return copy(a.sendEffects.lanes[kind]);}
+function shift(kind,delta){const a=arrangement();return setLane(kind,a.sendEffects.lanes[kind].map(p=>({time:p.time,value:Math.max(0,Math.min(1,p.value+delta))})));}
+function clear(kind){return setLane(kind,[{time:0,value:0}]);}
+function position(event,canvas){const rect=canvas.getBoundingClientRect();return {time:Math.max(0,Math.min(arrangement().durationSeconds,(event.clientX-rect.left)/rect.width*arrangement().durationSeconds)),value:Math.max(0,Math.min(1,1-(event.clientY-rect.top-12/130*rect.height)/(106/130*rect.height)))};}
+function drawLane(kind){const a=arrangement(),canvas=$('lane-'+kind),points=a.sendEffects.lanes[kind];canvas.replaceChildren();const width=1000,top=12,height=106,x=t=>t/a.durationSeconds*width,y=v=>top+(1-v)*height;
+ for(const value of [0,.5,1]){canvas.append(svg('line',{x1:0,x2:width,y1:y(value),y2:y(value),stroke:'#263e4e'}));const label=svg('text',{x:5,y:y(value)-3,fill:'#6f8798','font-size':10});label.textContent=Math.round(value*100)+'%';canvas.append(label);}
+ const bar=4*60/a.bpm;for(let t=0;t<=a.durationSeconds;t+=bar){canvas.append(svg('line',{x1:x(t),x2:x(t),y1:top,y2:118,stroke:'#1e3343'}));if(Math.round(t/bar)%4===0){const label=svg('text',{x:x(t)+4,y:129,fill:'#6f8798','font-size':10});label.textContent=t.toFixed(1)+'s';canvas.append(label);}}
+ const extended=[{time:0,value:points[0].value},...points,{time:a.durationSeconds,value:points.at(-1).value}],line=svg('polyline',{points:extended.map(p=>x(p.time)+','+y(p.value)).join(' '),fill:'none',stroke:kind==='reverb'?'#bb87ff':'#65d5eb','stroke-width':3,'data-line':kind});canvas.append(line);
+ for(const [i,p]of points.entries()){const point=svg('circle',{cx:x(p.time),cy:y(p.value),r:5,fill:kind==='reverb'?'#bb87ff':'#65d5eb',tabindex:0,role:'slider','aria-label':`${kind} point ${i+1} at ${p.time.toFixed(3)} seconds`,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':Math.round(p.value*100),'data-index':i});point.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Delete','Backspace'].includes(event.key)){event.preventDefault();let next=copy(arrangement().sendEffects.lanes[kind]);if(['Delete','Backspace'].includes(event.key)){if(next.length>1)next.splice(i,1);else next=[{time:0,value:0}];}else if(event.key==='ArrowUp'||event.key==='ArrowDown')next[i].value=Math.max(0,Math.min(1,next[i].value+(event.key==='ArrowUp'?.02:-.02)));else next[i].time=Math.max((next[i-1]?.time??-.001)+.001,Math.min((next[i+1]?.time??(a.durationSeconds+.001))-.001,next[i].time+(event.key==='ArrowRight'?.01:-.01)));setLane(kind,next);$('lane-'+kind).querySelector(`[data-index="${Math.min(i,next.length-1)}"]`)?.focus();}});canvas.append(point);}
+}
+function buildLanes(){const lanes=$('sendLanes');for(const kind of ['delay','reverb']){const row=document.createElement('div');row.className='send-lane';const head=document.createElement('header');const title=document.createElement('strong');title.textContent=kind==='delay'?'Delay send':'Reverb send';head.append(title);for(const [label,fn]of [['↓',()=>shift(kind,-.05)],['↑',()=>shift(kind,.05)],['Clear',()=>clear(kind)]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',`${label} ${kind} automation`);b.onclick=fn;head.append(b);}row.append(head);const canvas=svg('svg',{id:'lane-'+kind,viewBox:'0 0 1000 130',role:'group','aria-label':`${kind} automation lane`});row.append(canvas);lanes.append(row);
+ canvas.addEventListener('pointerdown',event=>{if(event.button!==0)return;const a=arrangement(),p=position(event,canvas),target=event.target,original=copy(a.sendEffects.lanes[kind]);let index=target.hasAttribute('data-index')?Number(target.getAttribute('data-index')):-1,whole=target.hasAttribute('data-line');if(index<0&&!whole){index=original.findIndex(q=>Math.abs(q.time-p.time)<.01);if(index<0){original.push(p);original.sort((a,b)=>a.time-b.time);index=original.indexOf(p);}else original[index]=p;setLane(kind,original);}drag={kind,index,whole,original:copy(original),value:p.value};canvas.setPointerCapture?.(event.pointerId);event.preventDefault();});
+ canvas.addEventListener('pointermove',event=>{if(!drag||drag.kind!==kind)return;const a=arrangement(),p=position(event,canvas),next=copy(drag.original);if(drag.whole)for(const point of next)point.value=Math.max(0,Math.min(1,point.value+p.value-drag.value));else{const i=drag.index;next[i].value=p.value;next[i].time=Math.max((next[i-1]?.time??-.001)+.001,Math.min((next[i+1]?.time??(a.durationSeconds+.001))-.001,p.time));}setLane(kind,next);});
+ const end=()=>{drag=null;};canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);canvas.addEventListener('dblclick',event=>{if(!event.target.hasAttribute('data-index'))return;const next=copy(arrangement().sendEffects.lanes[kind]),i=Number(event.target.getAttribute('data-index'));if(next.length>1)next.splice(i,1);else next[0]={time:0,value:0};setLane(kind,next);});
+}}
+function refresh(){const a=D.state.arrangement;$('automationEmptyState').hidden=!!a;$('sendAutomationControls').hidden=!a;$('kitEditor').hidden=!a?.chops;if(!a)return;arrangement();const body=$('kitRows');body.replaceChildren();for(const c of a.chops||[]){const tr=document.createElement('tr'),name=document.createElement('td');name.textContent=c.id+' ';const audition=document.createElement('button');audition.type='button';audition.textContent='▶';audition.setAttribute('aria-label',`Play ${c.id} at its median sequenced pitch`);audition.onclick=()=>window.ClipSeshArrangement.auditionChop(c.id).catch(error=>{$('sendEditStatus').textContent=error.message;});name.append(audition);tr.append(name);for(const key of ['start','end']){const td=document.createElement('td'),input=document.createElement('input');input.type='number';input.step='.001';input.value=c[key].toFixed(5);input.setAttribute('aria-label',`${c.id} source ${key}`);input.onchange=()=>{const old=c[key],value=Number(input.value);window.ClipSeshArrangement.stop();c[key]=value;for(const e of a.events)if(e.chopId===c.id)e[key]=value;try{window.ClipSeshArrangement.validate(a);window.ClipSeshArrangement.buffers(a);window.ClipSeshArrangement.refresh();}catch(error){c[key]=old;for(const e of a.events)if(e.chopId===c.id)e[key]=old;input.value=old;$('sendEditStatus').textContent=error.message;}};td.append(input);tr.append(td);}const count=document.createElement('td');count.textContent=a.events.filter(e=>e.chopId===c.id).length;tr.append(count);body.append(tr);}
+ $('sendDelayBeats').value=String(a.sendEffects.delay.beats);$('sendDelayFeedback').value=a.sendEffects.delay.feedback;$('sendReverbDecay').value=a.sendEffects.reverb.decay;for(const kind of ['delay','reverb'])drawLane(kind);
+}
+buildLanes();for(const [id,kind,key]of [['sendDelayBeats','delay','beats'],['sendDelayFeedback','delay','feedback'],['sendReverbDecay','reverb','decay']])$(id).onchange=()=>{const a=arrangement(),next=copy(a.sendEffects);next[kind][key]=Number($(id).value);try{a.sendEffects=A.validate(next,a.durationSeconds);window.ClipSeshArrangement.stop();changed('Effect setting saved. Press Play to hear it.');}catch(error){$('sendEditStatus').textContent=error.message;refresh();}};
+window.ClipSeshAutomationUI={refresh,set:setLane,shift,clear,setOpen,isOpen:()=>expanded};refresh();
+})();
+
+</script>
+<script id="sampler-checks">
+/* Embedded regression suite. The only fixtures are the external JSON/WAV files. */
+(function(){
+'use strict';
+const clone=x=>JSON.parse(JSON.stringify(x)),enc=new TextEncoder(),dec=new TextDecoder();
+function assert(value,message='Assertion failed'){if(!value)throw Error(message);}
+assert.equal=(a,b)=>assert(Object.is(a,b),`Expected ${String(b)}, received ${String(a)}`);
+assert.deepEqual=(a,b)=>assert(JSON.stringify(a)===JSON.stringify(b),'Values differ');
+assert.throws=(fn,pattern)=>{let error;try{fn();}catch(e){error=e;}assert(error,'Expected rejection');if(pattern)assert(pattern.test(error.message),error.message);};
+assert.rejects=async(promise,pattern)=>{let error;try{await promise;}catch(e){error=e;}assert(error,'Expected rejection');if(pattern)assert(pattern.test(error.message),error.message);};
+async function runInCurrentPage(options={}){
+ if(!window.__clipSeshIsolatedChecks)throw Error('Run engineering checks with the isolated runner.');
+ const w=window,D=w.__clipSeshDiagnostics,C=w.ClipSeshSamplerCatalog,Engine=w.ClipSeshArrangementEngine,E=Engine,F=w.ClipSeshAutomationEngine;
+ const originalFetch=w.fetch,rows=[],e={requests:[]},cache=new Map();
+ if(options.files)C.state.files=new Map(options.files);
+ const fixtureCatalog=await C.readResource(options.catalogUrl||'./test/test.json',document.baseURI,options.signal,8*1024*1024);
+ const suiteUrl=fixtureCatalog.url,catalog=C.validateCatalog(JSON.parse(dec.decode(fixtureCatalog.data)));
+ for(const id of ['native-quarter-identity','arrangement-poly','arrangement-choke','think10-best']){
+  const t=catalog.tests.find(t=>t.id===id);if(!t?.session)throw Error(`Engineering fixtures require the supplied ${id} session in this catalog.`);
+ }
+ if(catalog.tests[0].id!=='native-quarter-identity')throw Error('Engineering fixtures require native-quarter-identity first, as in the supplied catalog.');
+ cache.set(suiteUrl,fixtureCatalog.data);
+ for(const t of catalog.tests.filter(t=>['native-quarter-identity','arrangement-poly','arrangement-choke','think10-best'].includes(t.id))){
+  const session=await C.readResource(t.session.url,suiteUrl,options.signal,8*1024*1024);
+  assert.equal(D.md5Bytes(session.data),t.session.md5.toLowerCase());
+  cache.set(new URL(t.session.url,suiteUrl).href,session.data);
+  const doc=JSON.parse(dec.decode(session.data));
+  for(const [id,dep]of C.dependencyEntries(doc)){
+   const override=t.assets?.[id],u=new URL(override??dep.url,override?suiteUrl:session.url).href;
+   if(!cache.has(u)){const audio=await C.readResource(u,undefined,options.signal);assert.equal(D.md5Bytes(audio.data),dep.fileMd5.toLowerCase());cache.set(u,audio.data);}
+  }
+ }
+ function fixture(p){const u=new URL(p.replace(/^sampler\/test\//,''),suiteUrl).href;const b=cache.get(u);if(!b)throw Error(`Missing engineering fixture: ${p}`);return b.slice();}
+ const json=p=>JSON.parse(dec.decode(fixture(p)));
+ const fixtureFetch=async(url,options={})=>{e.requests.push(String(url));if(options.signal?.aborted)throw new DOMException('Cancelled','AbortError');const data=cache.get(String(url));if(!data)throw Error(`Unexpected fixture request: ${url}`);return new Response(data.slice());};
+ // Bundle URLs use the same production byte loader. HTTP fixtures use a bounded cache
+ // after preflight; this makes intentional corruption/cancellation tests reproducible.
+ if(new URL(suiteUrl).protocol==='bundle:'){
+  // The regression cases deliberately replace fetch, so give the verified bundle a
+  // virtual HTTP base inside this isolated page. No request reaches the network.
+  return runBundleChecks(options,cache,suiteUrl);
+ }
+ const test=async(name,fn)=>{
+  const before=w.fetch;try{await fn();rows.push({name,status:'PASS'});}catch(error){rows.push({name,status:'FAIL',error:error.stack||error.message});}finally{w.fetch=before;}
+  options.onProgress?.(rows.at(-1),rows.length);
+ };
+ let context;
+ try{
+  context=await D.ensureAudioContext();
+  if(context.state==='running'&&typeof context.suspend==='function')await context.suspend();
+  // Live scheduling assertions run against a suspended clock; all DSP renders are offline.
+  context.resume=async()=>{};
+  w.fetch=fixtureFetch;
+ await test('Catalog loading is lazy and keeps cancel controls outside the locked editor',async()=>{
+  await C.load(suiteUrl);assert.equal(e.requests.length,1);assert(!w.document.querySelector('main').contains(w.document.getElementById('canonicalCancel')));
+ });
+ const arr=json('sampler/test/sessions/arrangement-poly.session.json').recipe.arrangement;
+ await test('Doubling BPM halves time and doubles source rate; pitch changes source rate only',()=>{
+  const fast=Engine.compile(arr,{bpm:240,pitch:12});assert.equal(fast.duration,1);assert.equal(fast.events[1].when,.25);assert.equal(fast.events[0].rate,8);
+ });
+ await test('Mono choke preserves simultaneous layers and truncates the previous hit',()=>{
+  const events=Engine.compile(arr,{choke:true}).events;assert.equal(events[0].duration,.5);assert.equal(events[1].duration,1);assert.equal(events[2].duration,.5);assert.equal(events[3].duration,.25);
+ });
+ await test('Reject corrupt time, pitch, gain, and source identity before scheduling',()=>{
+  for(const [key,value]of [['time',-1],['rate',NaN],['gain',17],['source','reference']]){const a=clone(arr);a.events[0][key]=value;assert.throws(()=>Engine.compile(a));}
+ });
+ await test('Load an arrangement, retain per-note edits in session JSON, and resolve all sample dependencies',async()=>{
+  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));D.state.arrangement.events[0].gain=.6;const doc=D.buildSessionDocument();assert.equal(doc.recipe.arrangement.events[0].gain,.6);assert.equal(Object.keys(doc.audioDependencies.samples).length,2);assert.equal(w.document.querySelectorAll('#arrangementRows tr').length,4);assert(w.document.getElementById('sequencerScroller').hidden);
+ });
+ await test('Edited reference identity cannot enter the candidate audio graph',()=>{
+  const a=clone(D.state.arrangement);a.sources[0].fileMd5=D.state.test.referenceFileMd5;assert.throws(()=>w.ClipSeshArrangement.buffers(a),/reference/);
+ });
+ await test('Out-of-range source cuts fail explicitly',()=>{const a=clone(D.state.arrangement);a.events[0].end=999;assert.throws(()=>w.ClipSeshArrangement.buffers(a),/exceeds/);});
+ await test('Independent expected PCM passes; replacing the candidate with silence fails',async()=>{
+  const t=C.state.catalog.tests.find(t=>t.id==='arrangement-choke');await C.inspect(t);const result=await w.ClipSeshArrangement.score();assert(result.passed);const zero=D.state.audioContext.createBuffer(2,96000,48000);assert.equal(Engine.judge(Engine.pcmMetrics(zero,D.state.test.referenceBuffer),t.expect).passed,false);
+ });
+ await test('Stereo channel inversion cannot pass a waveform gate',()=>{
+  const ref=D.state.test.referenceBuffer,x=D.state.audioContext.createBuffer(2,ref.length,ref.sampleRate);x.getChannelData(0).set(ref.getChannelData(0));x.getChannelData(1).set(Float32Array.from(ref.getChannelData(1),v=>-v));assert(!Engine.judge(Engine.pcmMetrics(x,ref),{maxNrmse:.03}).passed);
+ });
+ await test('Changing A/B side never changes the offline candidate render',async()=>{
+  w.document.getElementById('arrange-candidate').click();const a=await D.renderCurrentLoop();w.document.getElementById('arrange-reference').click();const b=await D.renderCurrentLoop();assert.equal(Engine.pcmMetrics(a,b).nrmse,0);
+ });
+ await test('Session MD5 mismatch is rejected before audio loading',async()=>{
+  const t=clone(C.state.catalog.tests[0]);t.session.md5='0'.repeat(32);const count=e.requests.length;await assert.rejects(C.inspect(t),/Session MD5 mismatch/);assert.equal(e.requests.length,count+1);
+ });
+ await test('Audio tampering is rejected against the session hash',async()=>{
+  const t=clone(C.state.catalog.tests[0]),doc=json('sampler/test/'+t.session.url);D.state.audioLibrary.clear();t.assets={source:'audio/fixture-source-b.wav'};await assert.rejects(C.inspect(t),/Audio MD5 mismatch/);
+ });
+ await test('Duplicate catalog IDs, duplicate queue IDs, disabled and missing cases are rejected',async()=>{
+  const catalog=clone(C.state.catalog);catalog.tests.push(catalog.tests[0]);assert.throws(()=>C.validateCatalog(catalog),/unique/);await assert.rejects(C.run(['native-quarter-identity','native-quarter-identity']),/unique/);await assert.rejects(C.run(['missing']),/Unknown/);C.state.catalog.tests[0].disabled=true;await assert.rejects(C.run(['native-quarter-identity']),/disabled/);C.state.catalog.tests[0].disabled=false;
+ });
+ await test('Cancellation aborts loading and marks every unfinished queue item cancelled',async()=>{
+  const original=w.fetch;w.fetch=(_url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(new DOMException('Cancelled','AbortError')),{once:true}));
+  const running=C.run(['native-quarter-identity','arrangement-poly']);w.document.getElementById('canonicalCancel').click();const r=await running;w.fetch=original;assert.equal(r.cancelled,true);assert.equal(r.passed,false);assert.deepEqual(Array.from(r.results,x=>x.status),['CANCELLED','CANCELLED']);assert.equal(C.state.busy,false);
+ });
+ await test('Export ZIP round-trips catalog, pinned session, and external audio',async()=>{
+  await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));const doc=D.buildSessionDocument(),data=new TextEncoder().encode(JSON.stringify(doc));const zip=D.createZip([{name:'case/session.json',data},{name:'audio/source.wav',data:new Uint8Array([1,2,3])}]);const parsed=await D.parseZip(zip);assert.equal(D.md5Bytes(parsed.get('case/session.json')),D.md5Bytes(data));assert.equal(parsed.get('audio/source.wav')[2],3);
+ });
+ await test('Legacy mono choke is also applied in offline rendering',async()=>{
+  await C.inspect(C.state.catalog.tests[0]);const recipe=D.captureRecipe();recipe.loopLock.locked=false;recipe.boundaries=[0,1.5,2];recipe.pattern=Array.from({length:16},(_,i)=>i===0?[{slice:0,velocity:127}]:i===4?[{slice:1,velocity:127}]:[]);recipe.controls.chokeToggle=false;D.applyRecipe(recipe);const poly=await D.renderCurrentLoop();recipe.controls.chokeToggle=true;D.applyRecipe(recipe);const mono=await D.renderCurrentLoop();const energy=b=>b.getChannelData(0).slice(50000,70000).reduce((sum,v)=>sum+v*v,0);assert(energy(poly)>1);assert(energy(mono)<1e-10);
+ });
+ await test('Non-finite PCM cannot produce a misleading comparison report',()=>{const b=D.state.audioContext.createBuffer(2,128,48000);b.getChannelData(0)[7]=NaN;assert.throws(()=>Engine.pcmMetrics(b,b),/non-finite/);});
+ await test('External manifests bind session and every audio identity at their own relative URL',async()=>{
+  const original=w.fetch,t=clone(C.state.catalog.tests.find(t=>t.id==='arrangement-poly')),doc=json('sampler/test/'+t.session.url),deps=C.dependencyEntries(doc);let bad=false;
+  const manifest={format:'clip-sesh-sampler-test-manifest',version:1,session:{url:'../'+t.session.url,md5:t.session.md5},assets:deps.map(([id,dep])=>({id,url:'../audio/'+dep.name,md5:dep.fileMd5}))};
+  w.fetch=async(url,opts)=>String(url).endsWith('/manifests/poly.json')?new Response(JSON.stringify(bad?{...manifest,assets:manifest.assets.map((a,i)=>i? a:{...a,md5:'0'.repeat(32)})}:manifest)):original(url,opts);
+  const entry={...t,manifest:'manifests/poly.json'};delete entry.session;await C.inspect(entry);assert.equal(D.state.arrangement.events.length,4);bad=true;await assert.rejects(C.inspect(entry),/Manifest identity/);w.fetch=original;
+ });
+ await test('Bundle-relative catalog, session, and audio load without network requests',async()=>{
+  const original=w.fetch,t=clone(C.state.catalog.tests.find(t=>t.id==='arrangement-poly')),doc=json('sampler/test/'+t.session.url);C.state.files.clear();const put=(key,data)=>C.state.files.set('suite/'+key,new Uint8Array(data));put('test.json',enc.encode(JSON.stringify({...C.state.catalog,tests:[t]})));put(t.session.url,fixture(t.session.url));for(const [,dep]of C.dependencyEntries(doc))put('audio/'+dep.name,fixture('audio/'+dep.name));D.state.audioLibrary.clear();w.fetch=()=>{throw Error('Bundle attempted network fetch');};await C.load('bundle://local/suite/test.json');await C.inspect(C.state.catalog.tests[0]);assert.equal(D.state.arrangement.events.length,4);w.fetch=original;
+ });
+ await test('A nonzero attack holds its sustain level between the two fades',async()=>{
+  const ctx=new w.OfflineAudioContext(2,24000,48000),source=ctx.createBuffer(2,48000,48000);source.getChannelData(0).fill(.25);source.getChannelData(1).fill(.125);const a={format:'clipsesh-break-arrangement',version:1,bpm:120,durationSeconds:.5,sources:[{id:'constant'}],events:[{source:'constant',time:.1234,start:.2,end:.6,rate:1.5,duration:.2,gain:.4}]};Engine.schedule(ctx,ctx.destination,Engine.compile(a),new Map([['constant',source]]),{attack:.005,release:.005});const out=await ctx.startRendering();for(const time of [.14,.2,.3])assert(Math.abs(out.getChannelData(0)[Math.round(time*48000)]-.1)<1e-6);assert.equal(out.getChannelData(0)[16000],0);
+ });
+ await test('Clearing the sample clears timed arrangement state and restores the grid',()=>{D.clearSample();assert.equal(D.state.arrangement,null);assert(w.document.getElementById('arrangementPanel').hidden);assert(!w.document.getElementById('sequencerScroller').hidden);});
+
+ const base={format:'clipsesh-break-arrangement',version:1,bpm:120,durationSeconds:1,sources:[{id:'think'}],maxChops:1,chops:[{id:'c1',source:'think',start:0,end:1}],events:[{chopId:'c1',source:'think',start:0,end:1,time:0,duration:1,rate:1,gain:1}]};
+ await test('A chop budget rejects an eleventh region and undeclared per-hit boundaries',()=>{const a=structuredClone(base);a.chops.push({...a.chops[0],id:'c2'});assert.throws(()=>E.validate(a),/budget/);const b=structuredClone(base);b.events[0].start=.001;assert.throws(()=>E.validate(b),/reuse/);});
+ await test('Automation validates bounds, ordering, and a finite feedback range',()=>{for(const lane of [[{time:0,value:2}],[{time:.4,value:.5},{time:.2,value:.5}]])assert.throws(()=>F.validate({lanes:{delay:lane}},1));assert.throws(()=>F.validate({delay:{feedback:1}},1));});
+ await test('Linear envelope interpolation and tempo scaling preserve automation time',()=>{const points=[{time:0,value:0},{time:1,value:1},{time:2,value:0}];assert.equal(F.valueAt(points,.25),.25);assert.equal(F.valueAt(points,1.5),.5);const events=[];F.automate({cancelScheduledValues(){},setValueAtTime(v,t){events.push([v,t]);},linearRampToValueAtTime(v,t){events.push([v,t]);}},points,{start:10,scale:.5});assert(events.some(([v,t])=>v===1&&t===10.5));});
+ async function render(sendEffects,input,start=0){const ctx=new w.OfflineAudioContext(2,48000,48000),buf=ctx.createBuffer(2,48000,48000);for(let c=0;c<2;c++)buf.getChannelData(c).set(input);const a={...base,sendEffects},rack=F.create(ctx,ctx.destination,a,{start,bpm:120}),source=ctx.createBufferSource();source.buffer=buf;source.connect(rack.input);source.start(start);return ctx.startRendering();}
+ await test('Cleared sends leave dry PCM unchanged',async()=>{const x=new Float32Array(48000);x[1200]=.5;const y=await render(F.defaults(),x);assert.equal(y.getChannelData(0)[1200],.5);assert.equal(y.getChannelData(0).reduce((s,v)=>s+Math.abs(v),0),.5);});
+ await test('Delay repeats arrive at the chosen beat interval with decreasing amplitudes',async()=>{const x=new Float32Array(48000);x[1200]=.5;const y=await render({delay:{beats:.25,feedback:.5},lanes:{delay:[{time:0,value:.4}]}},x);const ch=y.getChannelData(0);assert(Math.abs(ch[7200]-.2)<1e-6);assert(Math.abs(ch[13200]-.1)<1e-6);assert.equal(ch[7100],0);});
+ await test('A send ramp changes successive hit echoes without changing dry hits',async()=>{const x=new Float32Array(48000);x[4800]=.5;x[14400]=.5;const y=await render({delay:{beats:.25,feedback:0},lanes:{delay:[{time:0,value:0},{time:.4,value:.8}]}},x);const ch=y.getChannelData(0);assert(Math.abs(ch[10800]-.1)<1e-5);assert(Math.abs(ch[20400]-.3)<1e-5);assert.equal(ch[4800],.5);assert.equal(ch[14400],.5);});
+ await test('Reverb produces deterministic delayed energy and clears completely',async()=>{const x=new Float32Array(48000);x[1000]=.5;const fx={reverb:{decay:.3},lanes:{reverb:[{time:0,value:.3}]}};const a=await render(fx,x),b=await render(fx,x);assert.equal(E.pcmMetrics(a,b).nrmse,0);assert(a.getChannelData(0).slice(1600,17000).some(v=>Math.abs(v)>.001));assert.equal(a.getChannelData(0)[1000],.5);});
+ await test('Lane API, keyboard edit, clear, and source kit persist in session JSON',async()=>{await C.load(suiteUrl);await C.inspect(C.state.catalog.tests.find(t=>t.id==='arrangement-poly'));const U=w.ClipSeshAutomationUI;U.set('delay',[{time:0,value:.2},{time:1,value:.4}]);U.shift('delay',.1);assert(Math.abs(D.buildSessionDocument().recipe.arrangement.sendEffects.lanes.delay[0].value-.3)<1e-10);const point=w.document.querySelector('#lane-delay circle');point.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));assert(Math.abs(D.state.arrangement.sendEffects.lanes.delay[0].value-.32)<1e-10);U.clear('delay');assert.equal(D.buildSessionDocument().recipe.arrangement.sendEffects.lanes.delay[0].value,0);assert.equal(w.document.querySelectorAll('#lane-delay circle').length,1);});
+ await test('The musical kit contains at most ten Think regions and edits one region for all its hits',async()=>{await C.load(suiteUrl);const entry=C.state.catalog.tests.find(t=>t.id==='think10-best');assert(entry,'Missing Think-only case');await C.inspect(entry);const a=D.state.arrangement;assert.equal(a.sources.length,1);assert.equal(a.sources[0].break,'Think');assert(a.chops.length<=10);assert.equal(new Set(a.events.map(h=>h.start+':'+h.end)).size,a.chops.length);assert.equal(w.document.querySelectorAll('#kitRows tr').length,a.chops.length);const c=a.chops[0],input=w.document.querySelector('#kitRows input'),next=c.start+.001;input.value=next;input.dispatchEvent(new w.Event('change',{bubbles:true}));assert(a.events.filter(h=>h.chopId===c.id).every(h=>h.start===next));assert.equal(D.buildSessionDocument().recipe.arrangement.maxChops,10);assert.equal(w.document.getElementById('sendDelayBeats').value,String(a.sendEffects.delay.beats));});
+ await test('Dragging a send during playback keeps the running source timeline',async()=>{await C.inspect(C.state.catalog.tests.find(t=>t.id==='think10-best'));await w.ClipSeshArrangement.play();const live=C.state.live,when=live.when;assert(live.rack.params.delay&&live.rack.params.reverb);w.ClipSeshAutomationUI.set('delay',[{time:0,value:.2},{time:2,value:0}]);assert.equal(C.state.live,live);assert.equal(C.state.live.when,when);w.ClipSeshAutomationUI.clear('reverb');assert.equal(C.state.live,live);w.ClipSeshArrangement.stop();assert.equal(C.state.live,null);await w.ClipSeshArrangement.auditionChop(D.state.arrangement.chops[0].id);assert(C.state.preview.length>0);w.ClipSeshArrangement.stop();assert.equal(C.state.preview.length,0);});
+  await test('Single HTML contains every engine and executable regression check',()=>{
+   assert.equal(w.document.querySelectorAll('script[src],link[rel="stylesheet"]').length,0);
+   for(const id of ['sampler-arrangement','sampler-automation','sampler-catalog','sampler-automation-ui','sampler-checks'])assert(w.document.getElementById(id)?.textContent.length>100);
+   assert.equal(w.document.querySelectorAll('#canonicalLibrary').length,1);
+   assert.equal(w.document.querySelectorAll('#engineeringChecks').length,1);
+   assert(w.__clipSeshIsolatedChecks);
+  });
+  await test('File MD5 uses the standard digest, including empty and UTF-8 inputs',()=>{
+   assert.equal(D.md5Bytes(enc.encode('')),'d41d8cd98f00b204e9800998ecf8427e');
+   assert.equal(D.md5Bytes(enc.encode('abc')),'900150983cd24fb0d6963f7d28e17f72');
+  });
+ }finally{w.fetch=originalFetch;D.stopSequencer();try{await context?.close();}catch{}}
+ const report={format:'clip-sesh-sampler-engineering-report',version:1,runtime:options.runtime||navigator.userAgent,catalogUrl:suiteUrl,passed:rows.every(r=>r.status==='PASS'),counts:{pass:rows.filter(r=>r.status==='PASS').length,fail:rows.filter(r=>r.status==='FAIL').length},codeMd5:D.md5Text([...document.querySelectorAll('script')].map(s=>s.textContent).join('\n')),tests:rows};
+ return report;
+}
+// An imported bundle is served through a virtual fetch in the child only. Original
+// dependency paths and pinned bytes stay intact, exercising the HTTP path as well.
+async function runBundleChecks(options,cache,base){
+ const original=window.fetch,virtual='https://sampler-checks.invalid/test/test.json';
+ const prefix=base.slice(0,base.lastIndexOf('/')+1),mapped=new Map();
+ for(const [u,b]of cache){if(!u.startsWith(prefix))throw Error('Engineering bundle fixtures must stay under their catalog folder.');mapped.set(new URL(u.slice(prefix.length),virtual).href,b);}
+ window.fetch=async u=>{const b=mapped.get(String(u));if(!b)throw Error(`Missing bundled fixture ${u}`);return new Response(b.slice());};
+ try{return await runInCurrentPage({...options,files:undefined,catalogUrl:virtual});}finally{window.fetch=original;}
+}
+window.ClipSeshEngineeringChecks={runInCurrentPage};
+})();
+
+/* Runner UI: reload this same HTML in an isolated, disposable child frame. */
+(function(){
+'use strict';
+const D=window.__clipSeshDiagnostics,C=window.ClipSeshSamplerCatalog,$=id=>document.getElementById(id);
+const root=document.createElement('details');root.id='engineeringChecks';root.innerHTML=`<summary>Engineering checks &amp; file format</summary><p>Run the embedded regression checks against the supplied test fixtures. Your open session stays editable while a separate instance runs silent checks.</p><div class="arrangement-controls"><button id="engineeringRun">Run engineering checks</button><button id="engineeringCancel" disabled>Cancel checks</button><button id="engineeringSave" disabled>Save checks report</button></div><p id="engineeringStatus" role="status">Ready. Uses the loaded catalog or imported bundle; otherwise the URL above.</p><pre id="engineeringReport"></pre><details><summary>Hosted files and session format</summary><div id="samplerFormatHelp"></div></details>`;
+$('canonicalLibrary').append(root);
+const style=document.createElement('style');style.textContent='#engineeringChecks{margin-top:14px;border-top:1px solid #465360;padding-top:12px}#engineeringChecks summary{cursor:pointer;font-size:12px}#engineeringChecks p,#samplerFormatHelp{font-size:12px;line-height:1.6}#engineeringReport:empty{display:none}#samplerFormatHelp code{overflow-wrap:anywhere}#samplerFormatHelp pre{background:#111b24;padding:8px}';document.head.append(style);
+$('samplerFormatHelp').innerHTML=`<p>Deploy <code>sampler.html</code> as the only application file. The default catalog is <code>./test/test.json</code>. Use the Catalog URL field or <code>?suite=./my-test/test.json</code> for another folder. Add <code>&amp;case=think10-best</code> to open a case on arrival.</p><p>Keep external data under that folder: <code>test.json</code>, <code>sessions/*.session.json</code>, and <code>audio/*.wav</code>. HTTPS URLs may also point to GitHub raw files or GitHub Pages, provided the host allows cross-origin fetches. Local use: open the supplied ZIP with <b>Open test bundle</b>.</p><p>Session URLs resolve relative to the catalog; audio URLs resolve relative to their session JSON. MD5s identify exact file bytes. Export a test bundle to produce a catalog with the correct session and audio hashes.</p><pre>{
+  "format": "clip-sesh-sampler-test-catalog",
+  "version": 1,
+  "title": "My sampler tests",
+  "tests": [{
+    "id": "my-case",
+    "session": {
+      "url": "sessions/my-case.session.json",
+      "md5": "REPLACE_WITH_SESSION_FILE_MD5"
+    },
+    "expect": {
+      "maxNrmse": 0.03,
+      "minEnvelopeCorrelation": 0.98,
+      "maxRmsDifferenceDb": 1
+    }
+  }]
+}</pre><p>Sessions use <code>schema: "clip-sesh-session-json"</code>, version 2. <code>audioDependencies.source</code>, <code>reference</code>, and <code>samples[id]</code> carry <code>fileMd5</code>, <code>url</code>, name, type, sample rate, channels, and frame count. <code>recipe</code> is the session's configuration: native controls and effects plus the optional arrangement.</p><p><code>recipe.arrangement</code> holds <code>bpm</code>, exact <code>durationSeconds</code>, sources, <code>maxChops</code>, reusable <code>chops</code>, and sequenced <code>events</code>. Event fields are <code>chopId, source, time, start, end, duration, rate, gain</code>; times are seconds and <code>rate</code> changes speed and pitch together. Each event must reuse its declared chop boundaries.</p><p>Automation lives at <code>recipe.arrangement.sendEffects</code>:</p><pre>{
+  "delay": {"beats": 0.25, "feedback": 0.3},
+  "reverb": {"decay": 0.45},
+  "lanes": {
+    "delay": [{"time": 0, "value": 0.02}, {"time": 30, "value": 0}],
+    "reverb": [{"time": 0, "value": 0.04}, {"time": 30, "value": 0.02}]
+  }
+}</pre><p>Use <b>FX / AUTOMATION</b> beside Play and Stop in the main sequencer to show or hide the delay/reverb settings and both lanes. The panel can stay open while changing sessions; its visibility saves with the session workspace. Lane points are strictly ascending, with values from 0 to 1. Drag points to edit, drag the line to move it vertically, or Clear to zero the send. All edits persist in session JSON.</p><p>Optional external manifests use <code>format: "clip-sesh-sampler-test-manifest"</code>, version 1, pinned <code>session: {url, md5}</code>, and <code>assets: [{id, url, md5}]</code>. Set a case's <code>manifest</code> URL instead of <code>session</code>; every asset hash must agree with the session.</p><p><b>Run selected / Run all</b> compare rendered audio against external references. <b>Run engineering checks</b> runs the executable checks embedded in this HTML and requires the supplied native-quarter-identity, arrangement-poly, arrangement-choke, and think10-best fixtures. Reports keep engineering correctness separate from musical similarity. The current Think reconstruction is an approximation and its strict musical checks report FAIL.</p>`;
+let active=null,last=null;
+function status(text){$('engineeringStatus').textContent=text;}
+function download(report){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)+'\n'],{type:'application/json'}));a.href=url;a.download='sampler-engineering-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function run(){
+ if(active)return Promise.reject(Error('Engineering checks are already running.'));
+ if(C.state.busy)return Promise.reject(Error('Finish or cancel the catalog operation first.'));
+ const token=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('');
+ const url=new URL(location.href);url.search='';url.hash='';url.searchParams.set('_samplerChecks',token);
+ const frame=document.createElement('iframe');frame.hidden=true;frame.title='Isolated sampler engineering checks';frame.src=url.href;
+ const catalogUrl=C.state.base||new URL($('canonicalUrl').value||'./test/test.json',document.baseURI).href;
+ $('engineeringRun').disabled=true;$('engineeringCancel').disabled=false;$('engineeringReport').textContent='';status('Loading an isolated copy of this HTML…');
+ return new Promise((resolve,reject)=>{
+  let timer;const cleanup=()=>{clearTimeout(timer);window.removeEventListener('message',receive);try{frame.contentWindow.__clipSeshDiagnostics?.state.audioContext?.close();}catch{}frame.remove();active=null;$('engineeringRun').disabled=false;$('engineeringCancel').disabled=true;};
+  const fail=error=>{cleanup();status(error.message);reject(error);};
+  const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>fail(Error('Engineering checks timed out. Check the catalog URL and fixture files.')),180000);};
+  const receive=event=>{
+   if(event.source!==frame.contentWindow||event.data?.token!==token||event.data?.channel!=='clip-sesh-engineering')return;
+   const m=event.data;arm();
+   if(m.kind==='ready'){status('Verifying fixture files…');frame.contentWindow.postMessage({channel:m.channel,token,kind:'run',catalogUrl,files:catalogUrl.startsWith('bundle:')?[...C.state.files]:undefined},location.origin==='null'?'*':location.origin);}
+   if(m.kind==='progress'){status(`${m.count} checks finished · ${m.row.status} · ${m.row.name}`);$('engineeringReport').textContent+=`${m.row.status} ${m.row.name}\n`;}
+   if(m.kind==='result'){last=m.report;cleanup();$('engineeringSave').disabled=false;status(`${last.counts.pass} passed · ${last.counts.fail} failed`);$('engineeringReport').textContent=JSON.stringify(last,null,2);resolve(last);}
+   if(m.kind==='error')fail(Error(m.error));
+  };
+  active={cancel:()=>fail(Error('Engineering checks cancelled.'))};window.addEventListener('message',receive);arm();document.body.append(frame);
+ });
+}
+$('engineeringRun').onclick=()=>run().catch(error=>status(error.message));$('engineeringCancel').onclick=()=>active?.cancel();$('engineeringSave').onclick=()=>last&&download(last);
+window.ClipSeshEngineeringChecks.run=run;
+if(window.__clipSeshIsolatedChecks){
+ const token=new URLSearchParams(location.search).get('_samplerChecks');let started=false;
+ const send=(kind,data={})=>parent.postMessage({channel:'clip-sesh-engineering',token,kind,...data},location.origin==='null'?'*':location.origin);
+ window.addEventListener('message',async event=>{
+  if(parent===window||event.source!==parent||event.data?.channel!=='clip-sesh-engineering'||event.data?.token!==token||event.data?.kind!=='run'||started)return;
+  started=true;try{const report=await window.ClipSeshEngineeringChecks.runInCurrentPage({catalogUrl:event.data.catalogUrl,files:event.data.files,onProgress:(row,count)=>send('progress',{row,count})});send('result',{report});}catch(error){send('error',{error:error.message});}
+ });
+ if(parent!==window){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>send('ready'),{once:true});else send('ready');}
+}
+})();
+
+</script>
 </body>
 </html>
