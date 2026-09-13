@@ -3,21 +3,16 @@
     "cancelled": false,
     "catalog": "https://clipsesh.com/sampler/test/test.json",
     "counts": {
-      "PASS": 7
+      "FAIL": 4,
+      "PASS": 3
     },
-    "createdAt": "2026-09-13T15:46:34.727Z",
-    "durationSeconds": 12.293300000000745,
+    "createdAt": "2026-09-13T15:07:32.685Z",
+    "durationSeconds": 13.11539999999851,
     "format": "clip-sesh-sampler-suite-result",
     "mode": "fast",
-    "passed": true,
+    "passed": false,
     "results": [
       {
-        "canonicalExpect": {
-          "maxAbsoluteError": 0.002,
-          "maxNrmse": 0.003,
-          "maxRmsDifferenceDb": 0.02,
-          "minEnvelopeCorrelation": 0.999
-        },
         "canonicalSessionMd5": "353e558bbaac769589081f95c8d008aa",
         "channels": 2,
         "checks": {
@@ -29,7 +24,7 @@
           "sampleRate": true,
           "waveform": true
         },
-        "createdAt": "2026-09-13T15:46:22.963Z",
+        "createdAt": "2026-09-13T15:07:20.184Z",
         "dependencies": [
           {
             "fileMd5": "584704bd53f150cc517a346da8df399f",
@@ -48,7 +43,6 @@
           "maxRmsDifferenceDb": 0.02,
           "minEnvelopeCorrelation": 0.999
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 96000,
         "id": "native-quarter-identity",
@@ -68,12 +62,6 @@
         "waveformCosine": 1
       },
       {
-        "canonicalExpect": {
-          "maxAbsoluteError": 0.002,
-          "maxNrmse": 0.003,
-          "maxRmsDifferenceDb": 0.02,
-          "minEnvelopeCorrelation": 0.999
-        },
         "canonicalSessionMd5": "b3fa78ae4cdaf3cb4561fc9b52e1f717",
         "channels": 2,
         "checks": {
@@ -85,7 +73,7 @@
           "sampleRate": true,
           "waveform": true
         },
-        "createdAt": "2026-09-13T15:46:23.812Z",
+        "createdAt": "2026-09-13T15:07:20.749Z",
         "dependencies": [
           {
             "fileMd5": "584704bd53f150cc517a346da8df399f",
@@ -112,7 +100,6 @@
           "maxRmsDifferenceDb": 0.02,
           "minEnvelopeCorrelation": 0.999
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 96000,
         "id": "arrangement-poly",
@@ -132,12 +119,6 @@
         "waveformCosine": 0.9999999940789214
       },
       {
-        "canonicalExpect": {
-          "maxAbsoluteError": 0.002,
-          "maxNrmse": 0.003,
-          "maxRmsDifferenceDb": 0.02,
-          "minEnvelopeCorrelation": 0.999
-        },
         "canonicalSessionMd5": "e012fa1bf48ac20927db655902f32eb5",
         "channels": 2,
         "checks": {
@@ -149,7 +130,7 @@
           "sampleRate": true,
           "waveform": true
         },
-        "createdAt": "2026-09-13T15:46:24.240Z",
+        "createdAt": "2026-09-13T15:07:21.149Z",
         "dependencies": [
           {
             "fileMd5": "584704bd53f150cc517a346da8df399f",
@@ -176,7 +157,6 @@
           "maxRmsDifferenceDb": 0.02,
           "minEnvelopeCorrelation": 0.999
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 96000,
         "id": "arrangement-choke",
@@ -196,20 +176,17 @@
         "waveformCosine": 0.9999999932803912
       },
       {
-        "canonicalExpect": {
-          "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
-        },
         "canonicalSessionMd5": "ea9a797cc0fdcc660b2d018f722c1e60",
         "channels": 2,
         "checks": {
           "channels": true,
-          "envelope": true,
+          "envelope": false,
           "frames": true,
           "level": true,
-          "sampleRate": true
+          "sampleRate": true,
+          "waveform": false
         },
-        "createdAt": "2026-09-13T15:46:27.634Z",
+        "createdAt": "2026-09-13T15:07:24.879Z",
         "dependencies": [
           {
             "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
@@ -225,47 +202,42 @@
           }
         ],
         "editedSinceLoad": false,
-        "envelopeCorrelation": 0.844456865460453,
+        "envelopeCorrelation": 0.8444568655684989,
         "expect": {
+          "maxNrmse": 0.03,
           "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
+          "minEnvelopeCorrelation": 0.98
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 1440000,
         "id": "think10-best",
-        "maxAbsoluteError": 1.0219857692718506,
-        "metric": "rhythm-envelope-10ms-v1",
-        "nrmse": 1.4532384525709334,
-        "passed": true,
+        "maxAbsoluteError": 1.0219857096672058,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.4532384523483273,
+        "passed": false,
         "referenceFrames": 1440000,
         "renderedRecipeMd5": "85e09263f2449b5660b6dd7cc21d99c4",
-        "rmsDifferenceDb": -0.005122569504094269,
+        "rmsDifferenceDb": -0.005122571571689971,
         "sameChannels": true,
         "sameFrames": true,
         "sameRate": true,
         "sampleRate": 48000,
-        "similarityPercent": 84.4456865460453,
-        "similarityTargetPercent": 70,
-        "status": "PASS",
+        "status": "FAIL",
         "version": 1,
-        "waveformCosine": -0.05657376491891647
+        "waveformCosine": -0.05657376484650757
       },
       {
-        "canonicalExpect": {
-          "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
-        },
         "canonicalSessionMd5": "f0090fb5dd5d34a0cd29b8123af6b210",
         "channels": 2,
         "checks": {
           "channels": true,
-          "envelope": true,
+          "envelope": false,
           "frames": true,
           "level": true,
-          "sampleRate": true
+          "sampleRate": true,
+          "waveform": false
         },
-        "createdAt": "2026-09-13T15:46:29.856Z",
+        "createdAt": "2026-09-13T15:07:27.381Z",
         "dependencies": [
           {
             "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
@@ -283,17 +255,17 @@
         "editedSinceLoad": false,
         "envelopeCorrelation": 0.8446632407239353,
         "expect": {
+          "maxNrmse": 0.03,
           "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
+          "minEnvelopeCorrelation": 0.98
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 1440000,
         "id": "think10-dry",
         "maxAbsoluteError": 1.0226200819015503,
-        "metric": "rhythm-envelope-10ms-v1",
+        "metric": "stereo-pcm-v1",
         "nrmse": 1.452254498893537,
-        "passed": true,
+        "passed": false,
         "referenceFrames": 1440000,
         "renderedRecipeMd5": "83155a5368ff734862a60a7293196ad6",
         "rmsDifferenceDb": -0.005583884885087757,
@@ -301,27 +273,22 @@
         "sameFrames": true,
         "sameRate": true,
         "sampleRate": 48000,
-        "similarityPercent": 84.46632407239353,
-        "similarityTargetPercent": 70,
-        "status": "PASS",
+        "status": "FAIL",
         "version": 1,
         "waveformCosine": -0.055199494793276634
       },
       {
-        "canonicalExpect": {
-          "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
-        },
         "canonicalSessionMd5": "7e0f2557f8bb959f3e5172f98b86652a",
         "channels": 2,
         "checks": {
           "channels": true,
-          "envelope": true,
+          "envelope": false,
           "frames": true,
           "level": true,
-          "sampleRate": true
+          "sampleRate": true,
+          "waveform": false
         },
-        "createdAt": "2026-09-13T15:46:32.393Z",
+        "createdAt": "2026-09-13T15:07:30.145Z",
         "dependencies": [
           {
             "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
@@ -337,47 +304,42 @@
           }
         ],
         "editedSinceLoad": false,
-        "envelopeCorrelation": 0.7831918558212471,
+        "envelopeCorrelation": 0.7831918558510073,
         "expect": {
+          "maxNrmse": 0.03,
           "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
+          "minEnvelopeCorrelation": 0.98
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 1440000,
         "id": "think10-sparser",
-        "maxAbsoluteError": 1.047489911317825,
-        "metric": "rhythm-envelope-10ms-v1",
-        "nrmse": 1.3848299076299664,
-        "passed": true,
+        "maxAbsoluteError": 1.0474898517131803,
+        "metric": "stereo-pcm-v1",
+        "nrmse": 1.384829907567128,
+        "passed": false,
         "referenceFrames": 1440000,
         "renderedRecipeMd5": "60dea96a3e80f00eb75587d21ccd1eed",
-        "rmsDifferenceDb": -0.0001847395648082398,
+        "rmsDifferenceDb": -0.00018474053870709932,
         "sameChannels": true,
         "sameFrames": true,
         "sameRate": true,
         "sampleRate": 48000,
-        "similarityPercent": 78.3191855821247,
-        "similarityTargetPercent": 70,
-        "status": "PASS",
+        "status": "FAIL",
         "version": 1,
-        "waveformCosine": 0.041102669190966175
+        "waveformCosine": 0.041102669170388136
       },
       {
-        "canonicalExpect": {
-          "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
-        },
         "canonicalSessionMd5": "cd3e2c96c280ea6b640dd25a548ed22b",
         "channels": 2,
         "checks": {
           "channels": true,
-          "envelope": true,
+          "envelope": false,
           "frames": true,
           "level": true,
-          "sampleRate": true
+          "sampleRate": true,
+          "waveform": false
         },
-        "createdAt": "2026-09-13T15:46:34.726Z",
+        "createdAt": "2026-09-13T15:07:32.684Z",
         "dependencies": [
           {
             "fileMd5": "f6c637fcbcaac584042a8f5e1511404f",
@@ -395,17 +357,17 @@
         "editedSinceLoad": false,
         "envelopeCorrelation": 0.8140910478138447,
         "expect": {
+          "maxNrmse": 0.03,
           "maxRmsDifferenceDb": 1,
-          "minEnvelopeCorrelation": 0.7
+          "minEnvelopeCorrelation": 0.98
         },
-        "expectationEdited": false,
         "format": "clip-sesh-sampler-test-result",
         "frames": 1440000,
         "id": "think10-fixed-pitch",
         "maxAbsoluteError": 1.032493680715561,
-        "metric": "rhythm-envelope-10ms-v1",
+        "metric": "stereo-pcm-v1",
         "nrmse": 1.3215375315917974,
-        "passed": true,
+        "passed": false,
         "referenceFrames": 1440000,
         "renderedRecipeMd5": "b26db0745c04c4a7c22115e469ed9a97",
         "rmsDifferenceDb": -0.04046168164156304,
@@ -413,9 +375,7 @@
         "sameFrames": true,
         "sameRate": true,
         "sampleRate": 48000,
-        "similarityPercent": 81.40910478138447,
-        "similarityTargetPercent": 70,
-        "status": "PASS",
+        "status": "FAIL",
         "version": 1,
         "waveformCosine": 0.12270284605036912
       }
@@ -424,10 +384,10 @@
   },
   "engineering": {
     "catalogUrl": "https://clipsesh.com/sampler/test/test.json",
-    "codeMd5": "e5c8db867ec84fa949e672416744bf41",
+    "codeMd5": "87cfd51b86197f11e94eb4ef9d17836d",
     "counts": {
       "fail": 0,
-      "pass": 40
+      "pass": 37
     },
     "format": "clip-sesh-sampler-engineering-report",
     "passed": true,
@@ -487,18 +447,6 @@
       },
       {
         "name": "Save WAV exports an arrangement even when the legacy step pattern is empty",
-        "status": "PASS"
-      },
-      {
-        "name": "Rhythm thresholds reject silence and worsen when a drum pattern changes; strict PCM stays independent",
-        "status": "PASS"
-      },
-      {
-        "name": "Raising a musical target persists across loading and running without changing source audio or recipe",
-        "status": "PASS"
-      },
-      {
-        "name": "Exported test bundles save the edited target and keep the original as reference",
         "status": "PASS"
       },
       {

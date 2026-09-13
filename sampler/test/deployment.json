@@ -11,11 +11,11 @@
   "engineeringChecks": "Open the test sidebar, expand Engineering checks & file format, then Run engineering checks. Requires the supplied fixture catalog.",
   "validation": {
     "nativeEngineering": {
-      "pass": 37,
+      "pass": 40,
       "fail": 0
     },
     "softwareEngineering": {
-      "pass": 37,
+      "pass": 40,
       "fail": 0
     },
     "additionalIntegration": {
@@ -27,18 +27,37 @@
       "fail": 0
     },
     "nativeMusicalAudio": {
-      "pass": 0,
-      "fail": 4
+      "pass": 4,
+      "fail": 0
     },
     "runtime": "Native Chrome 151 on clipsesh.com; supplementary DOM emulation and software Web Audio checks.",
-    "reportScope": "All 37 embedded engineering checks and all seven canonical cases rerun for this HTML in Chrome. Additional ZIP/custom-folder/message-isolation integration checks run in software.",
-    "musicalStatus": "The Think-only, ten-chop reconstruction remains an approximation. All four musical cases still FAIL their unchanged strict PCM limits.",
+    "reportScope": "All 40 embedded engineering checks and all seven canonical cases rerun in native Chrome for this HTML. Software integration checks passed. Historical strict musical failures are retained in native-chrome-before-threshold.json.",
+    "musicalStatus": "70% rhythm similarity is the requested acceptance criterion. The audio reconstruction itself is unchanged.",
     "audition": "Live A/B switch, automatic grid-page following, active notes, source chop marker, FX panel, and Stop verified through Chrome UI.",
-    "assets": "All seven session MD5s and 22 dependency references verified. Canonical sessions, audio files and comparison limits are unchanged."
+    "assets": "All seven session MD5s and 22 dependencies are unchanged. Only the musical acceptance limits in the catalog changed.",
+    "nativeCanonicalAudio": {
+      "pass": 7,
+      "fail": 0
+    },
+    "musicalScoresPercent": {
+      "think10-best": 84.4456865460453,
+      "think10-dry": 84.46632407239353,
+      "think10-sparser": 78.3191855821247,
+      "think10-fixed-pitch": 81.40910478138447
+    }
   },
-  "revision": "native-chrome-timing-and-test-playback",
+  "revision": "adjustable-rhythm-similarity-target",
   "automationPanel": "Click FX / AUTOMATION beside Play and Stop in the main sequencer. The panel shows delay/reverb settings and both automation lanes for the loaded arrangement. Before loading an arrangement it offers Open Sessions. Visibility is saved as workspace.automationOpen; the sound recipe is unaffected.",
-  "applicationCommit": "11c776dd2e33d5c79028ebd31ef0152a2123c5d2",
-  "verifiedUrl": "https://clipsesh.com/sampler/sampler?case=think10-best&build=11c776dd",
-  "playback": "In the test sidebar choose Audition A/B, then Run selected or Run all. HEAR B · REFERENCE and HEAR A · RECONSTRUCTION switch synchronized sides. PLAY A/B replays the loaded case. STOP AUDITION cancels a running queue. Silent checks measures without playback. The main grid shows exact arrangement hit positions; edit notes in the hit table."
+  "applicationCommit": "b25f34c92d56c21379e9e2af191a9e91e6a6818b",
+  "verifiedUrl": "https://clipsesh.com/sampler/sampler?case=think10-best&build=b25f34c9-verified",
+  "playback": "In the test sidebar choose Audition A/B, then Run selected or Run all. HEAR B \u00b7 REFERENCE and HEAR A \u00b7 RECONSTRUCTION switch synchronized sides. PLAY A/B replays the loaded case. STOP AUDITION cancels a running queue. Silent checks measures without playback. The main grid shows exact arrangement hit positions; edit notes in the hit table.",
+  "similarityTarget": {
+    "defaultPercent": 70,
+    "metric": "rhythm-envelope-10ms-v1",
+    "definition": "100 \u00d7 nonnegative Pearson correlation of aligned 10 ms stereo RMS envelopes. It measures rhythmic intensity over time, not waveform or perceptual identity.",
+    "configuration": "Set expect.minEnvelopeCorrelation in test/test.json (0.70 = 70%).",
+    "editor": "Load a musical case, edit Rhythm similarity target (%), then run it. Export test bundle persists the edited target for that case. Reloading the catalog resets unsaved overrides.",
+    "guards": "Musical cases still require matching sample rate, length and channel count and no more than 1 dB loudness difference. Mechanical cases keep strict waveform limits.",
+    "originalStillReference": true
+  }
 }

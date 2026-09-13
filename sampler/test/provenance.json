@@ -52,5 +52,14 @@
     ],
     "audioAndSessionFilesChanged": false,
     "comparisonLimitsChanged": false
+  },
+  "similarityTargetRevision": {
+    "applicationCommit": "b25f34c92d56c21379e9e2af191a9e91e6a6818b",
+    "requestedChange": "Use a 70% similarity threshold against the original, adjustable upward later.",
+    "criterion": "Rhythm-envelope correlation >= 0.70, plus existing format and level checks. Exact waveform errors stay in the reports as diagnostics.",
+    "mechanicalLimitsChanged": false,
+    "musicalLimitsChanged": true,
+    "audioAndSessionFilesChanged": false,
+    "audioSchedulingChanged": false
   }
 }

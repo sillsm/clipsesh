@@ -5,10 +5,10 @@
   "catalogUrl": "https://sampler-unit.invalid/sampler/test/test.json",
   "passed": true,
   "counts": {
-    "pass": 37,
+    "pass": 40,
     "fail": 0
   },
-  "codeMd5": "87cfd51b86197f11e94eb4ef9d17836d",
+  "codeMd5": "e5c8db867ec84fa949e672416744bf41",
   "tests": [
     {
       "name": "Catalog loading is lazy and keeps cancel controls outside the locked editor",
@@ -64,6 +64,18 @@
     },
     {
       "name": "Save WAV exports an arrangement even when the legacy step pattern is empty",
+      "status": "PASS"
+    },
+    {
+      "name": "Rhythm thresholds reject silence and worsen when a drum pattern changes; strict PCM stays independent",
+      "status": "PASS"
+    },
+    {
+      "name": "Raising a musical target persists across loading and running without changing source audio or recipe",
+      "status": "PASS"
+    },
+    {
+      "name": "Exported test bundles save the edited target and keep the original as reference",
       "status": "PASS"
     },
     {
