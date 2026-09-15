@@ -692,8 +692,60 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
 .cs-max-compact .toast-region{display:none}.cs-max-compact .settings-dialog{width:100vw;height:100vh;max-width:none;max-height:none}
 /* Full editor keeps the site's channel faders visible at a 740 px host window. */
 .cs-max-full .channel-strip{grid-template-rows:24px 20px repeat(4,30px)18px minmax(35px,1fr);row-gap:1px}.cs-max-full .channel-strip .knob{width:26px;height:26px}.cs-max-full .channel-strip .trim .knob{width:23px;height:23px}.cs-max-full .channel-meter{height:19px}.cs-max-full .mixer .headphone-cue{height:17px;min-height:17px}
+/* Embedded-6: pixel-height device layout; no 280px desktop minimum can leak in. */
+.cs-max-compact{height:100%;min-height:0!important;overflow:hidden;font-size:11px}
+.cs-max-compact body{height:100%;min-height:0!important;margin:0;overflow:hidden}
+.cs-max-compact #embeddedToolbar{height:22px;min-height:22px;padding:1px 5px;gap:4px}
+.cs-max-compact #app{height:calc(100vh - 22px)!important;min-height:0!important}
+#embeddedToolbar button.active{color:#eff8ff;border-color:#4baff3;background:#174971}
+#embeddedToolbar #embeddedUnlock{border-color:#237d55;color:#9dedba;background:#102c21}
+.cs-max-compact .performance-area,.cs-max-compact .mixer,.cs-max-compact .deck{min-height:0!important}
+.cs-max-compact .performance-area>.deck{flex:none}
+.cs-max-compact .deck-header{grid-template-columns:16px minmax(0,1fr) auto 16px}
+.embedded-load{border:1px solid #3777a8;background:#123049;color:#abd9ff;border-radius:3px;padding:3px 7px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:10px}
+.deck-2 .embedded-load{border-color:#b57427;background:#342616;color:#ffc675}
+.cs-max-compact .embedded-load{font-size:7px;padding:0 5px;height:17px;min-height:17px}
+.cs-max-compact .manual-loop-controls:not([hidden]){height:23px}
+.cs-max-compact .deck-2 .jog-display{border-color:#cc8a33}
+.cs-max-compact .loop-mode{line-height:1}
+.cs-max-compact .deck-overview-wrap{height:10px}
+.cs-max-compact .channel-fader{appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl}
+.cs-max-compact .settings-dialog,.cs-max-compact .test-dialog{max-height:100vh!important;height:100vh!important;overflow:auto}
+.cs-max-compact .settings-window{min-height:0;height:100%;grid-template-rows:32px minmax(0,1fr) 30px}
+.cs-max-compact .settings-body{min-height:0;grid-template-columns:135px minmax(0,1fr)}
+.cs-max-compact .settings-pages{padding:8px;overflow:auto}.cs-max-compact .settings-window>header strong{font-size:12px}.cs-max-compact .settings-window>header span{display:none}
+.cs-max-full .deck-header{grid-template-columns:32px minmax(0,1fr) auto auto 20px}
+.cs-max-full #app{height:calc(100vh - 24px)!important;min-height:0!important;--fx-h:68px;--wave-h:86px;--browser-h:178px;grid-template-rows:42px 68px 86px minmax(260px,1fr) 178px}
+.cs-max-full .performance-area{height:100%;min-height:260px;grid-template-columns:minmax(350px,1fr) 210px minmax(350px,1fr)}
+.cs-max-full .deck{height:100%;min-height:0;grid-template-rows:43px 28px minmax(0,1fr)}
+.cs-max-full .transport-bank{grid-template-rows:26px 18px minmax(66px,1fr) 30px}
+.cs-max-full .jog-wheel{width:80px;min-width:0}.cs-max-full .cue-button,.cs-max-full .play-button{width:40px;height:40px;min-height:40px}
+.cs-max-full .deck-body{grid-template-columns:minmax(205px,1.15fr) minmax(145px,1fr)}
+.cs-max-full .loop-pad-bank{display:grid!important;grid-template-rows:23px 43px minmax(0,1fr)}
+.cs-max-full .top-status{display:none}.cs-max-full .track-stats{display:none}
+.cs-max-full .browser-panel{min-height:0;height:100%;grid-template-columns:190px 1fr}
+.cs-max-full .fx-panel{height:68px}.cs-max-full .fx-unit{grid-template-columns:36px 68px minmax(90px,1fr) 62px 73px 90px 40px;min-height:0;gap:4px;padding:5px}
+.cs-max-full .brand-block{min-width:160px}.cs-max-full .tool-button{min-width:48px}
+.cs-max-full .master-strip.compact{min-width:245px}
+@media(max-width:900px){.cs-max-compact .performance-area{grid-template-columns:minmax(225px,1fr) 120px minmax(225px,1fr)}.cs-max-compact .deck-body{grid-template-columns:1fr 1fr}.cs-max-compact #embeddedNotice{display:none}.cs-max-compact #embeddedToolbar strong{margin-right:0}.cs-max-compact .hotcue-grid span{font-size:7px}.cs-max-compact .rotary-control.filter{font-size:5px}}
+@media(max-height:140px){.cs-max-compact .transport-bank{grid-template-rows:18px 8px 25px 16px;padding:2px}.cs-max-compact .sync-row button{height:17px;min-height:17px}.cs-max-compact .deck{grid-template-rows:20px 8px minmax(0,1fr)}.cs-max-compact .loop-pad-bank{grid-template-rows:16px 22px 1fr;padding:2px}}
+.cs-max-full .channel-strip>.rotary-control{gap:1px;font-size:6px;line-height:7px}
+.cs-max-full .channel-strip>.rotary-control .knob{width:22px;height:22px}
+.cs-max-full .channel-strip>.rotary-control.trim .knob{width:21px;height:21px}
+.cs-max-full .toast-region{max-width:290px;right:8px;bottom:8px}.cs-max-full .toast{padding:7px 10px}
+
+.cs-max-compact .tempo-range{font-size:6px!important;letter-spacing:-.15px;white-space:nowrap;overflow:hidden}
 </style>
-<script id="clipsesh-embedded-detection">window.__clipEmbeddedRequested=!!(window.max&&window.max.bindInlet)||new URLSearchParams(location.search).get('embed')==='max';if(window.__clipEmbeddedRequested)document.documentElement.classList.add('cs-max-compact');</script>
+<script id="clipsesh-embedded-detection">/* Explicit host intent is independent of the asynchronous CEF window.max bridge. */
+(function(){
+  function requested(){return window.__clipNativeRequested||!!(window.max&&(window.max.bindInlet||window.max.outlet))||/(?:[?&])embed=max(?:&|$)/.test(location.search)||location.hash==='#clipsesh-embedded';}
+  window.__clipEmbeddedRequested=!!requested();
+  if(window.__clipEmbeddedRequested)document.documentElement.classList.add('cs-max-compact');
+  window.__clipHostBootLog=[];
+  window.addEventListener('error',function(e){window.__clipHostBootLog.push(String(e.message||'Script error'));if(window.__clipHostBootLog.length>12)window.__clipHostBootLog.shift();});
+  window.addEventListener('unhandledrejection',function(e){window.__clipHostBootLog.push(String(e.reason&&e.reason.message||e.reason||'Promise rejected'));});
+})();
+</script>
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -5317,7 +5369,7 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
           buffer = await this.engine.decodeAudioData(arrayBuffer);
         }
         const analysis = await window.ClipSeshAnalysis.analyzeBuffer(buffer, { fileName: track.name }, progress);
-        track.buffer = keepBuffer ? buffer : (track.source === 'demo' ? buffer : null);
+        track.buffer = (keepBuffer || track._clipKeepBuffer || this.engine.decks.some(d => d.track === track)) ? buffer : (track.source === 'demo' ? buffer : null);
         this.library.setAnalysis(track, analysis);
         return analysis;
       })();
@@ -5328,6 +5380,8 @@ body.demo-running .toast-region{display:none}body.demo-running .app-shell{user-s
 
     async ensureTrackReady(track) {
       if (!track) throw new Error('Track not found.');
+      track._clipKeepBuffer = true;
+      if (track.analysisPromise) await track.analysisPromise;
       let buffer = track.buffer;
       if (!buffer) {
         const data = await this.library.getArrayBuffer(track);
@@ -8175,10 +8229,10 @@ function makeTaps(engine){const c=engine.context,nodes=[],undo=[];const wetA=eng
  return {taps,dispose(){for(const fn of undo.reverse())fn();for(const n of nodes)try{n.disconnect();}catch(_){}}};
 }
 // Embedded-host adapter; audio stays in the original AudioContext destination.
-const HOST={version:1,build:'EMBEDDED-5',ready:false,epoch:null,seq:0,seen:0,values:new Map(),desired:new Map(),held:new Set(),route:0,routing:null,pending:new Map(),logs:[],native:{},serial:Promise.resolve(),restoring:false,stateTimer:null,sessionMeta:null};
+const HOST={version:1,build:'EMBEDDED-6',ready:false,epoch:null,seq:0,seen:0,values:new Map(),desired:new Map(),held:new Set(),route:0,routing:null,pending:new Map(),logs:[],native:{},serial:Promise.resolve(),restoring:false,stateTimer:null,sessionMeta:null};
 const IDX=new Map(SCHEMA.parameters.map((p,i)=>[p.id,i]));
 function report(message){HOST.logs.push({at:new Date().toISOString(),message:String(message)});if(HOST.logs.length>100)HOST.logs.shift();const el=$('#embeddedNotice');if(el)el.textContent=String(message);const log=$('#embeddedLog');if(log)log.textContent=HOST.logs.map(x=>x.at+' '+x.message).join('\n');}
-function toMax(name,...args){if(typeof window.max?.outlet!=='function')return false;window.max.outlet(name,...args);return true;}
+function toMax(name,...args){if(typeof window.max?.outlet!=='function')return false;try{window.max.outlet(name,...args);return true;}catch(e){HOST.lastSendError=e.message;return false;}}
 function readValue(id){return id==='output.bus'?HOST.route:read(id);}
 function protocolValue(index,value){if(!Number.isInteger(index)||index<0||index>=SCHEMA.parameters.length)throw Error('Unknown parameter index');const p=SCHEMA.parameters[index];let v=Number(value);if(!Number.isFinite(v))throw Error('Non-finite parameter value');v=clip(v,p.min,p.max);return {p,v:p.enum?Math.round(v):v};}
 function createEmbeddedOutputs(engine){
@@ -8219,9 +8273,9 @@ async function hostParam(epoch,seq,index,value,source){if(String(epoch)!==HOST.e
  else applied=setParam(index,v,source||'host');
  }catch(e){err=e.message;report(err);}toMax('cs_ack',epoch,seq,index,Number.isFinite(applied)?applied:0,err||'ok');}
 function hostMidi(epoch,seq,status,note,value){if(String(epoch)!==HOST.epoch)return;seq=Number(seq);if(!Number.isSafeInteger(seq)||seq<=HOST.seen)return;HOST.seen=seq;let err='ok';try{if(HOST.restoring)throw Error('Session recall is in progress; MIDI is not delayed or replayed.');const bytes=[status,note,value].map(Number);midi(bytes);const decoded=ClipSeshMidi.decodeMessage(bytes);S.app.captureMidiMessage({...decoded,data:bytes,hex:bytes.map(x=>x.toString(16).padStart(2,'0')).join(' '),timestamp:performance.now(),receivedAt:Date.now(),deviceId:'max-embedded',deviceName:'Ableton MIDI clips',mappedActions:[]});}catch(e){err=e.message;report(err);}toMax('cs_ack',epoch,seq,-1,0,err);}
-function hostHello(epoch,protocol){if(Number(protocol)!==HOST.version){toMax('cs_error',String(epoch),'protocol','Unsupported embedded host protocol');return;}HOST.epoch=String(epoch);HOST.seen=0;HOST.ready=true;toMax('cs_ready',HOST.epoch,HOST.version,HOST.build,SCHEMA.parameters.length);report('Embedded session connected. Enable audio once, then use MIDI clips or Live automation.');}
+function hostHello(epoch,protocol){if(Number(protocol)!==HOST.version){toMax('cs_error',String(epoch),'protocol','Unsupported embedded host protocol');return;}if(HOST.epoch!==String(epoch)){HOST.epoch=String(epoch);HOST.seen=0;}HOST.ready=true;toMax('cs_ready',HOST.epoch,HOST.version,HOST.build,SCHEMA.parameters.length);report('Embedded session connected. Enable audio once, then use MIDI clips or Live automation.');}
 function hostEnqueue(fn,args){HOST.serial=HOST.serial.then(()=>fn(...args)).catch(e=>report(e.message));}
-function bindHost(){if(!window.max?.bindInlet)return false;
+function bindHost(){if(typeof window.max?.bindInlet!=='function'||typeof window.max?.outlet!=='function')return false;if(HOST.boundMax===window.max)return true;
  window.max.bindInlet('cs_hello',hostHello);
  window.max.bindInlet('cs_host',(...a)=>hostParam(...a).catch(e=>report(e.message)));window.max.bindInlet('cs_midi',(...a)=>hostMidi(...a));
  window.max.bindInlet('cs_restore',(...a)=>{if(String(a[0])===HOST.epoch)hostEnqueue(restoreMetadata,[a[1]]);});
@@ -8231,8 +8285,8 @@ function bindHost(){if(!window.max?.bindInlet)return false;
  window.max.bindInlet('cs_panic',()=>{releaseHolds();for(const d of S.app.engine.decks)d.pause();});
  window.max.bindInlet('cs_view',(view)=>setView(view==='full'?'full':'compact',false));
  window.max.bindInlet('cs_read',()=>{for(let i=0;i<SCHEMA.parameters.length;i++)sendOneState(i);cacheSessionSoon();});
- toMax('cs_webready',HOST.version,HOST.build,SCHEMA.parameters.length);return true;}
-function setView(view,notify=true){const full=view==='full';document.documentElement.classList.toggle('cs-max-full',full);document.documentElement.classList.toggle('cs-max-compact',!full);if(notify)toMax('cs_ui',full?'expand':'compact');requestAnimationFrame(()=>{S.app.drawMainWaveform();S.app.drawDeckOverviews();});}
+ window.max.bindInlet('cs_file_begin',fileBegin);window.max.bindInlet('cs_file_chunk',fileChunk);window.max.bindInlet('cs_file_end',(...a)=>fileEnd(...a));window.max.bindInlet('cs_file_abort',fileAbort);HOST.boundMax=window.max;toMax('cs_webready',HOST.version,HOST.build,SCHEMA.parameters.length);return true;}
+function setView(view,notify=true){HOST.view=view==='full'?'full':'compact';const full=HOST.view==='full';document.documentElement.classList.toggle('cs-max-full',full);document.documentElement.classList.toggle('cs-max-compact',!full);if(notify)toMax('cs_ui',full?'expand':'compact');requestAnimationFrame(()=>{S.app.drawMainWaveform();S.app.drawDeckOverviews();});}
 function webGestureBindings(){
  const selectorMap={'#crossfader':'mixer.crossfader','#masterVolume':'master.volume','#crossfaderCurveSetting':'mixer.curve'};
  for(let n=1;n<=2;n++){for(const [sel,key]of Object.entries({'.channel-fader':'fader','.trim-knob':'trim','.eq-low':'eqLow','.eq-mid':'eqMid','.eq-high':'eqHigh','.filter-knob':'filter'}))selectorMap[`.channel-strip[data-channel="${n}"] ${sel}`]=`deck${n}.${key}`;selectorMap[`.deck[data-deck="${n}"] .tempo-slider`]=`deck${n}.bpm`;selectorMap[`#autoLoopLength${n}`]=`deck${n}.loopLength`;}
@@ -8258,17 +8312,105 @@ function webGestureBindings(){
  for(const d of S.app.engine.decks){d.addEventListener('track',()=>{applyDeferred(d.id);if(!HOST.restoring)rememberTrack(d.id);cacheSessionSoon();});d.addEventListener('cue',cacheSessionSoon);}
 }
 async function probe(){if(!HOST.ready)throw Error('No native Max handshake yet');const values=[];for(let i=0;i<8;i++){const id='p'+(++HOST.seq);try{const ms=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{HOST.pending.delete(id);reject(Error('Max response timed out'));},2000);HOST.pending.set(id,{at:performance.now(),resolve:v=>{clearTimeout(timer);resolve(v);}});toMax('cs_probe',HOST.epoch,id);});values.push(ms);}catch(e){values.push(null);}await new Promise(r=>setTimeout(r,40));}const ok=values.filter(v=>v!=null).sort((a,b)=>a-b),r={type:'embedded-browser-to-max-control-roundtrip',audioLatency:false,attempts:values,medianMs:ok.length?ok[Math.floor(ok.length/2)]:null,maxMs:ok.at(-1)??null,misses:values.length-ok.length};$('#embeddedProbeReport').textContent=JSON.stringify(r,null,2);return r;}
-function wireEmbedded(){if(!window.__clipEmbeddedRequested)return;S.app=ensureApp();for(const p of SCHEMA.parameters)HOST.values.set(p.id,p.action?0:readValue(p.id));
- const top=document.createElement('nav');top.id='embeddedToolbar';top.innerHTML='<strong>CLIP SESH <span>IN LIVE</span></strong><button data-embed-tab="decks">DECKS</button><button data-embed-tab="mixer">MIXER</button><button data-embed-tab="fx">FX</button><button id="embeddedFull">FULL EDITOR ↗</button><button id="embeddedUnlock">ENABLE AUDIO</button><span id="embeddedNotice">Waiting for native host…</span>';
- document.body.prepend(top);document.documentElement.dataset.embeddedTab='decks';for(const b of top.querySelectorAll('[data-embed-tab]'))b.onclick=()=>{document.documentElement.dataset.embeddedTab=b.dataset.embedTab;};$('#embeddedFull').onclick=()=>setView(document.documentElement.classList.contains('cs-max-full')?'compact':'full');$('#embeddedUnlock').onclick=()=>S.app.engine.ensureRunning().then(()=>report('Audio running inside Max. MIDI and automation ready.')).catch(e=>report(e.message));
- const panel=document.createElement('details');panel.id='embeddedHostSettings';panel.innerHTML='<summary>Ableton embedded host · EMBEDDED-5</summary><p>The site owns one audio engine inside jweb~. No localhost audio bridge or separate Chrome tab is used. Live parameters and MIDI address this session only.</p><label>Stereo output <select id="embeddedOutput"></select></label><p id="embeddedNative">Native Max output meters have not reported.</p><button type="button" id="embeddedProbe">Test control round trip</button><button type="button" id="embeddedAudioTest">Quiet browser audio test</button><button type="button" id="embeddedExport">Save session metadata</button><pre id="embeddedProbeReport">Control measurements are not physical audio latency.</pre><pre id="embeddedLog"></pre><p>Live stores parameter values and source references; cached music remains in this embedded browser’s local storage, not inside the .als file. Keep your source audio and session exports. Offline bounce is not certified.</p>';
+function wireEmbedded(){if(HOST.wired)return true;if(!window.__clipEmbeddedRequested&&!window.__clipNativeRequested&&!window.max)return false;S.app=ensureApp();if($('#ab3Disconnect')){$('#ab3Disconnect').click();$('#abletonBridge').hidden=true;}for(const p of SCHEMA.parameters)HOST.values.set(p.id,p.action?0:readValue(p.id));
+ const top=document.createElement('nav');top.id='embeddedToolbar';top.innerHTML='<strong>CLIP SESH <span>IN LIVE · 6</span></strong><button data-embed-tab="decks">DECKS</button><button data-embed-tab="mixer">MIXER</button><button data-embed-tab="fx">FX</button><button id="embeddedLibrary">LIBRARY</button><button id="embeddedFull">FULL EDITOR ↗</button><button id="embeddedUnlock">ENABLE AUDIO</button><span id="embeddedNotice">Connecting to native host…</span>';
+ document.body.prepend(top);document.documentElement.dataset.embeddedTab='decks';for(const b of top.querySelectorAll('[data-embed-tab]'))b.onclick=()=>{document.documentElement.dataset.embeddedTab=b.dataset.embedTab;for(const item of top.querySelectorAll('[data-embed-tab]'))item.classList.toggle('active',item===b);};top.querySelector('[data-embed-tab]').classList.add('active');$('#embeddedLibrary').onclick=()=>{setView('full');S.app.toggleLibrary(true);};$('#embeddedFull').onclick=()=>setView(document.documentElement.classList.contains('cs-max-full')?'compact':'full');$('#embeddedUnlock').onclick=()=>S.app.engine.ensureRunning().then(()=>report('Audio running inside Max. MIDI and automation ready.')).catch(e=>report(e.message));
+ const panel=document.createElement('details');panel.id='embeddedHostSettings';panel.innerHTML='<summary>Ableton embedded host · EMBEDDED-6</summary><p>The site owns one audio engine inside jweb~. No localhost audio bridge or separate Chrome tab is used. Live parameters and MIDI address this session only.</p><label>Stereo output <select id="embeddedOutput"></select></label><p id="embeddedNative">Native Max output meters have not reported.</p><button type="button" id="embeddedProbe">Test control round trip</button><button type="button" id="embeddedAudioTest">Quiet browser audio test</button><button type="button" id="embeddedExport">Save session metadata</button><pre id="embeddedProbeReport">Control measurements are not physical audio latency.</pre><pre id="embeddedLog"></pre><p>Live stores parameter values and source references; cached music remains in this embedded browser’s local storage, not inside the .als file. Keep your source audio and session exports. Offline bounce is not certified.</p>';
  $('[data-settings-page="midi"]').append(panel);SCHEMA.buses.forEach((b,i)=>$('#embeddedOutput').add(new Option(b.label,String(i))));$('#embeddedOutput').onchange=e=>gesture(IDX.get('output.bus'),+e.target.value);$('#embeddedProbe').onclick=()=>probe().catch(e=>report(e.message));$('#embeddedAudioTest').onclick=async()=>{await S.app.engine.ensureRunning();const c=S.app.engine.context,o=c.createOscillator(),g=c.createGain();o.frequency.value=440;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(.035,c.currentTime+.015);g.gain.setValueAtTime(.035,c.currentTime+.15);g.gain.linearRampToValueAtTime(0,c.currentTime+.2);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.21);o.onended=()=>{o.disconnect();g.disconnect();};report('Quiet browser tone sent to jweb~ audio. Check the native meter and Live track output.');};$('#embeddedExport').onclick=()=>S.app.downloadText('clipsesh-embedded-session.json',JSON.stringify(metadata(),null,2),'application/json');
- webGestureBindings();setView('compact',false);let attempts=0;const interval=setInterval(()=>{if(bindHost()||++attempts>80){clearInterval(interval);if(attempts>80)report('Preview only: open this URL inside Clip Sesh DJ Embedded.amxd.');}},100);
- S.app.engine.context.addEventListener('statechange',()=>{$('#embeddedUnlock').textContent=S.app.engine.context.state==='running'?'AUDIO ON':'ENABLE AUDIO';});
+ wireFileImport();webGestureBindings();HOST.wired=true;setView(HOST.view||'compact',false);bindHost();
+ const refreshAudioButton=()=>{$('#embeddedUnlock').textContent=S.app.engine.context.state==='running'?'AUDIO ON':'ENABLE AUDIO';};S.app.engine.context.addEventListener('statechange',refreshAudioButton);refreshAudioButton();
  window.addEventListener('beforeunload',()=>{releaseHolds();toMax('cs_closing',HOST.epoch||'unbound');});
 }
-window.ClipSeshEmbedded=Object.freeze({version:1,schema:SCHEMA,setParam,gesture,readValue,createEmbeddedOutputs,hostParam,hostMidi,hostHello,setView,setOutput,snapshot,metadata,restoreMetadata,probe,state:()=>({build:HOST.build,ready:HOST.ready,epoch:HOST.epoch,lastSequence:HOST.seen,route:HOST.route,audioState:S.app?.engine?.context?.state,native:HOST.native,desired:[...HOST.desired],logs:HOST.logs})});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireEmbedded,{once:true});else wireEmbedded();
+window.ClipSeshEmbedded=Object.freeze({version:1,start:startEmbedded,acceptAudioFiles,fileBegin,fileChunk,fileEnd,fileAbort,schema:SCHEMA,setParam,gesture,readValue,createEmbeddedOutputs,hostParam,hostMidi,hostHello,setView,setOutput,snapshot,metadata,restoreMetadata,probe,state:()=>({build:HOST.build,ready:HOST.ready,epoch:HOST.epoch,lastSequence:HOST.seen,route:HOST.route,audioState:S.app?.engine?.context?.state,native:HOST.native,wired:!!HOST.wired,bound:!!HOST.boundMax,view:HOST.view,importCount:IMPORTS.size,desired:[...HOST.desired],logs:HOST.logs})});
+function startEmbedded(view){if(view)HOST.view=view==='full'?'full':'compact';window.__clipEmbeddedRequested=true;try{wireEmbedded();if(HOST.wired){setView(HOST.view||'compact',false);bindHost();}}catch(error){HOST.lastBootError=error.message;report('Embedded initialization: '+error.message);}return !!HOST.wired;}
+function pollEmbedded(){if(window.__clipEmbeddedRequested||window.__clipNativeRequested||window.max){if(!HOST.wired)startEmbedded();else{try{bindHost();if(!HOST.ready)toMax('cs_webready',HOST.version,HOST.build,SCHEMA.parameters.length);}catch(error){report('Native bridge is not ready: '+error.message);}}}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pollEmbedded,{once:true});else queueMicrotask(pollEmbedded);
+HOST.bootTimer=setInterval(pollEmbedded,750);
+
+/* Native import accepts bytes only for an explicit native file-drop / picker ticket.
+   The webpage never sends a local path for the native side to open. */
+const IMPORTS=new Map();
+const FILE_LIMIT=256*1024*1024;
+const CRC_TABLE=Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=(n&1)?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
+function crcUpdate(crc,bytes){for(const b of bytes)crc=CRC_TABLE[(crc^b)&255]^(crc>>>8);return crc>>>0;}
+function crcHex(crc){return ((crc^0xffffffff)>>>0).toString(16).padStart(8,'0');}
+function importMessage(message){report(message);const el=$('#embeddedImportStatus');if(el)el.textContent=message;}
+function fileBegin(epoch,id,deck,size,encodedName){
+ if(String(epoch)!==HOST.epoch)return;
+ id=String(id);size=Number(size);deck=Number(deck);
+ try{
+  if(!/^[a-zA-Z0-9_-]{1,96}$/.test(id)||!Number.isSafeInteger(size)||size<1||size>FILE_LIMIT||![0,1,2].includes(deck))throw Error('Invalid native audio transfer.');
+  if(IMPORTS.has(id)){toMax('cs_file_next',epoch,id,IMPORTS.get(id).offset);return;}
+  if(IMPORTS.size)throw Error('Another native import is still finishing.');
+  const name=decodeURIComponent(String(encodedName));if(!name||name.length>400||/[\x00-\x1f]/.test(name)||/[\\/]/.test(name))throw Error('Invalid audio filename.');
+  if(!ClipSeshLibrary.isAudioFile({name,type:''}))throw Error('Unsupported audio file. Choose WAV, MP3, AIFF, FLAC, M4A or OGG.');
+  const item={id,epoch,deck,size,name,bytes:new Uint8Array(size),offset:0,crc:0xffffffff,at:Date.now()};IMPORTS.set(id,item);
+  importMessage(`Importing ${name} · 0%`);toMax('cs_file_next',epoch,id,0);
+ }catch(error){toMax('cs_file_result',epoch,id,'error',error.message);importMessage(error.message);}
+}
+function fileChunk(epoch,id,offset,base64){
+ if(String(epoch)!==HOST.epoch)return;const item=IMPORTS.get(String(id));if(!item)return;
+ try{
+  offset=Number(offset);if(offset!==item.offset)throw Error('Out-of-order audio chunk. Please drop the file again.');
+  if(typeof base64!=='string'||base64.length>16384||!/^[A-Za-z0-9+/]*={0,2}$/.test(base64))throw Error('Invalid audio chunk encoding.');
+  const binary=atob(base64),n=binary.length;if(!n||offset+n>item.size)throw Error('Invalid audio chunk size.');
+  const chunk=Uint8Array.from(binary,c=>c.charCodeAt(0));item.bytes.set(chunk,offset);item.crc=crcUpdate(item.crc,chunk);item.offset+=n;item.at=Date.now();
+  importMessage(`Importing ${item.name} · ${Math.floor(item.offset/item.size*100)}%`);toMax('cs_file_next',epoch,item.id,item.offset);
+ }catch(error){IMPORTS.delete(item.id);toMax('cs_file_result',epoch,item.id,'error',error.message);importMessage(error.message);}
+}
+async function acceptAudioFiles(files,deck=0,origin='file-picker',guard=()=>{}){
+ guard();
+ const app=ensureApp(),valid=[...files].filter(ClipSeshLibrary.isAudioFile);if(!valid.length)throw Error('No supported audio found. Use the native LOAD A / LOAD B buttons above.');
+ const imported=[];
+ for(const file of valid){if(file.size>FILE_LIMIT)throw Error(`${file.name} exceeds the 256 MiB import limit.`);
+  const bytes=await file.arrayBuffer();guard();const hash=ClipSeshTestKernel.md5ArrayBuffer(bytes);
+  let track=app.library.getTracks().find(t=>t.embeddedHash===hash);
+  if(!track){track=app.library.addFiles([file],{source:'embedded-'+origin,basePath:'Imported/'+hash})[0];
+   if(!track)track=app.library.getTracks().find(t=>t.embeddedHash===hash);
+   if(!track)throw Error('Unable to register imported audio.');track.embeddedHash=hash;track.folder='Imported audio';
+   // Library analysis remains the app's own implementation, not a substitute sound engine.
+  }
+  imported.push(track);
+ }
+ if(deck===1||deck===2){const track=imported[0];importMessage(`Decoding ${track.name} for Deck ${deck===1?'A':'B'}…`);await app.ensureTrackReady(track);guard();await app.loadTrackToDeck(track,deck);
+  if(app.engine.getDeck(deck).track!==track)throw Error('The track was added to the library but did not replace the deck (cancelled or decode failed).');
+ }
+ for(const track of imported){try{const data=await app.library.getArrayBuffer(track);await cachedAudio(track.embeddedHash,new Blob([data],{type:track.file?.type||'application/octet-stream'}));}catch(error){report('Loaded; browser recall cache unavailable: '+error.message);}}
+ guard();app.renderLibrary();cacheSessionSoon();importMessage(`${imported.length} file${imported.length===1?'':'s'} ready${deck?' · Deck '+(deck===1?'A':'B'):''} · ${imported[0].name}`);
+ return {count:imported.length,deck,tracks:imported.map(t=>({id:t.id,name:t.name,md5:t.embeddedHash})),loaded:deck?app.engine.getDeck(deck).track===imported[0]:false};
+}
+async function fileEnd(epoch,id,checksum){
+ if(String(epoch)!==HOST.epoch)return;const item=IMPORTS.get(String(id));if(!item||item.decoding)return;item.decoding=true;
+ try{
+  if(item.offset!==item.size||String(checksum)!==crcHex(item.crc))throw Error('Audio transfer checksum mismatch. Drop the original file again.');
+  importMessage(`Checking ${item.name}…`);toMax('cs_file_busy',epoch,item.id);
+  const file=new File([item.bytes],item.name,{type:'',lastModified:0});item.bytes=null;
+  const result=await acceptAudioFiles([file],item.deck,'native',()=>{if(IMPORTS.get(item.id)!==item||HOST.epoch!==epoch)throw Error('Import cancelled before deck load.');});IMPORTS.delete(item.id);
+  toMax('cs_file_result',epoch,item.id,'ok',JSON.stringify(result));
+ }catch(error){IMPORTS.delete(item.id);toMax('cs_file_result',epoch,item.id,'error',error.message);importMessage(error.message);}
+}
+function fileAbort(epoch,id,reason){if(String(epoch)!==HOST.epoch)return;const item=IMPORTS.get(String(id));if(item){IMPORTS.delete(String(id));importMessage(reason||'Import cancelled.');}}
+function chooseFile(deck){if(HOST.ready&&typeof window.max?.outlet==='function'){toMax('cs_choose_file',HOST.epoch,Number(deck));importMessage('Choose an audio file in the native dialog…');}else{pickWebFile(deck);}}
+function pickWebFile(deck){const input=$('#embeddedFilePicker');input.dataset.deck=String(deck||0);input.value='';input.click();}
+function wireFileImport(){
+ const input=document.createElement('input');input.type='file';input.id='embeddedFilePicker';input.multiple=true;input.accept='audio/*,.wav,.wave,.mp3,.aif,.aiff,.flac,.m4a,.aac,.ogg,.opus';input.hidden=true;document.body.append(input);
+ input.onchange=()=>{const files=[...input.files],deck=+input.dataset.deck;input.value='';if(files.length)acceptAudioFiles(files,deck).catch(e=>importMessage(e.message));};
+ for(const d of S.app.deckUi.values()){
+  const b=document.createElement('button');b.className='embedded-load';b.textContent='LOAD '+(d.id===1?'A':'B');b.title='Choose an audio file for this deck';b.onclick=e=>{e.preventDefault();chooseFile(d.id);};d.element.querySelector('.deck-header').insertBefore(b,d.element.querySelector('.unload-track'));
+ }
+ for(const id of ['addFilesButton','emptyAddFiles'])$('#'+id)?.addEventListener('click',e=>{if(HOST.ready){e.preventDefault();e.stopImmediatePropagation();chooseFile(0);}},true);
+ // Handle the Files fallback even when CEF produces unusable webkitGetAsEntry handles.
+ document.addEventListener('dragover',e=>{if(e.dataTransfer&&([...(e.dataTransfer.types||[])].includes('Files')||[...(e.dataTransfer.types||[])].includes('text/uri-list'))){e.preventDefault();e.dataTransfer.dropEffect='copy';}},true);
+ document.addEventListener('drop',e=>{
+  if(e.target.closest?.('#testDialog'))return;
+  const dt=e.dataTransfer;if(!dt||dt.getData('application/x-clip-sesh-track'))return;
+  const files=Array.from(dt.files||[]);const isExternal=files.length||Array.from(dt.types||[]).some(t=>t==='Files'||t==='text/uri-list');if(!isExternal)return;
+  e.preventDefault();e.stopImmediatePropagation();S.app.dragDepth=0;S.app.dom.dropOverlay.hidden=true;
+  const deck=Number(e.target.closest?.('.deck[data-deck]')?.dataset.deck||0);
+  if(!files.length){importMessage('This browser did not provide the dropped file. Use the native DROP MUSIC TO A/B strips or LOAD buttons above.');return;}
+  acceptAudioFiles(files,deck,'drop').catch(error=>importMessage(error.message));
+ },true);
+}
 
 })();
 </script>
